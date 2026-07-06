@@ -14,7 +14,7 @@ Mitsuba: Rondo of Death — Copyright Notice & Terms of Use
 一、允许的行为
 
   1. 在线游玩：通过官方页面
-     https://ekibenya.github.io/mitsuba/ 游玩本游戏。
+     https://mitsuba-ekibenyas-projects.vercel.app/ 游玩本游戏。
   2. 离线游玩：从本仓库的 Releases 页面下载官方发布包，
      在个人设备上游玩。
   3. 酒馆加载：在你个人的 SillyTavern 环境中加载官方发布的
@@ -66,7 +66,7 @@ open-source rights.
 1. Permitted
 
   1. Online play: playing the game via the official page at
-     https://ekibenya.github.io/mitsuba/.
+     https://mitsuba-ekibenyas-projects.vercel.app/.
   2. Offline play: downloading official release packages from this
      repository's Releases page and playing on your personal devices.
   3. SillyTavern loading: loading the officially released HTML file

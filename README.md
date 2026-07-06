@@ -6,9 +6,7 @@
 
 *一款单文件、免安装的 AI 驱动角色扮演游戏 —— 魔术与大炮并存的近世革命时代*
 
-### 🎮 立即游玩 → [**ekibenya.github.io/mitsuba**](https://ekibenya.github.io/mitsuba/)
-
-**备用线路** → 部署后同步更新
+### 🎮 立即游玩 → [**mitsuba-ekibenyas-projects.vercel.app**](https://mitsuba-ekibenyas-projects.vercel.app/)
 
 *免下载 · 免安装 · 手机电脑皆可 · 配好你自己的 AI 接口即开局*
 
@@ -57,7 +55,7 @@
 
 ## ✦ 开始游玩
 
-1. 打开 [ekibenya.github.io/mitsuba](https://ekibenya.github.io/mitsuba/)
+1. 打开 [mitsuba-ekibenyas-projects.vercel.app](https://mitsuba-ekibenyas-projects.vercel.app/)
 2. 点封面「**链 · 接入**」，填入你自己的 AI 接口（OpenAI 兼容 / Claude 官方 / Gemini 官方任一），密钥只保存在你的浏览器本机
 3. 「**启 新 局**」→ 择一开局 → 入局
 
