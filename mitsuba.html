@@ -113,8 +113,8 @@ textarea,input{border-radius:10px}
 
 @media (prefers-reduced-motion: reduce){.zjSheen{display:none}.zjMarq{animation:none}}
 .slip{height:7px;border-radius:3px;opacity:.75;background:linear-gradient(90deg,transparent 0,#2a4568 14%,#2a4568 38%,#efe8d6 38%,#efe8d6 62%,#7e212e 62%,#7e212e 86%,transparent 100%)}
-.bamboo{background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.014) 0 27px,rgba(58,47,36,.22) 27px 28px)}
-.bambooV{background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0 31px,rgba(58,47,36,.2) 31px 32px)}
+.bamboo{background-image:none}
+.bambooV{background-image:none}
 @keyframes flick{0%,100%{transform:scaleY(1);opacity:.95}25%{transform:scaleY(1.18) translateX(.6px);opacity:1}55%{transform:scaleY(.82);opacity:.75}80%{transform:scaleY(1.06) translateX(-.6px);opacity:.9}}
 @keyframes glow{0%,100%{opacity:.4}50%{opacity:.72}}
 @keyframes fall{0%{transform:translateY(-16px);opacity:0}10%{opacity:1}100%{transform:translateY(340px);opacity:0}}
@@ -1772,7 +1772,7 @@ function storyPane(){
     return '<div class="fade" style="margin-bottom:24px;position:relative">'+wtb+chap+illu+cotHtml+wtools+paras+retry+'</div>';
   }).join('');
   var thinking=S.thinking?'<div style="display:flex;align-items:center;gap:10px;color:var(--mut);font-size:13px;letter-spacing:.25em;padding:4px 0 12px"><span>书记官执笔中</span><span style="animation:blink 1.2s infinite;color:var(--gold)">●</span><span style="animation:blink 1.2s .2s infinite;color:var(--gold)">●</span><span style="animation:blink 1.2s .4s infinite;color:var(--gold)">●</span></div>':'';
-  var HIDE3D=false;try{HIDE3D=localStorage.getItem('mb3d_hide')==='1';}catch(e){}
+  var HIDE3D=true;try{if(localStorage.getItem('mb_isle_v1')===null){localStorage.setItem('mb_isle_v1','1');localStorage.setItem('mb3d_hide','1');}HIDE3D=localStorage.getItem('mb3d_hide')==='1';}catch(e){}
   var hideScene=window.__ZJ3D_OFF__&&SVGF&&mob;
   var hide3d=!window.__ZJ3D_OFF__&&HIDE3D;
   var sceneH=(window.ZJ3D&&ZJ3D.owns())?ZJ3D.paneH(mob):((window.__ZJ3D_OFF__&&SVGF)?34:(mob?140:186));
