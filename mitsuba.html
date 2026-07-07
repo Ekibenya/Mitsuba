@@ -79,7 +79,7 @@ textarea,input{border-radius:10px}
    --glassTint 保证零模糊时也可读。 */
 .glass{--glassTint:.52;position:relative;overflow:hidden;border-radius:16px;
   background:radial-gradient(120px 74px at 24px 16px,rgba(255,255,255,.98),rgba(255,255,255,0) 72%),linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,0) 30%),radial-gradient(150% 112% at 3% -22%,rgba(255,255,255,.5),rgba(255,255,255,0) 44%),linear-gradient(140deg,rgba(255,253,248,var(--glassTint)),rgba(244,237,223,var(--glassTint)));
-  -webkit-backdrop-filter:url(#glassR) blur(7px) saturate(180%) brightness(1.05);backdrop-filter:url(#glassR) blur(7px) saturate(180%) brightness(1.05);
+  -webkit-backdrop-filter:url(#glassR) blur(6px) saturate(184%) brightness(1.05);backdrop-filter:url(#glassR) blur(6px) saturate(184%) brightness(1.05);
   border:none;
   box-shadow:inset 0 1.6px 0 rgba(255,255,255,.98),inset 1.6px 0 0 rgba(255,255,255,.6),inset 0 3px 5px -2px rgba(52,84,140,.5),inset 3px 0 6px -3px rgba(52,84,140,.3),inset -1.4px 0 0 rgba(255,255,255,.3),inset 0 -1.4px 0 rgba(255,255,255,.34),inset 0 -22px 40px rgba(96,120,160,.07),0 18px 44px rgba(46,38,26,.26),0 5px 14px rgba(46,38,26,.15)}
 .glass::before{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 60% at 18% -8%,rgba(255,255,255,.10),rgba(255,255,255,0) 55%)}
@@ -136,9 +136,9 @@ textarea,input{border-radius:10px}
 <body>
 <svg width="0" height="0" style="position:absolute;pointer-events:none" aria-hidden="true"><defs>
 <filter id="glassR" x="-12%" y="-12%" width="124%" height="124%" color-interpolation-filters="sRGB">
-<feTurbulence type="fractalNoise" baseFrequency="0.009 0.013" numOctaves="2" seed="7" result="n"/>
+<feTurbulence type="fractalNoise" baseFrequency="0.008 0.011" numOctaves="2" seed="7" result="n"/>
 <feGaussianBlur in="n" stdDeviation="1.1" result="ns"/>
-<feDisplacementMap in="SourceGraphic" in2="ns" scale="13" xChannelSelector="R" yChannelSelector="G"/>
+<feDisplacementMap in="SourceGraphic" in2="ns" scale="20" xChannelSelector="R" yChannelSelector="G"/>
 </filter></defs></svg>
 <canvas id="zjGL"></canvas>
 <div id="zj"></div>
