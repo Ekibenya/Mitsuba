@@ -29,7 +29,7 @@
 <style>
 :root{
   --bg:#e9dfc6; --panel:#f4edda; --panel2:#ece3cc; --ink:#2b231c; --ink2:#3a3024;
-  --gold:#3c5a86; --gold2:#274468; --gold3:#1d3350; --mut:#6e5f4b; --mut2:#5d5142;
+  --gold:#3c5a86; --gold2:#274468; --gold3:#1d3350; --mut:#564835; --mut2:#443929;
   --red:#7e212e; --red2:#a02a40; --grn:#3c6494; --grn2:#2f5480; --grn3:#4a72a2; --violet:#5c4680; --violet2:#7a5ca8;
   --kai:'Songti SC','Noto Serif CJK SC','Source Han Serif SC','ZCOOL XiaoWei','STKaiti','SimSun',serif;
   --serif:'Songti SC','Noto Serif CJK SC','Source Han Serif SC','ZCOOL XiaoWei','SimSun',serif;
@@ -74,7 +74,7 @@ html.zjLow #zjStory{background:rgba(246,240,226,.96)!important}
 .obtn::after{content:'';position:absolute;left:8%;right:50%;top:0;height:1px;border-radius:1px;pointer-events:none;background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.6),rgba(255,255,255,0))}
 .obtn:hover{background:linear-gradient(135deg,rgba(255,255,255,.3),rgba(226,233,246,.22) 38%,rgba(240,231,210,.18))}
 textarea,input{border-radius:10px}
-.glass{position:relative;overflow:hidden;border-radius:16px;background:linear-gradient(135deg,rgba(255,255,255,.16),rgba(255,252,244,.09) 38%,rgba(244,236,216,.07));-webkit-backdrop-filter:blur(26px) saturate(190%);backdrop-filter:blur(26px) saturate(190%);border:1px solid rgba(255,255,255,.55);box-shadow:inset 0 1px 0 rgba(255,255,255,.32),inset 0 -1px 1px rgba(90,120,168,.06),inset 1px 0 0 rgba(58,92,140,.10),inset -1px 0 0 rgba(58,92,140,.05),0 10px 26px rgba(58,47,36,.22),0 2px 8px rgba(58,47,36,.12)}
+.glass{position:relative;overflow:hidden;border-radius:16px;background:linear-gradient(135deg,rgba(255,255,255,.44),rgba(255,252,244,.36) 38%,rgba(246,238,220,.34));-webkit-backdrop-filter:blur(26px) saturate(190%);backdrop-filter:blur(26px) saturate(190%);border:1px solid rgba(255,255,255,.55);box-shadow:inset 0 1px 0 rgba(255,255,255,.32),inset 0 -1px 1px rgba(90,120,168,.06),inset 1px 0 0 rgba(58,92,140,.10),inset -1px 0 0 rgba(58,92,140,.05),0 10px 26px rgba(58,47,36,.22),0 2px 8px rgba(58,47,36,.12)}
 .glass::before{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 60% at 18% -8%,rgba(255,255,255,.10),rgba(255,255,255,0) 55%)}
 .glass::after{content:'';position:absolute;left:8%;right:55%;top:0;height:1px;border-radius:1px;pointer-events:none;background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.75),rgba(255,255,255,0))}
 .glassHover{transition:transform .35s cubic-bezier(.2,.9,.3,1.2),box-shadow .35s,border-color .2s}
@@ -2083,7 +2083,7 @@ function bgmPanel(){
       +'<span style="font-size:13px;letter-spacing:.06em;color:'+(on?'var(--gold3)':'#5f523f')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+tr.t+'</span>'
       +'<span class="grow"></span><span style="flex:none;font-size:10.5px;color:#6e5f4b">'+tr.a+'</span></div>';
   }).join('');
-  return '<div class="glass" id="zjBgmBox" style="overflow:hidden;position:fixed;top:58px;right:10px;z-index:60;width:min(288px,calc(100vw - 20px));display:flex;flex-direction:column;max-height:min(460px,calc(100vh - 130px))" class="fade">'
+  return '<div class="glass" id="zjBgmBox" style="overflow:hidden;position:fixed;top:58px;right:10px;z-index:60;width:min(288px,calc(100vw - 20px));display:flex;flex-direction:column;max-height:min(460px,calc(100vh - 130px));background:linear-gradient(155deg,rgba(250,245,235,.975),rgba(242,234,216,.96))" class="fade">'
     +'<div style="flex:none;padding:12px 14px 10px;border-bottom:1px solid rgba(42,69,104,.22)">'
       +'<div style="display:flex;align-items:center;gap:8px"><span class="kai" style="font-size:15px;letter-spacing:.18em;color:var(--gold2)">幕间音乐</span><span class="grow"></span><button data-act="bgm" class="obtn btn" style="width:26px;height:26px;font-size:12px;color:var(--mut)">✕</button></div>'
       +'<div style="margin-top:9px;display:flex;align-items:center;gap:10px">'
@@ -2122,8 +2122,8 @@ function overlayView(){
   var title=S.overlay==='codex'?'三叶世界书':S.overlay==='map'?'罗泽利亚地图':S.overlay==='preset'?'自定义预设':S.overlay==='api'?'AI 接口设置':S.overlay==='jpsb'?'日文沙盒':S.overlay==='set'?'设 置':S.overlay==='mem'?'长程记忆 · 编年长卷':'存 档';
   var inner=S.overlay==='codex'?codexBody():S.overlay==='map'?mapBody():S.overlay==='preset'?presetBody():S.overlay==='api'?apiBody():S.overlay==='jpsb'?jpsbBody():S.overlay==='set'?setBody():S.overlay==='mem'?memBody():savesBody();
   return '<div id="zjOvWrap" style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:14px">'
-    +'<div id="zjOvDim" data-act="closeov" class="fade" style="position:absolute;inset:0;background:rgba(46,38,26,.22);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)"></div>'
-    +'<div data-stop="1" id="zjOvBox" class="glass" style="position:relative;width:min(1060px,96vw);height:min(720px,92vh);display:flex;flex-direction:column;overflow:hidden">'
+    +'<div id="zjOvDim" data-act="closeov" class="fade" style="position:absolute;inset:0;background:rgba(26,20,12,.5);-webkit-backdrop-filter:blur(11px) saturate(80%);backdrop-filter:blur(11px) saturate(80%)"></div>'
+    +'<div data-stop="1" id="zjOvBox" class="glass" style="position:relative;width:min(1060px,96vw);height:min(720px,92vh);display:flex;flex-direction:column;overflow:hidden;background:linear-gradient(155deg,rgba(250,245,235,.975),rgba(242,234,216,.96))">'
     +'<div style="flex:none;display:flex;align-items:center;gap:14px;padding:13px 18px;border-bottom:1px solid rgba(42,69,104,.22)"><div class="kai" style="font-size:19px;letter-spacing:.22em;color:var(--gold2)">'+title+'</div>'+(S.overlay==='codex'?'<button data-act="editlore" class="obtn btn" title="编辑世界书：自写条目与上传" style="width:30px;height:30px;color:var(--mut);flex:none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><circle cx="12" cy="12" r="3.1"/><path d="M19.3 12c0-.5-.05-.99-.15-1.46l2-1.56-1.8-3.12-2.37.95a7.4 7.4 0 0 0-2.52-1.46L14.1 2.8h-4.2l-.36 2.55a7.4 7.4 0 0 0-2.52 1.46l-2.37-.95-1.8 3.12 2 1.56c-.1.47-.15.96-.15 1.46s.05.99.15 1.46l-2 1.56 1.8 3.12 2.37-.95c.75.65 1.6 1.15 2.52 1.46l.36 2.55h4.2l.36-2.55a7.4 7.4 0 0 0 2.52-1.46l2.37.95 1.8-3.12-2-1.56c.1-.47.15-.96.15-1.46z"/></svg></button>':'')+'<div class="grow"></div><button data-act="closeov" class="obtn btn" style="width:32px;height:32px;color:var(--mut)">✕</button></div>'
     +inner+'</div></div>';
 }
@@ -2479,7 +2479,7 @@ function fontPane(){
    +'<div style="display:flex;border:1px solid rgba(42,69,104,.25);border-radius:10px;overflow:hidden;width:max-content">'
    +[['auto','自动'],['desktop','<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="2.75" y="4.5" width="18.5" height="12.5" rx="2"/><path d="M8.5 20.5h7M12 17.2v3.3"/></svg> 电脑'],['mobile','<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="7.25" y="2.75" width="9.5" height="18.5" rx="2.4"/><path d="M10.7 18.2h2.6"/></svg> 手机']].map(function(dv){var on=S.device===dv[0];return '<div class="btn" data-dev="'+dv[0]+'" style="cursor:pointer;padding:8px 18px;font-size:13.5px;letter-spacing:.08em;color:'+(on?'var(--gold2)':'var(--mut)')+';background:'+(on?'rgba(42,69,104,.12)':'transparent')+'">'+dv[1]+'</div>';}).join('')+'</div>'
    +'<div style="font-size:12.5px;color:var(--mut);margin-top:8px;line-height:1.8">自动依屏幕宽窄选择版式；也可强制使用电脑或手机布局。</div>'
-   +'<div class="glass" style="margin-top:28px;padding:16px 18px"><div class="kai" style="font-size:17px;color:var(--gold3)">预览 · 贝尔的冬夜</div><div id="zjFontPrev" data-zjzoom style="margin-top:8px;font-size:15px;line-height:2;color:#cfc0a0;zoom:'+FS+'">「打扰了。请问，这里有甜的果汁吗？」你向食堂的大婶询问。汤勺当啷一声掉进了锅里——她张着嘴，视线在你的银发和蓝眼睛之间来回移动了三趟。</div></div>'
+   +'<div class="glass" style="margin-top:28px;padding:16px 18px"><div class="kai" style="font-size:17px;color:var(--gold3)">预览 · 贝尔的冬夜</div><div id="zjFontPrev" data-zjzoom style="margin-top:8px;font-size:15px;line-height:2;color:var(--ink2);zoom:'+FS+'">「打扰了。请问，这里有甜的果汁吗？」你向食堂的大婶询问。汤勺当啷一声掉进了锅里——她张着嘴，视线在你的银发和蓝眼睛之间来回移动了三趟。</div></div>'
    +'<div class="kai" style="font-size:19px;color:var(--gold2);letter-spacing:.15em;margin:34px 0 10px">日文沙盒</div>'
    +'<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">'
    +'<div class="btn" data-act="jpsbTog" style="cursor:pointer;display:inline-flex;align-items:center;gap:8px;padding:7px 16px;font-size:13px;letter-spacing:.12em;border:1px solid '+(JPSB?'rgba(160,42,64,.55)':'rgba(255,255,255,.6)')+';border-radius:10px;color:'+(JPSB?'#a02a40':'var(--mut)')+'">'+(JPSB?'✓ 已开启':'已关闭')+'</div>'
