@@ -203,15 +203,15 @@ function glInit(){
     var scene=new T.Scene();
     var cam=new T.PerspectiveCamera(45,window.innerWidth/window.innerHeight,.1,50);
     cam.position.set(0,0,3.1);
-    scene.add(new T.AmbientLight(0xf6efe0,.95));
-    var sun=new T.DirectionalLight(0xfff4e0,.72); sun.position.set(-2.2,2.6,3.2); scene.add(sun);
-    var fill=new T.DirectionalLight(0xdce4f2,.38); fill.position.set(2.4,-1.4,2.0); scene.add(fill);
+    scene.add(new T.AmbientLight(0xf8f2e4,1.05));
+    var sun=new T.DirectionalLight(0xfff4e0,.6); sun.position.set(-2.2,2.6,3.2); scene.add(sun);
+    var fill=new T.DirectionalLight(0xdce4f2,.42); fill.position.set(2.4,-1.4,2.0); scene.add(fill);
     /* 做旧三色布料贴图：平滑污渍与织纹，画布绘制，无块状噪点 */
     var tex=(function(){
       var c=document.createElement('canvas');c.width=1024;c.height=640;var x=c.getContext('2d');
-      x.fillStyle='#4E689C';x.fillRect(0,0,342,640);
-      x.fillStyle='#F0EADA';x.fillRect(342,0,342,640);
-      x.fillStyle='#B0524A';x.fillRect(684,0,340,640);
+      x.fillStyle='#5B76AC';x.fillRect(0,0,378,640);
+      x.fillStyle='#F6F0E2';x.fillRect(378,0,268,640);
+      x.fillStyle='#BE5A50';x.fillRect(646,0,378,640);
       var i,g;
       for(i=0;i<16;i++){var sx=Math.random()*1024,sy=Math.random()*640,sr=70+Math.random()*200;
         g=x.createRadialGradient(sx,sy,0,sx,sy,sr);
@@ -238,8 +238,8 @@ function glInit(){
     var flag=null,BX=null,BY=null,NV=0;
     function buildFlag(){
       if(flag){scene.remove(flag);flag.geometry.dispose();}
-      var d=cam.position.z, h=2*d*Math.tan(cam.fov*Math.PI/360)*1.5;
-      var w=h*Math.max(cam.aspect,1.25)*1.05;
+      var d=cam.position.z, vh=2*d*Math.tan(cam.fov*Math.PI/360), vw=vh*cam.aspect;
+      var h=vh*1.38, w=vw*1.16;
       var geo=new T.PlaneGeometry(w,h,SEG_X,SEG_Y);
       flag=new T.Mesh(geo,mat);
       flag.rotation.y=-0.07; flag.rotation.z=-0.035; flag.position.x=0;
@@ -1498,7 +1498,7 @@ function titleView(){
   return '<div class="col center" style="position:relative;text-align:center;padding-bottom:11vh">'+bgmBtn
     +'<div style="position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 75% 55% at 50% 82%, rgba(146,170,210,.22), transparent 62%)"></div>'
     
-    +'<div style="position:relative"><div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(60vh,86vw);aspect-ratio:1;pointer-events:none;background:radial-gradient(circle,rgba(42,69,104,.17),rgba(42,69,104,.06) 45%,transparent 70%)"></div><svg class="zjSeal" viewBox="0 0 772 834" style="position:relative;display:block;margin:0 auto;width:clamp(200px,min(46vh,66vw),480px);height:auto" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="zjGold" gradientUnits="userSpaceOnUse" x1="0" y1="60" x2="0" y2="800"><stop offset="0" stop-color="#ecd3a3"/><stop offset=".5" stop-color="#d4ab6e"/><stop offset="1" stop-color="#a97f45"/></linearGradient></defs><g><animateTransform attributeName="transform" type="rotate" from="0 386 417" to="360 386 417" dur="46s" repeatCount="indefinite"/><g fill="none" stroke="url(#zjGold)"><circle cx="386" cy="417" r="336" stroke-width="7" opacity=".5"/><circle cx="386" cy="417" r="312" stroke-width="2" opacity=".35" stroke-dasharray="4 14"/><circle cx="386" cy="417" r="360" stroke-width="1.5" opacity=".25"/></g><g fill="url(#zjGold)" opacity=".8"><circle cx="722.0" cy="417.0" r="9"/><circle cx="677.0" cy="585.0" r="5"/><circle cx="554.0" cy="708.0" r="5"/><circle cx="386.0" cy="753.0" r="9"/><circle cx="218.0" cy="708.0" r="5"/><circle cx="95.0" cy="585.0" r="5"/><circle cx="50.0" cy="417.0" r="9"/><circle cx="95.0" cy="249.0" r="5"/><circle cx="218.0" cy="126.0" r="5"/><circle cx="386.0" cy="81.0" r="9"/><circle cx="554.0" cy="126.0" r="5"/><circle cx="677.0" cy="249.0" r="5"/></g></g><g fill="url(#zjGold)"><circle cx="386" cy="303" r="112"/><circle cx="287" cy="472" r="112"/><circle cx="485" cy="472" r="112"/><path d="M386 520 q-14 96 -66 150 q66 -18 84 -70 q10 -34 6 -80 Z"/></g></svg></div>'
+    +'<div style="position:relative"><div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(60vh,86vw);aspect-ratio:1;pointer-events:none;background:radial-gradient(circle,rgba(255,253,244,.62),rgba(255,253,244,.28) 45%,transparent 72%)"></div><svg class="zjSeal" viewBox="0 0 772 834" style="position:relative;display:block;margin:0 auto;width:clamp(200px,min(46vh,66vw),480px);height:auto" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="zjGold" gradientUnits="userSpaceOnUse" x1="0" y1="60" x2="0" y2="800"><stop offset="0" stop-color="#ecd3a3"/><stop offset=".5" stop-color="#d4ab6e"/><stop offset="1" stop-color="#a97f45"/></linearGradient></defs><g><animateTransform attributeName="transform" type="rotate" from="0 386 417" to="360 386 417" dur="46s" repeatCount="indefinite"/><g fill="none" stroke="url(#zjGold)"><circle cx="386" cy="417" r="336" stroke-width="7" opacity=".5"/><circle cx="386" cy="417" r="312" stroke-width="2" opacity=".35" stroke-dasharray="4 14"/><circle cx="386" cy="417" r="360" stroke-width="1.5" opacity=".25"/></g><g fill="url(#zjGold)" opacity=".8"><circle cx="722.0" cy="417.0" r="9"/><circle cx="677.0" cy="585.0" r="5"/><circle cx="554.0" cy="708.0" r="5"/><circle cx="386.0" cy="753.0" r="9"/><circle cx="218.0" cy="708.0" r="5"/><circle cx="95.0" cy="585.0" r="5"/><circle cx="50.0" cy="417.0" r="9"/><circle cx="95.0" cy="249.0" r="5"/><circle cx="218.0" cy="126.0" r="5"/><circle cx="386.0" cy="81.0" r="9"/><circle cx="554.0" cy="126.0" r="5"/><circle cx="677.0" cy="249.0" r="5"/></g></g><g fill="url(#zjGold)"><circle cx="386" cy="303" r="112"/><circle cx="287" cy="472" r="112"/><circle cx="485" cy="472" r="112"/><path d="M386 520 q-14 96 -66 150 q66 -18 84 -70 q10 -34 6 -80 Z"/></g></svg></div>'
     +'<div style="position:relative;margin-top:16px;font-size:12px;letter-spacing:.52em;color:#7e212e;font-family:Georgia,serif;text-shadow:0 1px 0 rgba(255,255,255,.75)">LIBERTÉ · ÉGALITÉ · FRATERNITÉ</div><div class="kai" style="position:relative;margin-top:8px;font-size:clamp(34px,7vw,60px);letter-spacing:.18em;color:var(--gold2);text-shadow:0 1px 0 rgba(255,255,255,.7),0 0 34px rgba(58,92,140,.25)">三叶物语</div><div style="position:relative;margin-top:10px;font-size:13px;letter-spacing:.12em;color:var(--gold);font-style:italic;font-family:Georgia,serif;text-shadow:0 1px 0 rgba(255,255,255,.7)">L\'Histoire de Mitsuba 〜 La Fille Maudite et la Ronde de la Mort 〜</div>'
     +'<div class="slip" style="position:relative;width:320px;max-width:74vw;margin:18px auto 12px"></div>'
     +'<div style="position:relative;font-size:13px;letter-spacing:.34em;color:var(--mut2);padding:0 20px;text-shadow:0 0 12px rgba(42,69,104,.45),0 1px 0 rgba(255,255,255,.55)">诅咒的少女与死之轮舞 · 你即三叶 · 世界由 AI 扮演</div>'
