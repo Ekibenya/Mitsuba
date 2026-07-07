@@ -45,7 +45,7 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--serif);overscroll-behavior:none;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 #zjGL{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
-#zj{position:fixed;inset:0;overflow:hidden;background:radial-gradient(52% 42% at 8% 4%,rgba(60,100,170,.20),transparent 64%),radial-gradient(48% 40% at 94% 10%,rgba(92,70,128,.22),transparent 62%),radial-gradient(40% 36% at 78% 78%,rgba(92,70,128,.10),transparent 66%),radial-gradient(60% 44% at 50% 106%,rgba(158,43,62,.16),transparent 66%);z-index:1;box-sizing:border-box}
+#zj{position:fixed;inset:0;overflow:hidden;background:transparent;z-index:1;box-sizing:border-box}
 .tcursor{display:inline-block;color:var(--gold2);animation:blink 1s step-end infinite;margin-left:1px}
 ::selection{background:rgba(158,43,62,.5);color:#f0e8d8}
 ::-webkit-scrollbar{width:8px;height:8px}
@@ -199,18 +199,18 @@ function glInit(){
     rnd.setPixelRatio(LOWFX?1:Math.min(2,window.devicePixelRatio||1)); rnd.setSize(W,H);
     GL.applyLow=function(on){try{rnd.setPixelRatio(on?1:Math.min(2,window.devicePixelRatio||1));rnd.setSize(window.innerWidth,window.innerHeight);}catch(e){}};
     var scene=new T.Scene(); var cam=new T.OrthographicCamera(-1,1,1,-1,0.1,10); cam.position.z=1;
-    var uni={uT:{value:0}};
-    var mat=new T.ShaderMaterial({uniforms:uni,vertexShader:"varying vec2 vUv;varying float vL;uniform float uT;\nvoid main(){\n  vUv=uv;vec3 p=position;\n  float a1=sin(uv.x*6.2+uT*1.5)*0.5+sin(uv.x*11.0-uT*2.2+uv.y*2.0)*0.25;\n  float a2=sin(uv.y*4.5+uT*1.1+uv.x*3.0)*0.3;\n  float amp=0.055+0.03*uv.x;\n  p.z=(a1+a2)*amp;\n  float sl=(cos(uv.x*6.2+uT*1.5)*3.1+cos(uv.x*11.0-uT*2.2+uv.y*2.0)*2.75)*amp;\n  vL=clamp(0.86+sl*1.35,0.6,1.22);\n  gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.0);\n}",fragmentShader:"varying vec2 vUv;varying float vL;\nvoid main(){\n  vec3 c;\n  if(vUv.x<0.33333)c=vec3(0.043,0.290,0.639);\n  else if(vUv.x<0.66667)c=vec3(0.968,0.958,0.930);\n  else c=vec3(0.879,0.230,0.201);\n  float e=smoothstep(0.0,0.012,abs(vUv.x-0.33333))*smoothstep(0.0,0.012,abs(vUv.x-0.66667));\n  c*=mix(0.92,1.0,e);\n  gl_FragColor=vec4(c*vL,1.0);\n}"});
-    var flag=new T.Mesh(new T.PlaneGeometry(2,2,150,100),mat); scene.add(flag);
+    var uni={uT:{value:0},uMute:{value:0}};
+    var mat=new T.ShaderMaterial({uniforms:uni,vertexShader:"varying vec2 vUv;varying float vL;uniform float uT;\nvoid main(){\n  vUv=uv;vec3 p=position;\n  float a1=sin(uv.x*6.2+uT*1.5)*0.5+sin(uv.x*11.0-uT*2.2+uv.y*2.0)*0.25;\n  float a2=sin(uv.y*4.5+uT*1.1+uv.x*3.0)*0.3;\n  float amp=0.055+0.03*uv.x;\n  p.z=(a1+a2)*amp;\n  float sl=(cos(uv.x*6.2+uT*1.5)*3.1+cos(uv.x*11.0-uT*2.2+uv.y*2.0)*2.75)*amp;\n  vL=clamp(0.86+sl*1.35,0.6,1.22);\n  gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.0);\n}",fragmentShader:"varying vec2 vUv;varying float vL;uniform float uMute;\nfloat hash(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}\nvoid main(){\n  vec3 c;\n  if(vUv.x<0.33333)c=vec3(0.263,0.345,0.502);\n  else if(vUv.x<0.66667)c=vec3(0.902,0.874,0.808);\n  else c=vec3(0.604,0.268,0.255);\n  float e=smoothstep(0.0,0.014,abs(vUv.x-0.33333))*smoothstep(0.0,0.014,abs(vUv.x-0.66667));\n  c*=mix(0.93,1.0,e);\n  float n1=hash(floor(vUv*vec2(52.0,34.0)));\n  float n2=hash(floor(vUv*vec2(9.0,6.0))+7.3);\n  c*=0.96+0.045*n1+0.05*n2;\n  c=mix(c,vec3(0.898,0.858,0.760),0.16+0.10*n2);\n  float vg=smoothstep(0.42,0.98,distance(vUv,vec2(0.5,0.52)));\n  c*=1.0-0.20*vg;\n  c=mix(c,vec3(0.914,0.875,0.776),uMute);\n  gl_FragColor=vec4(c*vL,1.0);\n}"});
+    var flag=new T.Mesh(new T.PlaneGeometry(2,2,150,100),mat); flag.rotation.z=-0.045; flag.scale.set(1.22,1.34,1); scene.add(flag);
     GL.done=true;
     window.addEventListener('resize',function(){rnd.setSize(window.innerWidth,window.innerHeight);});
     var t0=Date.now(),glLast=0;
     (function loop(){
       requestAnimationFrame(loop);
       var scr=(typeof S!=='undefined'&&S&&S.screen)?S.screen:'title';
-      if(scr!=='title'){ if(!GL._cleared){try{rnd.clear();}catch(e2){} GL._cleared=true;} return; }
-      GL._cleared=false;
       if(LOWFX){ if(document.hidden)return; var nw9=Date.now(); if(nw9-glLast<33)return; glLast=nw9; }
+      var mt=(scr==='title')?0.0:0.82;
+      uni.uMute.value+=(mt-uni.uMute.value)*0.06;
       uni.uT.value=(Date.now()-t0)/1000;
       rnd.render(scene,cam);
     })();
