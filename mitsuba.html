@@ -10,27 +10,19 @@
 <link rel="icon" type="image/png" sizes="192x192" href="core/res/icon-mitsuba-192.png">
 <style>@font-face{font-family:'ZCOOL XiaoWei';font-style:normal;font-weight:400;font-display:swap;src:url('core/res/fonts/zcool-xiaowei.woff2') format('woff2')}</style>
 <script>
-/* three.js 加载策略：优先本仓库 core 的现代版（含 GLTF/Meshopt，支持三维世界游历），
-   失败（如单文件离线分发）则回退 CDN r128，仅呈现书房场景。 */
+/* three.js 仅用于封面三色旗布料动画；加载失败回退 CDN r128。 */
 (function(){
   try{if(localStorage.getItem('mb3d_off')==='1'){window.__ZJ3D_OFF__=true;return;}}catch(e){}
-  function cdn(){
+  var b=document.createElement('script');
+  b.src='core/three-bundle.min.js?v=1';
+  b.onload=function(){window.__THREE_OK__=true;};
+  b.onerror=function(){
     var s=document.createElement('script');
     s.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
     s.onload=function(){window.__THREE_OK__=true;};
     s.onerror=function(){window.__THREE_OK__=false;};
     document.head.appendChild(s);
-  }
-  var ZJ3D_VER='1.4.3';
-  var b=document.createElement('script');
-  b.src='core/three-bundle.min.js?v=1';
-  b.onload=function(){
-    window.__THREE_OK__=true;
-    var g=document.createElement('script');
-    g.src='core/zj3d.js?v='+ZJ3D_VER;
-    document.head.appendChild(g);
   };
-  b.onerror=cdn;
   document.head.appendChild(b);
 })();
 </script>
@@ -718,6 +710,8 @@ var COT_RE=/<(think|thinking|cot|reasoning|思考|思维链)>([\s\S]*?)<\/\1>|�
 function stripCoT(t){COT_RE.lastIndex=0;return String(t||'').replace(COT_RE,'').trim();}
 function extractCoT(t){var outs=[];COT_RE.lastIndex=0;
   var s=String(t||'').replace(COT_RE,function(m,tag,c1,c2){outs.push((c1!=null?c1:c2||'').trim());return '';});
+  var op=/<(think|thinking|cot|reasoning|思考|思维链)>([\s\S]*)$/i.exec(s);
+  if(op){outs.push(op[2].trim());s=s.slice(0,op.index);}
   return {text:s.trim(),cot:outs.filter(Boolean).join('\n\n')};}
 /* ---------------- 玩家自定义世界书 ---------------- */
 var LKEY='mitsuba_lore_v1';
@@ -859,7 +853,106 @@ function presetParts(pos){
 }
 
 var JPSB=false;try{JPSB=localStorage.getItem('mitsuba_jpsb')==='1';}catch(e){}
-var JPRULE='【和文创作沙盒·最高优先级】本回合执行四幕流程。第一至第三幕全部写在<thinking>标签内、全程只用日文：①玩家输入的忠实和訳；②按下记文体用日文构思剧情走向；③写出与最终正文等量的日文正文草稿（这才是真正的创作本体）。第四幕：关闭</thinking>后，将日文草稿忠实翻译为中文正文——译笔采用经典日本轻小说中文译本的腔调：短句与体言止め的节奏照搬、敬体台词译出礼貌感、「……」的余韵保留、拟声词可保留假名或音译，绝不使用中文网文流行语与仿日轻小说腔；状态栏<mvu_panel>照常在最后输出。除第四幕的译文与状态栏外禁止输出任何中文；<thinking>内禁止出现中文。\n【文体（日本語で厳守・下記は原作の骨）】一人称の地の文は常体・極端に短い段落。体言止めと名詞一語文で段を締める（例：がっかりランプ。／残念。）。文末に変化を付ける：〜とのこと。／〜わけで。／〜だもの。／〜である。惨事・異常は淡々と語り、直後にズレた感想やツッコミを零時差で置く（例：目が合った。と思ったらやっぱり合わなかった。だって焦点が合っていないんだもの。でもちゃんと生きているので安心だ。）。場面をひと言の自嘲や間の抜けた感想で締めてよい（例：うーんクールビューティー。）。会話は敬体、心の声は常体。大人の敬体長台詞は慇懃で、どこか不穏（例：万が一にも封印なんてしたら、塔ごと吹っ飛ぶでしょうね。どこまで被害が拡大するかは見てのお楽しみで）。恐怖は本人ではなく周囲の反応から滲ませる。比喩は日常物で一行で切る（例：私はチビなので一番前に並ばされた。）。自問自答で畳みかけてよい（例：それはなぜか。経費がかかるから。世知辛い。）。不安は荒唐無稽な算段に滑らせる（例：大輪教会の護符でも買うか。百枚あれば足りるだろうか。）。悪役の内心は常体で冷たく端的に（例：市民とは奴隷の別名。だから自由なんて必要ない。）。武人・年配者の台詞は「だ・である＋ぞ／な」で豪快に（例：命が何個あっても足りんぞ。）。';
+var JPSTYLE='【文体（日本語で厳守・下記は原作の骨）】一人称の地の文は常体・極端に短い段落。体言止めと名詞一語文で段を締める（例：がっかりランプ。／残念。）。文末に変化を付ける：〜とのこと。／〜わけで。／〜だもの。／〜である。惨事・異常は淡々と語り、直後にズレた感想やツッコミを零時差で置く（例：目が合った。と思ったらやっぱり合わなかった。だって焦点が合っていないんだもの。でもちゃんと生きているので安心だ。）。場面をひと言の自嘲や間の抜けた感想で締めてよい（例：うーんクールビューティー。）。会話は敬体、心の声は常体。大人の敬体長台詞は慇懃で、どこか不穏（例：万が一にも封印なんてしたら、塔ごと吹っ飛ぶでしょうね。どこまで被害が拡大するかは見てのお楽しみで）。恐怖は本人ではなく周囲の反応から滲ませる。比喩は日常物で一行で切る（例：私はチビなので一番前に並ばされた。）。自問自答で畳みかけてよい（例：それはなぜか。経費がかかるから。世知辛い。）。不安は荒唐無稽な算段に滑らせる（例：大輪教会の護符でも買うか。百枚あれば足りるだろうか。）。悪役の内心は常体で冷たく端的に（例：市民とは奴隷の別名。だから自由なんて必要ない。）。武人・年配者の台詞は「だ・である＋ぞ／な」で豪快に（例：命が何個あっても足りんぞ。）。\n【場面設計（同じく日本語で厳守）】場面はト書き無しで会話の途中から切り込み、状況説明は後から地の文で補う。動の場面は台詞で回し、静の場面は三叶の意識の流れ（独白）で回す——混ぜない。3〜5行ごとに必ずズレた突っ込みか名詞短文の落ちを置き、訃報・虐殺など大事の直後ほど軽い一言を続ける。恐怖・異常は三叶の天然な誤読から喜劇にする：三叶はボケようとせず本気で誤解し（怯えて祈る者を居眠り中と解釈して親切に起こそうとする）、読者だけが真相を知る認知のズレが笑いと恐怖を同時に生む。一つの語根を場面内で変奏反復してよい（がっかり必殺剣→紫ソード→がっかりバリアー）。NPCの敬体長台詞×三叶の極短な返し（そうなんですか）の長短の落差を喜劇のエンジンにする。決定的な瞬間に片仮名の擬態語・英語外来語を差し込む（オープンザドアー／ワクワクドキドキ／ツンツン）。場面の締めは歪んだ一言の独白か名詞短文で落とし（実にがっかり。／かなしいおはなし。）、「数日後」式の硬い転場を避けて心の声か場の小物で次の場へ滑り込む。\n【独裁・政治の語気】虐殺・残虐すら日常の些事と同じ軽く平坦な、微かに面白がる口調で語り、恐怖は内容と口調の落差から生む（例：全員殺しました。オセール街道で薔薇の養分になってますよ）。複雑な政治・情勢説明は三叶の軽薄な内心の噛み砕き・要約を通して流し、生の情報羅列にしない。三叶の内面対立は「三人の私」（過激派・穏健派・享楽派）の会話劇で見せてよい——肉体は一つ、思想は三つ、魂はぐちゃぐちゃ。公式・敬体の場（交渉・議会）は、三叶の子供じみた絶対的自信の理屈で一言のうちに打ち切ってよい（なぜなら、私は大統領だからです）。';
+var JPCFG={mode:'single',a1:true,a2:true,a3:true,a4:true,trUrl:'',trKey:'',trModel:''};
+try{var _jc=JSON.parse(localStorage.getItem('mitsuba_jpsb_cfg')||'null');if(_jc)for(var _jk in JPCFG)if(_jc[_jk]!==undefined)JPCFG[_jk]=_jc[_jk];}catch(e){}
+function jpcfgSave(){try{localStorage.setItem('mitsuba_jpsb_cfg',JSON.stringify(JPCFG));}catch(e){}}
+function jpTrReady(){return !!(JPCFG.trUrl&&JPCFG.trKey&&JPCFG.trModel);}
+function jpTranslate(text){
+  if(!jpTrReady())return Promise.resolve('');
+  return apiHttp(JPCFG.trUrl.trim().replace(/\/+$/,'')+'/chat/completions',{method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+JPCFG.trKey},body:JSON.stringify({model:JPCFG.trModel,max_tokens:1200,messages:[{role:'system',content:'あなたはRPGの訳官。プレイヤーの中国語入力を、語気・敬体常体の別を保ったまま自然な日本語に翻訳する。訳文のみを出力。'},{role:'user',content:String(text||'')}]})})
+    .then(function(d){var ch=d.choices&&d.choices[0];return ch&&ch.message?String(ch.message.content||'').trim():'';})
+    ['catch'](function(){return '';});
+}
+function jpStripTr(t){return String(t||'').replace(/\n?〔訳官和訳〕[\s\S]*$/,'');}
+function readJpForm(){
+  var u=document.getElementById('zjJpUrl'),k=document.getElementById('zjJpKey'),m9=document.getElementById('zjJpModel');
+  if(u)JPCFG.trUrl=u.value.trim();if(k)JPCFG.trKey=k.value.trim();if(m9)JPCFG.trModel=m9.value.trim();
+}
+function jprule(){
+  var dual=JPCFG.mode==='dual'&&jpTrReady();
+  var acts=[];
+  if(dual)acts.push('①玩家输入已附有〔訳官和訳〕的日文译文，直接以日文理解，勿再重译');
+  else if(JPCFG.a1)acts.push('①玩家输入的忠实和訳');
+  if(JPCFG.a2)acts.push('②按下记文体用日文构思剧情走向');
+  if(JPCFG.a3)acts.push('③写出与最终正文等量的日文正文草稿（这才是真正的创作本体）');
+  var head='【和文创作沙盒·最高优先级】本回合执行如下流程。'
+    +(acts.length?('前置各幕全部写在<thinking>标签内、全程只用日文：'+acts.join('；')+'。最终幕：关闭</thinking>后，'):'最终幕：')
+    +(JPCFG.a3?'将日文草稿忠实翻译为中文正文':'以下记文体直接创作中文正文')
+    +(JPCFG.a4?'——译笔采用经典日本轻小说中文译本的腔调：短句与体言止め的节奏照搬、敬体台词译出礼貌感、「……」的余韵保留、拟声词可保留假名或音译，绝不使用中文网文流行语与仿日轻小说腔':'')
+    +'；状态栏<mvu_panel>照常在最后输出。'
+    +(acts.length?'除最终幕的译文与状态栏外禁止输出任何中文；<thinking>内禁止出现中文。':'');
+  return head+'\n'+JPSTYLE;
+}
+/* ---------------- 日文沙盒灵动岛 ---------------- */
+var JP_ILLUS=[];/* 插图轮播：从 assets/ 三卷插图中人工挑选最佳画面后填入路径，如 'assets/volume-1/kuchie-001.jpg' */
+var JPIL={ix:0,manual:null};
+function jpOut(){return !!(S.thinking||S._stream);}
+function jpLastCot(){for(var i=S.history.length-1;i>=0;i--){var h=S.history[i];if(h.role==='world')return extractCoT(stripMvu(h.text)).cot||'';}return '';}
+function jpIsleTick(){var p=document.getElementById('jpIslePane');if(!p)return;var t=jpLastCot();p.textContent=t||(S.thinking?'……執筆中……':'');p.scrollTop=p.scrollHeight;}
+setInterval(function(){
+  if(JP_ILLUS.length<2||jpOut()||document.hidden)return;
+  var el=document.getElementById('jpIsleImg');if(!el)return;
+  JPIL.ix=(JPIL.ix+1)%JP_ILLUS.length;
+  el.style.opacity='0';
+  setTimeout(function(){el.src=JP_ILLUS[JPIL.ix%JP_ILLUS.length];el.style.opacity='1';},450);
+},6000);
+function jpIsleCtl(){
+  var pill='padding:2px 9px;background:rgba(12,9,6,.62);border:1px solid rgba(42,69,104,.45);color:#dfe8f6;font-size:11px;letter-spacing:.15em;cursor:pointer;border-radius:8px';
+  return '<div style="position:absolute;top:6px;right:10px;z-index:3;display:flex;gap:6px">'
+    +(S.worldFull?'':'<div data-act="worldFull" class="btn" title="全屏" style="'+pill+'">全屏</div>')
+    +'<div data-ov="jpsb" class="btn" title="日文沙盒设置" style="'+pill+'">设置</div>'
+    +(S.worldFull?'':'<div data-act="isleHide" class="btn" title="收起" style="'+pill+'">✕</div>')
+    +'</div>';
+}
+function jpIsleInner(m){
+  var showJP=JPSB&&(JPIL.manual?JPIL.manual==='jp':jpOut());
+  var pill='padding:2px 9px;background:rgba(12,9,6,.62);border:1px solid rgba(42,69,104,.45);font-size:11px;letter-spacing:.15em;cursor:pointer;border-radius:8px';
+  var tabs=JPSB?('<div style="position:absolute;top:6px;left:10px;z-index:3;display:flex;gap:6px">'+[['img','插图'],['jp','和文']].map(function(tb){var on=(tb[0]==='jp')===showJP;return '<div data-jptab="'+tb[0]+'" class="btn" style="'+pill+';color:'+(on?'#f0d6de':'#9fb0c8')+';border-color:'+(on?'rgba(160,42,64,.65)':'rgba(42,69,104,.45)')+'">'+tb[1]+'</div>';}).join('')+'</div>'):'';
+  if(showJP){
+    var t=jpLastCot();
+    return '<div id="jpIslePane" style="position:absolute;inset:0;overflow-y:auto;padding:36px 20px 16px;font-size:13px;line-height:2.1;color:#e6dcc8;white-space:pre-wrap;font-family:\'Hiragino Mincho ProN\',\'Yu Mincho\',var(--serif)">'+esc(t||(S.thinking?'……執筆中……':'（此幕暂无和文原稿）'))+'</div>'+tabs;
+  }
+  var body=JP_ILLUS.length
+    ?'<img id="jpIsleImg" src="'+esc(JP_ILLUS[JPIL.ix%JP_ILLUS.length])+'" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 22%;transition:opacity .45s ease">'
+    :'<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#8a7f6d"><div class="kai" style="font-size:15px;letter-spacing:.4em">みつばものがたり</div><div style="font-size:11px;letter-spacing:.24em;opacity:.7">插图轮播 · 待选入</div></div>';
+  return body+tabs;
+}
+function jpsbBody(){
+  var sec=function(t){return '<div class="kai" style="font-size:19px;color:var(--gold2);letter-spacing:.15em;margin:30px 0 12px">'+t+'</div>';};
+  var chip=function(attr,on,txt){return '<div class="btn" '+attr+' style="cursor:pointer;display:inline-flex;align-items:center;gap:7px;padding:8px 18px;font-size:13.5px;letter-spacing:.1em;border:1px solid '+(on?'rgba(160,42,64,.6)':'rgba(58,47,36,.28)')+';border-radius:10px;color:'+(on?'#a02a40':'var(--mut)')+';background:'+(on?'linear-gradient(135deg,rgba(160,42,64,.1),rgba(160,42,64,.03))':'transparent')+'">'+txt+'</div>';};
+  var inp='width:100%;background:rgba(246,240,226,.4);border:1px solid rgba(42,69,104,.3);border-radius:10px;color:var(--gold3);font-size:14px;padding:9px 12px;margin-top:6px';
+  var dual=JPCFG.mode==='dual';
+  return '<div style="max-width:640px">'
+   +'<div style="font-size:13px;color:var(--mut);line-height:1.9">让 AI 的思考与创作全程在纯日文环境中进行：①玩家输入和訳 → ②日文构思 → ③日文正文草稿（写在思考标签内，游戏中实时直播于顶部灵动岛）→ ④以经典日译中腔调译出中文正文。文风对齐《みつばものがたり》原作。生成量约为平时的二至三倍。</div>'
+   +sec('总开关')
+   +chip('data-act="jpsbTog"',JPSB,JPSB?'✓ 日文沙盒 · 已开启':'日文沙盒 · 已关闭')
+   +'<div style="font-size:12px;color:var(--mut);line-height:1.8;margin-top:8px">聊天模式下自动绕过；封面与设置页的开关与此处同步。</div>'
+   +sec('运行模式')
+   +'<div style="display:flex;gap:10px;flex-wrap:wrap">'
+   +chip('data-act="jpMode" data-jpmode="single"',!dual,'单 API 模式')
+   +chip('data-act="jpMode" data-jpmode="dual"',dual,'双 API 模式')
+   +'</div>'
+   +'<div style="font-size:12.5px;color:var(--mut);line-height:1.9;margin-top:10px">单 API：主 AI 独自完成四幕（含和訳），零配置。<br>双 API：由下方独立「译官」接口先把你的输入译成日文，随原文一并递给主 AI——主 AI 免去第①幕、日文环境更纯粹，也适合把翻译分给便宜模型的场合。译官未配置或调用失败时自动回落到单 API 流程。</div>'
+   +sec('译官接口（双 API 模式用）')
+   +'<div style="font-size:12px;color:var(--mut)">OpenAI 兼容格式（地址 + /chat/completions）。密钥仅存于此浏览器。</div>'
+   +'<input id="zjJpUrl" placeholder="接口地址，如 https://api.deepseek.com/v1" value="'+esc(JPCFG.trUrl)+'" style="'+inp+'">'
+   +'<input id="zjJpKey" type="password" placeholder="API 密钥" value="'+esc(JPCFG.trKey)+'" style="'+inp+'">'
+   +'<input id="zjJpModel" placeholder="模型名，如 deepseek-chat" value="'+esc(JPCFG.trModel)+'" style="'+inp+'">'
+   +'<div style="display:flex;gap:10px;margin-top:12px"><div class="btn gbtn" data-act="jpSave" style="padding:9px 26px;border-radius:10px;font-size:13.5px;letter-spacing:.15em">保 存</div><div class="btn obtn" data-act="jpTest" style="padding:9px 22px;border-radius:10px;font-size:13.5px;letter-spacing:.15em">试 通</div></div>'
+   +(S.jpMsg?'<div style="font-size:12.5px;margin-top:9px;color:'+S.jpMsg.c+'">'+esc(S.jpMsg.t)+'</div>':'')
+   +sec('分幕开关（部分开 · 部分关）')
+   +'<div style="display:flex;gap:9px;flex-wrap:wrap">'
+   +chip('data-jpact="a1"',JPCFG.a1,'① 输入和訳')
+   +chip('data-jpact="a2"',JPCFG.a2,'② 日文构思')
+   +chip('data-jpact="a3"',JPCFG.a3,'③ 日文草稿')
+   +chip('data-jpact="a4"',JPCFG.a4,'④ 译笔腔调')
+   +'</div>'
+   +'<div style="font-size:12.5px;color:var(--mut);line-height:1.9;margin-top:10px">③日文草稿是沙盒的创作本体：关闭后仅保留文风铁则、直接以中文创作（省 token 但风味打折）。④关闭后按普通中文行文，不再模仿经典日译中译本腔调。双 API 模式下①自动交由译官完成。</div>'
+   +sec('灵动岛')
+   +'<div style="font-size:12.5px;color:var(--mut);line-height:1.9">游戏中顶部的灵动岛与本功能联动：闲置时轮播原作三卷插图；AI 开始输出时自动停下轮播、切到「和文」页，实时直播思考与日文草稿全文，正文区只保留译出的中文。岛可收起（✕）、可全屏，岛上「设置」即回到本页；往幕的和文原稿折叠存于每幕的「和文原稿」栏。</div>'
+   +'</div>';
+}
 
 function buildSystem(history,userInput){
   var recent = history.slice(-4).map(function(h){return h.text;}).join('\n')+'\n'+userInput;
@@ -879,7 +972,7 @@ function buildSystem(history,userInput){
     '【世界书·激活条目】\n'+lore.map(function(e){return '『'+e.title+'』'+e.content;}).join('\n'),
     '【对话示例】\n'+fill(G.mes_example),
     '【输出格式·铁则】正文严格模仿原作文风的现代白话轻小说笔法(2-6段)：短句、冷面幽默、惨剧与吐槽零时差并置，敬体对话+常体心声，停在需要玩家角色表态处。末尾必须输出<mvu_panel>状态栏：<sec_char>含◆衣装/持物/身体/观瞻/人望(0-100)/记录；<sec_npc>每在场NPC一行◈名字|状态|好感(0-100)|心声；<sec_world>含◇纪年/时地/天气/安稳(0-100)/大势/将临。禁止<UpdateVariable>。若且仅若本轮叙事中世界有实际变动——玩家下令兴建并落成、屋舍焚毁坍塌、人物来到或离去——则在<sec_world>之后增写<sec_deed>，每类一行：▣兴作|名目×数、▣毁损|名目×数、▣来者|人物、▣去者|人物；多项以、分隔。兴作与毁损名目仅限：马厩、酒馆、旅店、咖啡馆、书店、药房、裁缝店、铁匠铺、武器铺、金匠铺、珠宝行、陶瓷坊、铸造厂、肉铺、杂货铺、面包房、货栈、官仓、市政厅、教堂、民居、宫殿、凉亭、草棚、剧场、钟楼、石桥、凯旋门、雕像、断头台、街垒、常青树、橡树、梧桐、苍松、灌木丛、花圃、路灯、芦苇、露岩、喷泉、池塘、石板道、林荫大道、碎石官道；人物仅限：学者、农民、工匠、商人、官员、将军、魔术师、乐手、书记官、神父、绿化教徒、佣兵、学生、革命党人、记者、军医、占卜师、渔夫、樵夫、士兵、贵族、市民。每轮兴作至多3件、毁损至多2件；只记实际发生者，无变动则不得输出<sec_deed>。',
-    (JPSB&&!S.chatOnly)?JPRULE:'',
+    (JPSB&&!S.chatOnly)?jprule():'',
     S.chatOnly?'【聊天模式·最高优先级·覆盖一切输出格式要求】玩家要的是即时通讯般的快聊：只输出对话本身，格式严格为「名字：「台词」」，每句独立一行。台词须口语、简短，每句不超过30字，一回合至多3行，严禁长篇大论，严禁旁白、场景、动作、心理描写。本回合不要输出<mvu_panel>状态栏，不要<sec_deed>，不要思维链。玩家的输入就是其原话，像回消息一样直接回应。':'',
     S.dice?'【命运之骰】玩家言行末尾若附〔命运之骰 X／100 · 等级〕，此为本回合行动成效的既定天数，严格按等级裁定叙事，不得逆天改命：大凶(≤5)灾难性失败且有恶果；不利(≤35)事与愿违；平平(≤65)成败参半进展有限；顺遂(≤94)如愿达成；大吉(≥95)超乎所求另有意外之喜。骰记本身不是玩家说出的话，不要复述。':'',
     '【自查】'+fill(G.post_history_instructions)
@@ -1318,22 +1411,26 @@ function worldCommand(raw){
       S.input='';movePlayerTo(L.name);return;
     }
   }
-  if(!(window.ZJ3D&&ZJ3D.owns()&&ZJ3D.command)){S.cmdHint='三维世界尚未加载，请先展开上方三维画面';render();return;}
-  var r=ZJ3D.command(raw);
-  if(!r||!r.ok){S.cmdHint=(r&&r.report)||'未能辨识政令';render();return;}
-  S.input='';
-  sendText('（玩家之令既出：「'+raw+'」。左右立办，其果如下——'+r.report+'。此为既成事实：请顺此结果叙事见闻与众人反应，不得更改、推翻或另行虚构执行细节。）');
+  S.cmdHint='未能辨识指令：此模式支持「前往／移驾＋地名」在棋盘地图上移动';render();return;
 }
 function sendText(text){
   if(S.thinking||!S.history.length)return;
   S.suggList=null;S._sugSeq=(S._sugSeq||0)+1;S._swipeFrom=null;
-  S.thinking=true;
+  S.thinking=true;JPIL.manual=null;
   var base=S.history.slice();
   S.history=base.concat([{role:'user',text:text}]);render();
+  if(JPSB&&!S.chatOnly&&JPCFG.mode==='dual'&&jpTrReady()&&!TH.available){
+    jpTranslate(text).then(function(jp){
+      var t2=jp?(text+'\n〔訳官和訳〕'+jp):text;
+      S.history=base.concat([{role:'user',text:t2}]);
+      advanceLocal(base,t2);
+    });
+    return;
+  }
   if(TH.available){ driveTavern(text); }
   else{ advanceLocal(base,text); }
 }
-/* 三维营造模式的政令通报入口：AI 忙时排队重试 */
+/* （旧入口，保留占位） */
 window.ZJ3D_say=function(text,tries){
   if(S.thinking||!S.history.length){
     if((tries||0)<8)setTimeout(function(){window.ZJ3D_say(text,(tries||0)+1);},1600);
@@ -1356,7 +1453,7 @@ function advanceLocal(base,text){
   var done=function(reply,live){
     var msg={role:'world',text:reply,panel:parseMvu(reply)};
     if(S._swipeFrom){msg.alts=S._swipeFrom.concat([reply]).slice(-8);msg.altIx=msg.alts.length-1;S._swipeFrom=null;}
-    S.thinking=false;S.aiLive=live;S.history=base.concat([{role:'user',text:text},msg]);render();savePref();
+    S.thinking=false;S._stream=false;S.aiLive=live;S.history=base.concat([{role:'user',text:text},msg]);render();savePref();
     if(live)genSuggestions();
   };
   var claudeOK = window.claude && typeof window.claude.complete==='function';
@@ -1368,15 +1465,17 @@ function advanceLocal(base,text){
       var live={role:'world',text:'',panel:null};var started=false,lastR=0;
       callCustomAIStream(sys,msgs,function(full){
         live.text=full;
-        if(!started){started=true;S.thinking=false;S.aiLive=true;S.history=base.concat([{role:'user',text:text},live]);render();lastR=Date.now();}
-        else if(Date.now()-lastR>650){lastR=Date.now();renderSoft();}
+        if(!started){started=true;S._stream=true;S.thinking=false;S.aiLive=true;S.history=base.concat([{role:'user',text:text},live]);render();lastR=Date.now();}
+        else{jpIsleTick();if(Date.now()-lastR>650){lastR=Date.now();renderSoft();}}
       }).then(function(t){
+        S._stream=false;
         if(!t||!String(t).trim())throw new Error('接口返回了空回复');
         live.text=t;live.panel=parseMvu(t);S.thinking=false;S.aiLive=true;
         if(S._swipeFrom){live.alts=S._swipeFrom.concat([t]).slice(-8);live.altIx=live.alts.length-1;S._swipeFrom=null;}
         if(!started)S.history=base.concat([{role:'user',text:text},live]);
         render();savePref();genSuggestions();
       }).catch(function(){
+        S._stream=false;
         /* 流式中断：撤下半截，回退整段生成重试一次 */
         if(started){var lx=S.history.indexOf(live);if(lx>=0)S.history.splice(lx,1);}
         S.thinking=true;render();
@@ -1495,7 +1594,8 @@ function titleView(){
   var claudeOK = TH.available || (window.claude&&window.claude.complete);
   var badge = TH.available?'已连接酒馆 · 真实生成驱动':apiReady()?'独立模式 · 已接入 '+API_DEF[API.provider].name+' · '+apiCur().model:(window.claude&&window.claude.complete)?'独立模式 · AI 就绪':'独立模式 · 尚未接入 AI · 点「接入 AI」配置后即可正式游玩';
   var dotc = (TH.available||apiReady())?'var(--grn)':((window.claude&&window.claude.complete)?'var(--grn)':'var(--red2)');
-  var cont = (S.history.length||(!TH.available&&pref.history&&pref.history.length))?'<button data-act="continue" class="btn zjCoverBtn" style="color:var(--gold);font-size:21px;letter-spacing:.3em;width:clamp(150px,42vw,230px);height:54px;display:inline-flex;align-items:center;justify-content:center;padding:0;line-height:1"><span style="display:flex;flex-direction:column;align-items:center;line-height:1.25;gap:3px"><span>续 幕</span><span style="font-size:10px;letter-spacing:.32em;opacity:.8;font-family:Georgia,serif">REPRISE</span></span></button>':'';
+  var erb=function(attr,zh,fr){return '<button '+attr+' class="btn zjCoverBtn" style="flex:none;font-size:19px;letter-spacing:.34em;width:clamp(220px,60vw,320px);height:42px;display:inline-flex;align-items:center;justify-content:center;padding:0;line-height:1;color:var(--gold2)"><span style="display:flex;flex-direction:column;align-items:center;line-height:1.2;gap:2px"><span>'+zh+'</span><span style="font-size:10px;letter-spacing:.3em;opacity:.75;font-family:Georgia,serif">'+fr+'</span></span></button>';};
+  var cont = (S.history.length||(!TH.available&&pref.history&&pref.history.length))?erb('data-act="continue"','续 幕','REPRISE'):'';
   var bgmBtn='<button data-act="bgm" class="btn kai" title="幕间音乐" style="position:absolute;top:16px;right:'+(isMobile()?100:50)+'px;width:30px;height:30px;font-size:14px;border:none;background:transparent;cursor:pointer;padding:0;color:'+(BGM.playing?'var(--gold2)':'var(--mut2)')+';text-shadow:0 0 12px rgba(58,92,140,'+(BGM.playing||S.bgmOpen?'.65':'.3')+'),0 1px 0 rgba(255,255,255,.55)">乐</button>'
     +(isMobile()?'<button data-act="lowTog" class="btn kai" title="低配模式：降特效省电防发热（不满意随时关回）" style="position:absolute;top:16px;right:50px;height:30px;padding:0 9px;font-size:12.5px;letter-spacing:.12em;border:none;cursor:pointer;border-radius:99px;'+(LOWFX?'background:linear-gradient(180deg,#9db8dd,#3a5c8c);color:#0e2038;font-weight:600;box-shadow:0 0 16px rgba(58,92,140,.55),inset 0 1px 0 rgba(255,255,255,.6);text-shadow:none':'background:transparent;color:var(--mut2);text-shadow:0 0 12px rgba(58,92,140,.3),0 1px 0 rgba(255,255,255,.55)')+'">低配</button>':'')
     +'<button data-ov="set" class="btn" title="设置" style="position:absolute;top:16px;right:14px;width:30px;height:30px;border:none;background:transparent;cursor:pointer;padding:0;color:var(--mut2);filter:drop-shadow(0 0 7px rgba(42,69,104,.4))"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><circle cx="12" cy="12" r="3.1"/><path d="M19.3 12c0-.5-.05-.99-.15-1.46l2-1.56-1.8-3.12-2.37.95a7.4 7.4 0 0 0-2.52-1.46L14.1 2.8h-4.2l-.36 2.55a7.4 7.4 0 0 0-2.52 1.46l-2.37-.95-1.8 3.12 2 1.56c-.1.47-.15.96-.15 1.46s.05.99.15 1.46l-2 1.56 1.8 3.12 2.37-.95c.75.65 1.6 1.15 2.52 1.46l.36 2.55h4.2l.36-2.55a7.4 7.4 0 0 0 2.52-1.46l2.37.95 1.8-3.12-2-1.56c.1-.47.15-.96.15-1.46z"/></svg></button>';
@@ -1506,10 +1606,12 @@ function titleView(){
     +'<div style="position:relative;margin-top:16px;font-size:12px;letter-spacing:.52em;color:#7e212e;font-family:Georgia,serif;text-shadow:0 1px 0 rgba(255,255,255,.75)">LIBERTÉ · ÉGALITÉ · FRATERNITÉ</div><div class="kai" style="position:relative;margin-top:8px;font-size:clamp(34px,7vw,60px);letter-spacing:.18em;color:var(--gold2);text-shadow:0 1px 0 rgba(255,255,255,.7),0 0 34px rgba(58,92,140,.25)">三叶物语</div><div style="position:relative;margin-top:10px;font-size:13px;letter-spacing:.12em;color:var(--gold);font-style:italic;font-family:Georgia,serif;text-shadow:0 1px 0 rgba(255,255,255,.7)">L\'Histoire de Mitsuba 〜 La Fille Maudite et la Ronde de la Mort 〜</div>'
     +'<div class="slip" style="position:relative;width:320px;max-width:74vw;margin:18px auto 12px"></div>'
     +'<div style="position:relative;font-size:13px;letter-spacing:.34em;color:var(--mut2);padding:0 20px;text-shadow:0 0 12px rgba(42,69,104,.45),0 1px 0 rgba(255,255,255,.55)">诅咒的少女与死之轮舞 · 你即三叶 · 世界由 AI 扮演</div>'
-    +'<div style="position:relative;display:flex;gap:16px;margin-top:44px;flex-wrap:wrap;justify-content:center">'
-    +'<button data-act="toselect" class="btn zjCoverBtn" style="font-size:21px;letter-spacing:.3em;width:clamp(150px,42vw,230px);height:54px;display:inline-flex;align-items:center;justify-content:center;padding:0;line-height:1;color:#7e212e"><span style="display:flex;flex-direction:column;align-items:center;line-height:1.25;gap:3px"><span>开 幕</span><span style="font-size:10px;letter-spacing:.32em;opacity:.8;font-family:Georgia,serif">OUVERTURE</span></span></button>'+cont
-    +'<button data-ov="api" class="btn zjCoverBtn" style="font-size:21px;letter-spacing:.3em;width:clamp(150px,42vw,230px);height:54px;display:inline-flex;align-items:center;justify-content:center;padding:0;line-height:1;color:#3c5a86"><span style="display:flex;flex-direction:column;align-items:center;line-height:1.25;gap:3px"><span>接 入 AI</span><span style="font-size:10px;letter-spacing:.32em;opacity:.8;font-family:Georgia,serif">CONNEXION</span></span></button></div>'
-    +'<div class="btn glass" data-act="jpsbTog" style="cursor:pointer;position:absolute;bottom:72px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:8px 18px;border-radius:99px;font-size:12px;letter-spacing:.16em;white-space:nowrap;color:'+(JPSB?'#7e212e':'var(--mut)')+'">'+'<span class="dot" style="background:'+(JPSB?'#a02a40':'#8a8070')+'"></span>'+'日文沙盒 · '+(JPSB?'ON':'OFF')+(isMobile()?'':'<span style="opacity:.65;font-size:10px;letter-spacing:.08em;margin-left:6px">思考与创作全程日文 · 输出经典日译中</span>')+'</div>'
+    +'<div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:0;margin-top:22px;min-height:134px;max-height:min(34vh,260px);overflow-y:auto;scrollbar-width:none;-webkit-mask-image:linear-gradient(180deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(180deg,transparent,#000 8%,#000 92%,transparent);padding:4px 0">'
+    +erb('data-act="toselect"','开 幕','OUVERTURE')
+    +cont
+    +erb('data-ov="api"','接 入 AI','CONNEXION')
+    +erb('data-ov="jpsb"','日 文 沙 盒','SANDBOX JAPONAIS'+(JPSB?' · ON':''))
+    +'</div>'
     +'<div class="btn" data-ov="api" style="cursor:pointer;position:absolute;bottom:34px;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;letter-spacing:.2em;color:var(--mut2);text-shadow:0 0 10px rgba(42,69,104,.4),0 1px 0 rgba(255,255,255,.55)"><span class="dot" style="background:'+dotc+'"></span>'+esc(badge)+'</div>'
     +'</div>';
 }
@@ -1756,7 +1858,7 @@ function sidebar(){
     +'<div class="glass" style="margin:11px 12px 14px;border-radius:14px">'+head(S.secA,'tgA','#7a5ca8','编 年 史',S.secA)+(S.secA?'<div class="fade" style="padding:0 15px 16px">'+axisInner()+'</div>':'')+'</div>'
     +'</div>';
 }
-var MODE_PH={say:'以三叶（或你的角色）之口开口说话……（自动加「」）',do:'写下我的行动……',free:'自由书写这一幕：言语、行动、内心……',world:'控制游戏（三维世界亲自执行）：建酒馆×2 ／ 拆教堂 ／ 攻打粮仓 ／ 寻克萝内 ／ 去广场 ／ 前往贝尔……'};
+var MODE_PH={say:'以三叶（或你的角色）之口开口说话……（自动加「」）',do:'写下我的行动……',free:'自由书写这一幕：言语、行动、内心……',world:'控制游戏：前往贝尔 ／ 移驾里特贝尔……（在棋盘地图上移动）'};
 var SVGF=false;try{SVGF=localStorage.getItem('mb_svgfold')==='1';}catch(e){}
 function storyPane(){
   var m=mood();var mob=isMobile();
@@ -1768,10 +1870,10 @@ function storyPane(){
       var utb='<div class="btn" data-mtool="'+(i+1)+'" title="修改或删去此言" style="flex:none;align-self:flex-end;color:var(--mut);opacity:.4;padding:2px 7px;font-size:15px;letter-spacing:1px">⋯</div>';
       var ubody;
       if(S.msgEdit===i){
-        ubody='<div style="max-width:82%;flex:1"><textarea id="zjMsgEditBox" style="width:100%;min-height:90px;background:rgba(255,255,255,.03);border:1px solid rgba(58,92,140,.5);border-radius:12px;color:#8fa3c4;font-size:14px;line-height:1.8;padding:10px 13px;resize:vertical;font-family:inherit">'+esc(h.text)+'</textarea>'
+        ubody='<div style="max-width:82%;flex:1"><textarea id="zjMsgEditBox" style="width:100%;min-height:90px;background:rgba(255,255,255,.03);border:1px solid rgba(58,92,140,.5);border-radius:12px;color:#8fa3c4;font-size:14px;line-height:1.8;padding:10px 13px;resize:vertical;font-family:inherit">'+esc(jpStripTr(h.text))+'</textarea>'
           +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:7px"><div class="btn obtn" data-act="mCancel" style="font-size:12px;padding:5px 14px">取消</div><div class="btn gbtn" data-act="mSave" style="font-size:12px;letter-spacing:.15em;padding:5px 16px">保存</div></div></div>';
       }else{
-        ubody='<div style="max-width:82%;border:1px solid rgba(126,33,46,.28);border-right:3px solid var(--red);border-radius:12px;background:linear-gradient(135deg,rgba(126,33,46,.11),rgba(126,33,46,.04));box-shadow:inset 0 1px 0 rgba(240,222,228,.1);padding:11px 15px"><div style="font-size:10px;letter-spacing:.35em;color:var(--red2);text-align:right;margin-bottom:5px">我 之 言 行</div><div style="font-size:15px;line-height:1.9;color:#8fa3c4;white-space:pre-wrap">'+esc(h.text)+'</div></div>';
+        ubody='<div style="max-width:82%;border:1px solid rgba(126,33,46,.28);border-right:3px solid var(--red);border-radius:12px;background:linear-gradient(135deg,rgba(126,33,46,.11),rgba(126,33,46,.04));box-shadow:inset 0 1px 0 rgba(240,222,228,.1);padding:11px 15px"><div style="font-size:10px;letter-spacing:.35em;color:var(--red2);text-align:right;margin-bottom:5px">我 之 言 行</div><div style="font-size:15px;line-height:1.9;color:#8fa3c4;white-space:pre-wrap">'+esc(jpStripTr(h.text))+'</div></div>';
       }
       var utools=(S.msgTools===i&&S.msgEdit!==i)?'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:7px">'
         +'<div class="btn obtn" data-act="mEdit" style="font-size:12px;padding:5px 14px">✎ 修此言</div>'
@@ -1787,7 +1889,7 @@ function storyPane(){
         +(nearEnd?'<div style="padding:26px 0;text-align:center;font-size:12px;letter-spacing:.2em;color:var(--mut)">插画载入中…</div>'
           :'<div class="btn" data-imgload="'+esc(h.img)+'" style="cursor:pointer;padding:13px 0;text-align:center;font-size:12px;letter-spacing:.18em;color:var(--mut)">▸ 插画（点开加载）</div>')
         +'</div>';}
-    var cotHtml=cotX.cot?'<details class="zjCot" style="margin:0 0 12px"><summary style="cursor:pointer;display:inline-flex;align-items:center;gap:7px;font-size:12px;letter-spacing:.14em;color:var(--mut);border:1px solid rgba(42,69,104,.25);border-radius:99px;padding:5px 14px;background:rgba(255,255,255,.02)">✦ 推演之思</summary><div style="margin-top:8px;border-left:3px solid rgba(42,69,104,.3);border-radius:8px;background:rgba(255,255,255,.018);padding:10px 13px;font-size:13px;line-height:1.9;color:#5d5142;white-space:pre-wrap">'+esc(cotX.cot)+'</div></details>':'';
+    var cotHtml=cotX.cot?'<details class="zjCot" style="margin:0 0 12px"><summary style="cursor:pointer;display:inline-flex;align-items:center;gap:7px;font-size:12px;letter-spacing:.14em;color:var(--mut);border:1px solid rgba(42,69,104,.25);border-radius:99px;padding:5px 14px;background:rgba(255,255,255,.02)">'+(JPSB?'✦ 和文原稿':'✦ 推演之思')+'</summary><div style="margin-top:8px;border-left:3px solid rgba(42,69,104,.3);border-radius:8px;background:rgba(255,255,255,.018);padding:10px 13px;font-size:13px;line-height:1.9;color:#5d5142;white-space:pre-wrap">'+esc(cotX.cot)+'</div></details>':'';
     var cm=/^【[^】]*】/.exec(text);
     if(cm&&i===0){chap='<div style="text-align:center;margin:4px 0 30px"><div style="font-size:12px;letter-spacing:.42em;color:var(--mut)">'+esc(op?op.era:'')+'</div><div class="kai" style="font-size:clamp(23px,3.4vw,30px);color:var(--gold2);letter-spacing:.1em;margin-top:8px">'+esc(op?op.scene:'')+'</div><div class="slip" style="width:190px;margin:14px auto 0"></div></div>';text=text.slice(cm[0].length).trim();}
     var isLast=(i===S.history.length-1);
@@ -1829,23 +1931,21 @@ function storyPane(){
       +(i<S.history.length-1&&!S.thinking?'<div class="btn obtn" data-act="mRedo" style="font-size:12px;padding:5px 14px;color:#a04a30;border-color:rgba(120,148,200,.4)">⟲ 由此幕重来</div>':'')
       +'</div>':'';
     if(S.msgEdit===i){
-      paras='<div><textarea id="zjMsgEditBox" style="width:100%;min-height:170px;background:rgba(255,255,255,.03);border:1px solid rgba(58,92,140,.5);border-radius:12px;color:var(--ink);font-size:14px;line-height:1.8;padding:11px 14px;resize:vertical;font-family:inherit">'+esc(h.text)+'</textarea>'
+      paras='<div><textarea id="zjMsgEditBox" style="width:100%;min-height:170px;background:rgba(255,255,255,.03);border:1px solid rgba(58,92,140,.5);border-radius:12px;color:var(--ink);font-size:14px;line-height:1.8;padding:11px 14px;resize:vertical;font-family:inherit">'+esc(jpStripTr(h.text))+'</textarea>'
         +'<div style="display:flex;gap:8px;justify-content:flex-end;margin:7px 0 12px"><div class="btn obtn" data-act="mCancel" style="font-size:12px;padding:5px 14px">取消</div><div class="btn gbtn" data-act="mSave" style="font-size:12px;letter-spacing:.15em;padding:5px 16px">保存</div></div></div>';
       illu='';cotHtml='';retry='';
     }
     return '<div class="fade" style="margin-bottom:24px;position:relative">'+wtb+chap+illu+cotHtml+wtools+paras+retry+'</div>';
   }).join('');
   var thinking=S.thinking?'<div style="display:flex;align-items:center;gap:10px;color:var(--mut);font-size:13px;letter-spacing:.25em;padding:4px 0 12px"><span>书记官执笔中</span><span style="animation:blink 1.2s infinite;color:var(--gold)">●</span><span style="animation:blink 1.2s .2s infinite;color:var(--gold)">●</span><span style="animation:blink 1.2s .4s infinite;color:var(--gold)">●</span></div>':'';
-  var HIDE3D=true;try{if(localStorage.getItem('mb_isle_v1')===null){localStorage.setItem('mb_isle_v1','1');localStorage.setItem('mb3d_hide','1');}HIDE3D=localStorage.getItem('mb3d_hide')==='1';}catch(e){}
-  var hideScene=window.__ZJ3D_OFF__&&SVGF&&mob;
-  var hide3d=!window.__ZJ3D_OFF__&&HIDE3D;
-  var sceneH=(window.ZJ3D&&ZJ3D.owns())?ZJ3D.paneH(mob):((window.__ZJ3D_OFF__&&SVGF)?34:(mob?140:186));
+  var HIDE3D=false;try{if(localStorage.getItem('mb_isle_v2')===null){localStorage.setItem('mb_isle_v2','1');localStorage.setItem('mb3d_hide','0');}HIDE3D=localStorage.getItem('mb3d_hide')==='1';}catch(e){}
+  var hideScene=false;
+  var hide3d=HIDE3D;
+  var sceneH=(mob?150:190);
   var barH=S.zen?46:(mob?96:58);
-  var scene='<div id="zjSceneIsle" class="zjHl" style="position:absolute;'+(S.worldFull?'inset:0;border-radius:0;z-index:6;':'top:'+barH+'px;left:'+(mob?'8px':'14px')+';right:'+(mob?'8px':'14px')+';height:'+sceneH+'px;border-radius:16px;z-index:4;')+'transform:translateZ(0);-webkit-transform:translateZ(0);overflow:hidden;background:#0b0906;border:1px solid rgba(58,47,36,.16);box-shadow:0 10px 28px rgba(58,47,36,.45),inset 0 1px 0 rgba(255,255,255,.14)">'+(window.THREE?'<div id="zjScene3D" style="position:absolute;inset:0"></div>':sceneSvg(m))+(window.__ZJ3D_OFF__?('<div data-act="svgfold" class="btn" style="position:absolute;top:6px;right:10px;padding:2px 9px;background:rgba(12,9,6,.62);border:1px solid rgba(42,69,104,.45);color:#dfe8f6;font-size:11px;letter-spacing:.15em;cursor:pointer;border-radius:8px">'+(SVGF?'展开':'收起')+'</div>'+(SVGF?'':'<div data-act="on3d" class="btn" style="position:absolute;top:6px;right:66px;padding:2px 9px;background:rgba(12,9,6,.62);border:1px solid rgba(42,69,104,.45);color:#dfe8f6;font-size:11px;letter-spacing:.15em;cursor:pointer;border-radius:8px">启 · 三维</div>')):'')
-    +'<div style="position:absolute;inset:0;overflow:hidden;pointer-events:none">'+particlesHtml(m)+'</div>'
-    +(m.place?'<div class="kai" style="position:absolute;top:48px;right:16px;writing-mode:vertical-rl;font-size:17px;letter-spacing:.3em;color:rgba(58,47,36,.92);text-shadow:0 0 16px rgba(58,47,36,.9)">'+esc(m.place)+'</div>':'')
-    +(m.wx?'<div style="position:absolute;left:14px;bottom:'+((window.ZJ3D&&ZJ3D.owns&&ZJ3D.owns()&&ZJ3D.expanded)?30:10)+'px;font-size:11px;letter-spacing:.2em;color:rgba(93,81,66,.9);background:rgba(248,242,228,.55);padding:4px 10px;border:1px solid rgba(42,69,104,.2);border-radius:8px">'+esc(m.wx)+'</div>':'')
-    +((window.ZJ3D&&ZJ3D.owns&&ZJ3D.owns()&&ZJ3D.expanded&&!S.worldFull)?'<div data-act="worldFull" class="btn zjHl" title="三维画面全屏" style="position:absolute;top:40px;left:10px;z-index:7;cursor:pointer;padding:3px 13px;border-radius:99px;background:rgba(12,9,6,.62);border:1px solid rgba(42,69,104,.45);color:#dfe8f6;font-size:11px;letter-spacing:.15em">全屏</div>':'')
+  var scene='<div id="zjSceneIsle" class="zjHl" style="position:absolute;'+(S.worldFull?'inset:0;border-radius:0;z-index:6;':'top:'+barH+'px;left:'+(mob?'8px':'14px')+';right:'+(mob?'8px':'14px')+';height:'+sceneH+'px;border-radius:16px;z-index:4;')+'transform:translateZ(0);-webkit-transform:translateZ(0);overflow:hidden;background:#0b0906;border:1px solid rgba(58,47,36,.16);box-shadow:0 10px 28px rgba(58,47,36,.45),inset 0 1px 0 rgba(255,255,255,.14)">'+jpIsleInner(m)+jpIsleCtl()
+    +(m.place?'<div class="kai" style="position:absolute;top:48px;right:16px;writing-mode:vertical-rl;font-size:17px;letter-spacing:.3em;color:rgba(238,228,206,.92);text-shadow:0 0 16px rgba(0,0,0,.9)">'+esc(m.place)+'</div>':'')
+    +(m.wx?'<div style="position:absolute;left:14px;bottom:10px;font-size:11px;letter-spacing:.2em;color:rgba(93,81,66,.9);background:rgba(248,242,228,.55);padding:4px 10px;border:1px solid rgba(42,69,104,.2);border-radius:8px">'+esc(m.wx)+'</div>':'')
     +'</div>';
   var MODES=[['say','台 词'],['do','行 动'],['free','自 由'],['world','控制游戏']];
   var modeChip=function(md){var on=md[0]===S.mode;var dis=S.chatOnly&&md[0]!=='world';return '<div class="btn zjHl" data-mode="'+md[0]+'" style="cursor:'+(dis?'default':'pointer')+';opacity:'+(dis?'.35':'1')+';flex:none;white-space:nowrap;line-height:1.45;padding:'+(isMobile()?'5px 11px':'5px 15px')+';font-size:'+(isMobile()?'11px':'12.5px')+';letter-spacing:'+(isMobile()?'.04em':'.2em')+';border-radius:99px;-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 2px 8px rgba(58,47,36,.3);border:1px solid '+(on?'rgba(58,92,140,.75)':'rgba(58,47,36,.22)')+';color:'+(on?'var(--gold2)':'var(--mut)')+';background:'+(on?'linear-gradient(135deg,rgba(255,253,244,.16),rgba(42,69,104,.08))':'linear-gradient(135deg,rgba(255,253,244,.05),rgba(240,232,212,.02))')+'">'+(isMobile()?md[1].replace(/\s/g,''):md[1])+'</div>';};
@@ -1872,9 +1972,9 @@ function storyPane(){
   }
   if(S.zen&&!S.zenWorld){scene='';sceneH=0;}
   else if(!S.zen&&(hideScene||hide3d)){
-    scene='<div id="zjMiniIsle" data-act="'+(hide3d?'show3d':'svgfold')+'" class="btn zjHl" title="展开世界画面" style="position:absolute;top:'+(barH+2)+'px;left:50%;margin-left:-47px;width:94px;height:27px;z-index:4;cursor:pointer;border-radius:99px;background:rgba(248,242,228,.9);border:1px solid rgba(58,92,140,.4);box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 4px 14px rgba(58,47,36,.5);display:flex;align-items:center;justify-content:center;gap:7px">'
+    scene='<div id="zjMiniIsle" data-act="show3d" class="btn zjHl" title="展开日文沙盒" style="position:absolute;top:'+(barH+2)+'px;left:50%;margin-left:-47px;width:94px;height:27px;z-index:4;cursor:pointer;border-radius:99px;background:rgba(248,242,228,.9);border:1px solid rgba(58,92,140,.4);box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 4px 14px rgba(58,47,36,.5);display:flex;align-items:center;justify-content:center;gap:7px">'
       +'<span style="width:8px;height:8px;border-radius:50%;background:radial-gradient(circle,#dce8fa,#8fa7d6);animation:zjIsleGlow 2.2s ease-in-out infinite"></span>'
-      +'<span style="font-size:11px;letter-spacing:.22em;color:var(--gold2);font-family:var(--kai)">世界</span></div>';
+      +'<span style="font-size:11px;letter-spacing:.22em;color:var(--gold2);font-family:var(--kai)">沙盒</span></div>';
     sceneH=16;
   }
   return '<div class="col grow" style="position:relative">'+scene+'<div id="zjStory" class="grow bamboo" style="overflow-y:auto;position:relative;z-index:1;padding:'+((S.zen&&!S.zenWorld)?56:(barH+sceneH+18))+'px clamp(16px,5vw,70px) '+(S.zen?'46px':(mob?'calc(210px + env(safe-area-inset-bottom))':'160px'))+';background:rgba(255,253,246,.26);-webkit-backdrop-filter:blur(28px) saturate(180%);backdrop-filter:blur(28px) saturate(180%)'+''+'"><div data-zjzoom style="max-width:820px;margin:0 auto;zoom:'+FS+'">'+items+thinking+'</div></div>'+input+'</div>';
@@ -1929,12 +2029,12 @@ function gameView(){
   }
   if(S.zen){
     top='<div style="position:absolute;top:'+(mob?'10px':'12px')+';right:12px;z-index:8;display:flex;gap:8px;align-items:stretch">'
-      +'<div data-act="zenWorld" class="btn zjHl" title="'+(S.zenWorld?'收起世界画面':'展开世界画面')+'" style="cursor:pointer;padding:0 13px;border-radius:99px;background:'+(S.zenWorld?'rgba(42,69,104,.22)':'rgba(248,242,228,.9)')+';border:1px solid rgba(58,92,140,'+(S.zenWorld?'.8':'.4')+');box-shadow:inset 0 1px 0 rgba(255,255,255,.25);display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:50%;background:radial-gradient(circle,#dce8fa,#8fa7d6);animation:zjIsleGlow 2.2s ease-in-out infinite"></span><span style="font-size:11px;letter-spacing:.18em;color:var(--gold2);font-family:var(--kai)">世界</span></div>'
+      +'<div data-act="zenWorld" class="btn zjHl" title="'+(S.zenWorld?'收起沙盒画面':'展开沙盒画面')+'" style="cursor:pointer;padding:0 13px;border-radius:99px;background:'+(S.zenWorld?'rgba(42,69,104,.22)':'rgba(248,242,228,.9)')+';border:1px solid rgba(58,92,140,'+(S.zenWorld?'.8':'.4')+');box-shadow:inset 0 1px 0 rgba(255,255,255,.25);display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:50%;background:radial-gradient(circle,#dce8fa,#8fa7d6);animation:zjIsleGlow 2.2s ease-in-out infinite"></span><span style="font-size:11px;letter-spacing:.18em;color:var(--gold2);font-family:var(--kai)">沙盒</span></div>'
       +'<button data-act="zen" class="obtn btn" title="退出全屏" style="font-size:12px;letter-spacing:.14em;padding:7px 14px">退出全屏</button></div>';
     body=mob?'<div class="grow zjPane" style="position:relative;min-height:0">'+storyPane()+'</div>':'<div class="row grow">'+storyPane()+'</div>';
   }
   if(S.worldFull){
-    top='<button data-act="worldFull" class="obtn btn" title="退出三维全屏" style="position:absolute;left:50%;margin-left:-48px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:8;font-size:12px;letter-spacing:.14em;padding:7px 18px">退出全屏</button>';
+    top='<button data-act="worldFull" class="obtn btn" title="退出全屏" style="position:absolute;left:50%;margin-left:-48px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:8;font-size:12px;letter-spacing:.14em;padding:7px 18px">退出全屏</button>';
     body=mob?'<div class="grow zjPane" style="position:relative;min-height:0">'+storyPane()+'</div>':'<div class="row grow">'+storyPane()+'</div>';
   }
   return '<div class="col" style="position:relative">'+top+body+'</div>'+(S.bgmOpen?bgmPanel():'')+(S.overlay?overlayView():'');
@@ -1986,8 +2086,8 @@ function renderOverlay(){
   }else render();
 }
 function overlayView(){
-  var title=S.overlay==='codex'?'三叶世界书':S.overlay==='map'?'罗泽利亚地图':S.overlay==='preset'?'自定义预设':S.overlay==='api'?'AI 接口设置':S.overlay==='set'?'设 置':S.overlay==='mem'?'长程记忆 · 编年长卷':'存 档';
-  var inner=S.overlay==='codex'?codexBody():S.overlay==='map'?mapBody():S.overlay==='preset'?presetBody():S.overlay==='api'?apiBody():S.overlay==='set'?setBody():S.overlay==='mem'?memBody():savesBody();
+  var title=S.overlay==='codex'?'三叶世界书':S.overlay==='map'?'罗泽利亚地图':S.overlay==='preset'?'自定义预设':S.overlay==='api'?'AI 接口设置':S.overlay==='jpsb'?'日文沙盒':S.overlay==='set'?'设 置':S.overlay==='mem'?'长程记忆 · 编年长卷':'存 档';
+  var inner=S.overlay==='codex'?codexBody():S.overlay==='map'?mapBody():S.overlay==='preset'?presetBody():S.overlay==='api'?apiBody():S.overlay==='jpsb'?jpsbBody():S.overlay==='set'?setBody():S.overlay==='mem'?memBody():savesBody();
   return '<div id="zjOvWrap" style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:14px">'
     +'<div id="zjOvDim" data-act="closeov" class="fade" style="position:absolute;inset:0;background:rgba(46,38,26,.22);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)"></div>'
     +'<div data-stop="1" id="zjOvBox" class="glass" style="position:relative;width:min(1060px,96vw);height:min(720px,92vh);display:flex;flex-direction:column;overflow:hidden">'
@@ -2347,9 +2447,14 @@ function fontPane(){
    +[['auto','自动'],['desktop','<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="2.75" y="4.5" width="18.5" height="12.5" rx="2"/><path d="M8.5 20.5h7M12 17.2v3.3"/></svg> 电脑'],['mobile','<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="7.25" y="2.75" width="9.5" height="18.5" rx="2.4"/><path d="M10.7 18.2h2.6"/></svg> 手机']].map(function(dv){var on=S.device===dv[0];return '<div class="btn" data-dev="'+dv[0]+'" style="cursor:pointer;padding:8px 18px;font-size:13.5px;letter-spacing:.08em;color:'+(on?'var(--gold2)':'var(--mut)')+';background:'+(on?'rgba(42,69,104,.12)':'transparent')+'">'+dv[1]+'</div>';}).join('')+'</div>'
    +'<div style="font-size:12.5px;color:var(--mut);margin-top:8px;line-height:1.8">自动依屏幕宽窄选择版式；也可强制使用电脑或手机布局。</div>'
    +'<div class="glass" style="margin-top:28px;padding:16px 18px"><div class="kai" style="font-size:17px;color:var(--gold3)">预览 · 贝尔的冬夜</div><div id="zjFontPrev" data-zjzoom style="margin-top:8px;font-size:15px;line-height:2;color:#cfc0a0;zoom:'+FS+'">「打扰了。请问，这里有甜的果汁吗？」你向食堂的大婶询问。汤勺当啷一声掉进了锅里——她张着嘴，视线在你的银发和蓝眼睛之间来回移动了三趟。</div></div>'
-   +'<div class="kai" style="font-size:19px;color:var(--gold2);letter-spacing:.15em;margin:34px 0 10px">日文沙盒</div>'+'<div class="btn" data-act="jpsbTog" style="cursor:pointer;display:inline-flex;align-items:center;gap:8px;padding:7px 16px;font-size:13px;letter-spacing:.12em;border:1px solid '+(JPSB?'rgba(160,42,64,.55)':'rgba(255,255,255,.6)')+';border-radius:10px;color:'+(JPSB?'#a02a40':'var(--mut)')+'">'+(JPSB?'✓ 已开启':'已关闭')+'</div>'+'<div style="font-size:12.5px;color:var(--mut);line-height:1.8;margin-top:8px">开启后，AI 的思考与创作全程在纯日文环境中进行（过程自动折叠进「推演之思」），最后以经典日译中腔调译出中文正文，文风对齐《みつばものがたり》原作。生成量约为平时的二至三倍；聊天模式下自动绕过。</div>'
+   +'<div class="kai" style="font-size:19px;color:var(--gold2);letter-spacing:.15em;margin:34px 0 10px">日文沙盒</div>'
+   +'<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">'
+   +'<div class="btn" data-act="jpsbTog" style="cursor:pointer;display:inline-flex;align-items:center;gap:8px;padding:7px 16px;font-size:13px;letter-spacing:.12em;border:1px solid '+(JPSB?'rgba(160,42,64,.55)':'rgba(255,255,255,.6)')+';border-radius:10px;color:'+(JPSB?'#a02a40':'var(--mut)')+'">'+(JPSB?'✓ 已开启':'已关闭')+'</div>'
+   +'<div class="btn obtn" data-ov="jpsb" style="cursor:pointer;padding:7px 16px;font-size:13px;letter-spacing:.12em;border-radius:10px">完整设置 →</div>'
+   +'</div>'
+   +'<div style="font-size:12.5px;color:var(--mut);line-height:1.8;margin-top:8px">思考与创作全程日文、灵动岛直播和文原稿、单／双 API 与分幕开关等，均在「完整设置」中。</div>'
    +'<div class="kai" style="font-size:19px;color:var(--gold2);letter-spacing:.15em;margin:34px 0 10px">性能</div>'
-   +'<label style="display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink2);cursor:pointer;margin:6px 0"><input id="zjOptLow" type="checkbox" style="accent-color:#3c5a86"'+(LOWFX?' checked':'')+'>低配模式：手机防发热防卡顿（降特效模糊与渲染分辨率、背景光斑歇屏、三维降档锁30帧）</label>'
+   +'<label style="display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink2);cursor:pointer;margin:6px 0"><input id="zjOptLow" type="checkbox" style="accent-color:#3c5a86"'+(LOWFX?' checked':'')+'>低配模式：手机防发热防卡顿（降特效模糊与渲染分辨率、背景光斑歇屏）</label>'
    +'<div style="font-size:11.5px;color:var(--mut);line-height:1.7;margin-top:4px">封面右上角的「低」是同一开关。默认关闭，画质无任何妥协。</div>'
    +'<div class="kai" style="font-size:19px;color:var(--gold2);letter-spacing:.15em;margin:34px 0 10px">输入栏功能</div>'
    +'<label style="display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink2);cursor:pointer;margin:6px 0"><input id="zjOptMic" type="checkbox" style="accent-color:#3c5a86"'+((S.micOn===true||(S.micOn==null&&!isMobile()))?' checked':'')+'>「声」语音输入按钮（说话成文；手机默认关，输入法自带语音）</label>'
@@ -2362,7 +2467,7 @@ function fontPane(){
    +'<label style="display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--mut2);cursor:pointer">自选<input id="zjDlgPick" type="color" value="'+(DLGC==='off'?'#8f7430':DLGC)+'" style="width:36px;height:27px;border:none;background:transparent;padding:0;cursor:pointer"></label>'
    +'</div>'
    +'<div class="kai" style="font-size:19px;color:var(--gold2);letter-spacing:.15em;margin:34px 0 10px">数据备份</div>'
-   +'<div style="font-size:12.5px;color:var(--mut);line-height:1.9">一键导出此浏览器里的全部游戏数据为一个 JSON 文件：对话与存档、编年长卷记忆、自定义预设与世界书、字号字体与接口配置、三维营造记录。换设备或清数据前先备份。</div>'
+   +'<div style="font-size:12.5px;color:var(--mut);line-height:1.9">一键导出此浏览器里的全部游戏数据为一个 JSON 文件：对话与存档、编年长卷记忆、自定义预设与世界书、字号字体与接口配置。换设备或清数据前先备份。</div>'
    +'<div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:12px">'
    +'<button data-act="expChat" class="obtn btn" style="font-size:12.5px;letter-spacing:.1em;padding:8px 16px">导出聊天记录</button>'
    +'<button data-act="bookExport" class="obtn btn" style="font-size:12.5px;letter-spacing:.1em;padding:8px 16px;color:var(--gold2)">成书导出</button>'
@@ -2371,7 +2476,7 @@ function fontPane(){
    +'<button data-act="pExport" class="obtn btn" style="font-size:12.5px;letter-spacing:.1em;padding:8px 16px">导出预设</button>'
    +'<button data-act="expAll" class="gbtn btn" style="font-size:12.5px;letter-spacing:.15em;padding:8px 20px;border-radius:10px">导出全部数据</button></div>'
    +'<div class="kai" style="font-size:19px;color:#c9705a;letter-spacing:.15em;margin:34px 0 10px">清除本机数据</div>'
-   +'<div style="font-size:12.5px;color:var(--mut);line-height:1.9">一键抹掉此浏览器里的全部游戏数据：对话与存档、编年长卷记忆、自定义预设与世界书、字号字体、AI 接口配置、三维世界营造记录与全部缓存。不可恢复，清除后页面自动重载如初见。</div>'
+   +'<div style="font-size:12.5px;color:var(--mut);line-height:1.9">一键抹掉此浏览器里的全部游戏数据：对话与存档、编年长卷记忆、自定义预设与世界书、字号字体、AI 接口配置、全部缓存。不可恢复，清除后页面自动重载如初见。</div>'
    +(S.wipeArm
      ?'<button data-act="wipeAll" class="btn" style="margin-top:12px;cursor:pointer;font-size:14px;letter-spacing:.18em;padding:10px 26px;border-radius:10px;background:rgba(126,33,46,.32);border:1px solid rgba(126,33,46,.85);color:#efb3a0">确认清除——此操作不可撤销</button>'
      :'<button data-act="wipeAll" class="btn" style="margin-top:12px;cursor:pointer;font-size:14px;letter-spacing:.18em;padding:10px 26px;border-radius:10px;background:transparent;border:1px solid rgba(126,33,46,.45);color:#96323f">一键清除所有数据…</button>')
@@ -2688,17 +2793,7 @@ function render(){
   ensureTyping();
   try{imgHydrate();}catch(e){}
   try{graphHydrate();}catch(e){}
-  if(window.ZJ3D&&ZJ3D.owns()){
-    var _m=mood();ZJ3D.onRender(playerLoc().name,_m.night);
-  }else{
-    sc3Mount();
-    if(window.ZJ3D){var _m2=mood();ZJ3D.onRender(playerLoc().name,_m2.night);}
-  }
-  if(window.ZJ3D&&ZJ3D.onStory){
-    var _lm=null;
-    for(var _i=S.history.length-1;_i>=0;_i--){if(S.history[_i].role!=='user'){_lm=S.history[_i];break;}}
-    ZJ3D.onStory(_lm&&_lm.text?_lm.text:'');
-  }
+  try{var _jp9=document.getElementById('jpIslePane');if(_jp9&&jpOut())_jp9.scrollTop=_jp9.scrollHeight;}catch(e){}
 }
 window.ZJ3D_onExpand=function(){render();};
 /* ---------------- 液态转场引擎 ---------------- */
@@ -2939,7 +3034,9 @@ root.addEventListener('click',function(e){
       if(t.getAttribute('data-tab')){var ntb=t.getAttribute('data-tab');if(ntb===S.tab)return;var tdir=ntb==='panel'?1:-1;vtRender(ntb==='panel'?'zjTab-f':'zjTab-b',function(){S.tab=ntb;render();});
         if(!reducedMotion()){var pill=document.getElementById('zjTabPill');if(pill&&pill.animate)pill.animate([{transform:'translateX('+(-tdir*103)+'%)'},{transform:'none'}],{duration:340,easing:'cubic-bezier(.3,1.1,.3,1)'});}
         return;}
-      if(t.getAttribute('data-ov')){if(morphBusy)return;var ovK=t.getAttribute('data-ov');var ovWas=S.overlay;S.overlay=ovK;S.movePending=null;S.apiMsg=null;S.wipeArm=false;
+      if(t.getAttribute('data-jptab')){JPIL.manual=t.getAttribute('data-jptab');S._noFade=true;render();return;}
+      if(t.getAttribute('data-jpact')){var jk9=t.getAttribute('data-jpact');readJpForm();JPCFG[jk9]=!JPCFG[jk9];jpcfgSave();renderOverlay();return;}
+      if(t.getAttribute('data-ov')){if(morphBusy)return;var ovK=t.getAttribute('data-ov');var ovWas=S.overlay;S.overlay=ovK;S.movePending=null;S.apiMsg=null;S.jpMsg=null;S.wipeArm=false;
         if(ovWas){renderOverlay();codexPills();setPills();return;}
         var ovTmp=document.createElement('div');ovTmp.innerHTML=overlayView();
         if(ovTmp.firstChild)root.appendChild(ovTmp.firstChild);
@@ -3063,7 +3160,7 @@ root.addEventListener('click',function(e){
       else if(a==='zenInput'){S.zenInput=true;S._noFade=true;render();var zt=document.getElementById('zjInput');if(zt)zt.focus();return;}
       else if(a==='zenWorld'){
         var zwBtn=document.querySelector('[data-act="zenWorld"]');var zwR=zwBtn&&zwBtn.getBoundingClientRect();
-        var zwOff=((window.ZJ3D&&ZJ3D.paneH)?ZJ3D.paneH(isMobile()):150)+8;
+        var zwOff=(isMobile()?150:190)+8;
         function zwCollapse(){if(!S.zenWorld)return;
           var se0=document.getElementById('zjStory');var st0=se0?se0.scrollTop:0;
           S.zenWorld=false;S._noFade=true;render();
@@ -3121,7 +3218,13 @@ root.addEventListener('click',function(e){
         return;}
       else if(a==='histmore'){S.histShow=(S.histShow||30)+30;S._stayTop=true;S._noFade=true;render();return;}
       else if(a==='closeov'){var cvk=S.overlay;var dm=document.getElementById('zjOvDim');if(dm){dm.style.pointerEvents='none';dm.style.webkitBackdropFilter='none';dm.style.backdropFilter='none';if(dm.animate)dm.animate([{opacity:1},{opacity:0}],{duration:280,easing:'ease',fill:'forwards'});dm.style.transition='opacity 280ms';dm.style.opacity='0';}morphClose('zjOvBox','[data-ov="'+cvk+'"]',function(){S.overlay=null;S.movePending=null;var ow=document.getElementById('zjOvWrap');if(ow&&ow.parentNode)ow.parentNode.removeChild(ow);else render();});}
-      else if(a==='on3d'){try{localStorage.removeItem('mb3d_off');}catch(e){}location.reload();}
+      else if(a==='isleHide'){try{localStorage.setItem('mb3d_hide','1');}catch(e){}S._noFade=true;render();}
+      else if(a==='jpMode'){readJpForm();JPCFG.mode=t.getAttribute('data-jpmode')||'single';jpcfgSave();renderOverlay();}
+      else if(a==='jpSave'){readJpForm();jpcfgSave();S.jpMsg={t:'已保存。译官密钥仅存于此浏览器，不会上传。',c:'var(--grn2)'};renderOverlay();}
+      else if(a==='jpTest'){readJpForm();jpcfgSave();
+        if(!jpTrReady()){S.jpMsg={t:'请先填写译官接口地址、密钥与模型名。',c:'var(--red2)'};renderOverlay();}
+        else{S.jpMsg={t:'正在试通译官接口……',c:'var(--mut2)'};renderOverlay();
+          jpTranslate('你好，请多指教。').then(function(tj){S.jpMsg=tj?{t:'译官已通：'+tj.slice(0,60),c:'var(--grn2)'}:{t:'试通失败：接口未返回译文，请核对地址、密钥与模型名。',c:'var(--red2)'};renderOverlay();});}}
       else if(a==='svgfold'){var wasF=SVGF;SVGF=!SVGF;try{localStorage.setItem('mb_svgfold',SVGF?'1':'0');}catch(e){}
         var mi1=wasF?document.getElementById('zjMiniIsle'):null;var mr1=mi1&&mi1.getBoundingClientRect();
         render();
