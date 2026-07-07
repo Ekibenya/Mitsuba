@@ -885,17 +885,49 @@ function jprule(){
   return head+'\n'+JPSTYLE;
 }
 /* ---------------- 日文沙盒灵动岛 ---------------- */
-var JP_ILLUS=[];/* 插图轮播：从 assets/ 三卷插图中人工挑选最佳画面后填入路径，如 'assets/volume-1/kuchie-001.jpg' */
-var JPIL={ix:0,manual:null};
+var JP_A='assets/';
+/* 原作三卷插图库：cover 封面、extra 卷首彩页（原色）、story 正文插图（按页码顺序，oy=横框内纵向裁切焦点%）、eps 各话标题 */
+var JP_VOLS={
+ 1:{cover:'volume-1/cover.jpg',max:13,
+    eps:['目覚め','青い薔薇','悪意は巡るよ','士官学校','砲弾が世界を変える','明日に向かって撃ってみよう','謹慎が明けて','素敵な兵器','爽やかなかび','招かれざる研修生','神の導きがあらんことを','ミツバの刻印','勝利の美酒'],
+    extra:[{s:'volume-1/kuchie-001.jpg',oy:40},{s:'volume-1/kuchie-002.jpg',oy:42},{s:'volume-1/kuchie-003.jpg',oy:42}],
+    story:[{s:'volume-1/p011.jpg',oy:44},{s:'volume-1/p041.jpg',oy:15},{s:'volume-1/p067.jpg',oy:22},{s:'volume-1/p103.jpg',oy:26},{s:'volume-1/p161.jpg',oy:30},{s:'volume-1/p205.jpg',oy:46},{s:'volume-1/p282.jpg',oy:40},{s:'volume-1/p323.jpg',oy:30}]},
+ 2:{cover:'volume-2/cover.jpg',max:13,
+    eps:['私と私と私','戦争ごっこ','楽しい冬休み','優雅な鉄火場','戦争勃発','地獄への切符','撃って撃たれて撃って撃たれて','敗北の味','悪魔の歌が聞こえる','舞台への誘い','ミツバ派と難民大隊','HAPPY BIRTHDAY','王冠を手に'],
+    extra:[{s:'volume-2/kuchie-001.jpg',oy:42},{s:'volume-2/kuchie-002.jpg',oy:42},{s:'volume-2/kuchie-003.jpg',oy:40}],
+    story:[{s:'volume-2/p033.jpg',oy:24},{s:'volume-2/p053.jpg',oy:34},{s:'volume-2/p173.jpg',oy:34},{s:'volume-2/p217.jpg',oy:26},{s:'volume-2/p261.jpg',oy:20},{s:'volume-2/p353.jpg',oy:38}]},
+ 3:{cover:'volume-3/cover.jpg',max:11,
+    eps:['特等席','ローゼリア独裁宣言','嘘ついたら針何本？','夢、理想、そして恐怖','薔薇の葬列','一ベルも譲らない','ともだち','公約は守ろう','煮えたぎる野望','宴は続くよいつまでも','十四歳の誕生日'],
+    extra:[{s:'volume-3/kuchie-001.jpg',oy:24},{s:'volume-3/kuchie-002.jpg',oy:40},{s:'volume-3/kuchie-003.jpg',oy:40},{s:'volume-3/p006.jpg',oy:50}],
+    story:[{s:'volume-3/p030.jpg',oy:20},{s:'volume-3/p072.jpg',oy:22},{s:'volume-3/p092.jpg',oy:34},{s:'volume-3/p123.jpg',oy:42},{s:'volume-3/p194.jpg',oy:40},{s:'volume-3/p232.jpg',oy:36},{s:'volume-3/p292.jpg',oy:30},{s:'volume-3/p305.jpg',oy:34}]}
+};
+var JPIL={ix:0,manual:null,wc:-1};
+function jpWC(){var n=0;for(var i=0;i<S.history.length;i++)if(S.history[i].role==='world')n++;return n;}
+/* 从最近含卷号的世界幕解析当前 卷·EP */
+function jpCtx(){var vol=0,ep=0,cn={'１':1,'２':2,'３':3,'一':1,'二':2,'三':3};
+  for(var i=S.history.length-1;i>=0;i--){var h=S.history[i];if(h.role!=='world')continue;var tx=String(h.text||'');
+    var mv=/第\s*([1-3１-３一二三])\s*卷/.exec(tx),me=/EP\s*(\d+)/i.exec(tx);
+    if(mv){vol=cn[mv[1]]||parseInt(mv[1],10)||0;if(me)ep=parseInt(me[1],10)||0;break;}}
+  return {vol:vol,ep:ep};}
+/* 当前灵动岛插图池 + 剧情锚点 + 章节题注：刚进游戏→本卷封面；游玩中→按 EP 步进正文插图 */
+function jpPool(){
+  var wc=jpWC(),c=jpCtx(),vol=c.vol||1,V=JP_VOLS[vol]||JP_VOLS[1];
+  if(wc<=1)return {list:[{s:V.cover,oy:16}],anchor:0,cap:'',cover:true};
+  var pool=V.extra.concat(V.story),epi=0;
+  if(c.ep>0&&V.story.length>1&&V.max>1){epi=Math.round((Math.min(c.ep,V.max)-1)/(V.max-1)*(V.story.length-1));epi=Math.max(0,Math.min(V.story.length-1,epi));}
+  var cap='';if(c.ep>0){var t=V.eps[Math.min(c.ep,V.eps.length)-1]||'';cap='第'+vol+'卷 · EP'+c.ep+(t?' · '+t:'');}
+  return {list:pool,anchor:V.extra.length+epi,cap:cap};
+}
 function jpOut(){return !!(S.thinking||S._stream);}
 function jpLastCot(){for(var i=S.history.length-1;i>=0;i--){var h=S.history[i];if(h.role==='world')return extractCoT(stripMvu(h.text)).cot||'';}return '';}
 function jpIsleTick(){var p=document.getElementById('jpIslePane');if(!p)return;var t=jpLastCot();p.textContent=t||(S.thinking?'……執筆中……':'');p.scrollTop=p.scrollHeight;}
 setInterval(function(){
-  if(JP_ILLUS.length<2||jpOut()||document.hidden)return;
+  if(!JPSB||jpOut()||document.hidden||JPIL.manual==='jp')return;
   var el=document.getElementById('jpIsleImg');if(!el)return;
-  JPIL.ix=(JPIL.ix+1)%JP_ILLUS.length;
+  var Pp=jpPool();if(Pp.cover||Pp.list.length<2)return;
+  JPIL.ix=(JPIL.ix+1)%Pp.list.length;var nx=Pp.list[JPIL.ix%Pp.list.length];
   el.style.opacity='0';
-  setTimeout(function(){el.src=JP_ILLUS[JPIL.ix%JP_ILLUS.length];el.style.opacity='1';},450);
+  setTimeout(function(){el.src=JP_A+nx.s;el.style.objectPosition='50% '+(nx.oy||30)+'%';el.style.opacity='1';},450);
 },6000);
 function jpIsleCtl(){
   var pill='padding:2px 9px;background:rgba(12,9,6,.62);border:1px solid rgba(42,69,104,.45);color:#dfe8f6;font-size:11px;letter-spacing:.15em;cursor:pointer;border-radius:8px';
@@ -913,10 +945,11 @@ function jpIsleInner(m){
     var t=jpLastCot();
     return '<div id="jpIslePane" style="position:absolute;inset:0;overflow-y:auto;padding:36px 20px 16px;font-size:13px;line-height:2.1;color:#e6dcc8;white-space:pre-wrap;font-family:\'Hiragino Mincho ProN\',\'Yu Mincho\',var(--serif)">'+esc(t||(S.thinking?'……執筆中……':'（此幕暂无和文原稿）'))+'</div>'+tabs;
   }
-  var body=JP_ILLUS.length
-    ?'<img id="jpIsleImg" src="'+esc(JP_ILLUS[JPIL.ix%JP_ILLUS.length])+'" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 22%;transition:opacity .45s ease">'
-    :'<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#8a7f6d"><div class="kai" style="font-size:15px;letter-spacing:.4em">みつばものがたり</div><div style="font-size:11px;letter-spacing:.24em;opacity:.7">插图轮播 · 待选入</div></div>';
-  return body+tabs;
+  var P=jpPool(),cur=P.list[JPIL.ix%P.list.length]||P.list[0];
+  var body='<img id="jpIsleImg" src="'+esc(JP_A+cur.s)+'" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% '+(cur.oy||30)+'%;transition:opacity .45s ease,object-position .6s ease">'
+    +'<div style="position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(11,9,6,.42),rgba(11,9,6,0) 26%,rgba(11,9,6,0) 66%,rgba(11,9,6,.5))"></div>';
+  var cap=P.cap?'<div style="position:absolute;right:12px;bottom:10px;z-index:2;max-width:66%;text-align:right;font-size:11px;letter-spacing:.12em;line-height:1.5;color:#ece3cf;text-shadow:0 1px 6px rgba(0,0,0,.95)">'+esc(P.cap)+'</div>':'';
+  return body+cap+tabs;
 }
 function jpsbBody(){
   var sec=function(t){return '<div class="kai" style="font-size:19px;color:var(--gold2);letter-spacing:.15em;margin:30px 0 12px">'+t+'</div>';};
@@ -950,7 +983,7 @@ function jpsbBody(){
    +'</div>'
    +'<div style="font-size:12.5px;color:var(--mut);line-height:1.9;margin-top:10px">③日文草稿是沙盒的创作本体：关闭后仅保留文风铁则、直接以中文创作（省 token 但风味打折）。④关闭后按普通中文行文，不再模仿经典日译中译本腔调。双 API 模式下①自动交由译官完成。</div>'
    +sec('灵动岛')
-   +'<div style="font-size:12.5px;color:var(--mut);line-height:1.9">游戏中顶部的灵动岛与本功能联动：闲置时轮播原作三卷插图；AI 开始输出时自动停下轮播、切到「和文」页，实时直播思考与日文草稿全文，正文区只保留译出的中文。岛可收起（✕）、可全屏，岛上「设置」即回到本页；往幕的和文原稿折叠存于每幕的「和文原稿」栏。</div>'
+   +'<div style="font-size:12.5px;color:var(--mut);line-height:1.9">游戏中顶部的灵动岛与本功能联动：新玩家初入游戏显示整卷封面；随剧情推进（按当前卷·EP）自动切换到对应章节的正文插图，闲置时在本卷插图间缓缓轮播——右下角标出「第N卷·EP·话题」。AI 开始输出时自动停下轮播、切到「和文」页，实时直播思考与日文草稿全文，正文区只保留译出的中文。岛可收起（✕）、可全屏，岛上「设置」即回到本页；往幕的和文原稿折叠存于每幕的「和文原稿」栏。原作三卷全部插图与卷首彩页均已入池。</div>'
    +'</div>';
 }
 
@@ -2794,6 +2827,7 @@ function render(){
   try{imgHydrate();}catch(e){}
   try{graphHydrate();}catch(e){}
   try{var _jp9=document.getElementById('jpIslePane');if(_jp9&&jpOut())_jp9.scrollTop=_jp9.scrollHeight;}catch(e){}
+  try{var _wc=jpWC();if(JPIL.wc!==_wc){JPIL.wc=_wc;JPIL.ix=(jpPool().anchor)||0;}}catch(e){}
 }
 window.ZJ3D_onExpand=function(){render();};
 /* ---------------- 液态转场引擎 ---------------- */
