@@ -957,39 +957,34 @@ function jpIsleInner(m){
   return body+cap+tabs;
 }
 function jpsbBody(){
-  var sec=function(t){return '<div class="kai" style="font-size:19px;color:var(--gold2);letter-spacing:.15em;margin:30px 0 12px">'+t+'</div>';};
-  var chip=function(attr,on,txt){return '<div class="btn" '+attr+' style="cursor:pointer;display:inline-flex;align-items:center;gap:7px;padding:8px 18px;font-size:13.5px;letter-spacing:.1em;border:1px solid '+(on?'rgba(160,42,64,.6)':'rgba(58,47,36,.28)')+';border-radius:10px;color:'+(on?'#a02a40':'var(--mut)')+';background:'+(on?'linear-gradient(135deg,rgba(160,42,64,.1),rgba(160,42,64,.03))':'transparent')+'">'+txt+'</div>';};
-  var inp='width:100%;background:rgba(246,240,226,.4);border:1px solid rgba(42,69,104,.3);border-radius:10px;color:var(--gold3);font-size:14px;padding:9px 12px;margin-top:6px';
+  var sec=function(t,sub){return '<div style="display:flex;align-items:baseline;gap:10px;margin:0 0 12px"><div class="kai" style="font-size:17px;color:var(--gold2);letter-spacing:.14em">'+t+'</div>'+(sub?'<div style="font-size:11px;letter-spacing:.1em;color:var(--mut)">'+sub+'</div>':'')+'</div>';};
+  var card=function(inner){return '<div class="glass" style="padding:16px 18px;margin-top:14px;border-radius:14px">'+inner+'</div>';};
+  var note=function(t){return '<div style="font-size:12.5px;color:var(--mut);line-height:1.85;margin-top:10px">'+t+'</div>';};
+  var chip=function(attr,on,txt){return '<div class="btn" '+attr+' style="cursor:pointer;display:inline-flex;align-items:center;gap:7px;padding:8px 18px;font-size:13.5px;letter-spacing:.08em;border:1px solid '+(on?'rgba(160,42,64,.6)':'rgba(58,47,36,.28)')+';border-radius:10px;color:'+(on?'#a02a40':'var(--mut)')+';background:'+(on?'linear-gradient(135deg,rgba(160,42,64,.12),rgba(160,42,64,.03))':'rgba(255,255,255,.02)')+'">'+txt+'</div>';};
+  var inp='width:100%;background:rgba(255,255,255,.03);border:1px solid rgba(42,69,104,.3);border-radius:10px;color:var(--ink);font-size:14px;padding:10px 12px;margin-top:10px';
   var dual=JPCFG.mode==='dual';
-  return '<div style="max-width:640px">'
-   +'<div style="font-size:13px;color:var(--mut);line-height:1.9">让 AI 的思考与创作全程在纯日文环境中进行：①玩家输入和訳 → ②日文构思 → ③日文正文草稿（写在思考标签内，游戏中实时直播于顶部灵动岛）→ ④以经典日译中腔调译出中文正文。文风对齐《みつばものがたり》原作。生成量约为平时的二至三倍。</div>'
-   +sec('总开关')
-   +chip('data-act="jpsbTog"',JPSB,JPSB?'✓ 日文沙盒 · 已开启':'日文沙盒 · 已关闭')
-   +'<div style="font-size:12px;color:var(--mut);line-height:1.8;margin-top:8px">聊天模式下自动绕过；封面与设置页的开关与此处同步。</div>'
-   +sec('运行模式')
-   +'<div style="display:flex;gap:10px;flex-wrap:wrap">'
-   +chip('data-act="jpMode" data-jpmode="single"',!dual,'单 API 模式')
-   +chip('data-act="jpMode" data-jpmode="dual"',dual,'双 API 模式')
-   +'</div>'
-   +'<div style="font-size:12.5px;color:var(--mut);line-height:1.9;margin-top:10px">单 API：主 AI 独自完成四幕（含和訳），零配置。<br>双 API：由下方独立「译官」接口先把你的输入译成日文，随原文一并递给主 AI——主 AI 免去第①幕、日文环境更纯粹，也适合把翻译分给便宜模型的场合。译官未配置或调用失败时自动回落到单 API 流程。</div>'
-   +sec('译官接口（双 API 模式用）')
-   +'<div style="font-size:12px;color:var(--mut)">OpenAI 兼容格式（地址 + /chat/completions）。密钥仅存于此浏览器。</div>'
-   +'<input id="zjJpUrl" placeholder="接口地址，如 https://api.deepseek.com/v1" value="'+esc(JPCFG.trUrl)+'" style="'+inp+'">'
-   +'<input id="zjJpKey" type="password" placeholder="API 密钥" value="'+esc(JPCFG.trKey)+'" style="'+inp+'">'
-   +'<input id="zjJpModel" placeholder="模型名，如 deepseek-chat" value="'+esc(JPCFG.trModel)+'" style="'+inp+'">'
-   +'<div style="display:flex;gap:10px;margin-top:12px"><div class="btn gbtn" data-act="jpSave" style="padding:9px 26px;border-radius:10px;font-size:13.5px;letter-spacing:.15em">保 存</div><div class="btn obtn" data-act="jpTest" style="padding:9px 22px;border-radius:10px;font-size:13.5px;letter-spacing:.15em">试 通</div></div>'
-   +(S.jpMsg?'<div style="font-size:12.5px;margin-top:9px;color:'+S.jpMsg.c+'">'+esc(S.jpMsg.t)+'</div>':'')
-   +sec('分幕开关（部分开 · 部分关）')
-   +'<div style="display:flex;gap:9px;flex-wrap:wrap">'
-   +chip('data-jpact="a1"',JPCFG.a1,'① 输入和訳')
-   +chip('data-jpact="a2"',JPCFG.a2,'② 日文构思')
-   +chip('data-jpact="a3"',JPCFG.a3,'③ 日文草稿')
-   +chip('data-jpact="a4"',JPCFG.a4,'④ 译笔腔调')
-   +'</div>'
-   +'<div style="font-size:12.5px;color:var(--mut);line-height:1.9;margin-top:10px">③日文草稿是沙盒的创作本体：关闭后仅保留文风铁则、直接以中文创作（省 token 但风味打折）。④关闭后按普通中文行文，不再模仿经典日译中译本腔调。双 API 模式下①自动交由译官完成。</div>'
-   +sec('灵动岛')
-   +'<div style="font-size:12.5px;color:var(--mut);line-height:1.9">游戏中顶部的灵动岛与本功能联动：新玩家初入游戏显示整卷封面；随剧情推进（按当前卷·EP）自动切换到对应章节的正文插图，闲置时在本卷插图间缓缓轮播——右下角标出「第N卷·EP·话题」。AI 开始输出时自动停下轮播、切到「和文」页，实时直播思考与日文草稿全文，正文区只保留译出的中文。岛可收起（✕）、可全屏，岛上「设置」即回到本页；往幕的和文原稿折叠存于每幕的「和文原稿」栏。原作三卷全部插图与卷首彩页均已入池。</div>'
-   +'</div>';
+  return '<div class="grow bambooV" style="overflow-y:auto;padding:22px 26px">'
+   +'<div style="max-width:680px;margin:0 auto">'
+   +'<div style="font-size:13px;color:var(--ink2);line-height:1.95">让 AI 的思考与创作全程在纯日文环境中进行：<b style="color:var(--gold2);font-weight:600">①</b>玩家输入和訳 → <b style="color:var(--gold2);font-weight:600">②</b>日文构思 → <b style="color:var(--gold2);font-weight:600">③</b>日文正文草稿（写在思考标签内，游戏中实时直播于顶部灵动岛）→ <b style="color:var(--gold2);font-weight:600">④</b>以经典日译中腔调译出中文正文。文风对齐《みつばものがたり》原作，生成量约为平时的二至三倍。</div>'
+   +card(sec('总开关')
+     +'<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">'+chip('data-act="jpsbTog"',JPSB,JPSB?'✓ 日文沙盒 · 已开启':'日文沙盒 · 已关闭')+'</div>'
+     +note('聊天模式下自动绕过；封面与设置页的开关与此处同步。'))
+   +card(sec('运行模式')
+     +'<div style="display:flex;gap:10px;flex-wrap:wrap">'+chip('data-act="jpMode" data-jpmode="single"',!dual,'单 API 模式')+chip('data-act="jpMode" data-jpmode="dual"',dual,'双 API 模式')+'</div>'
+     +note('<b>单 API</b>：主 AI 独自完成四幕（含和訳），零配置。<br><b>双 API</b>：由下方独立「译官」接口先把你的输入译成日文，随原文一并递给主 AI——主 AI 免去第①幕、日文环境更纯粹，也适合把翻译分给便宜模型的场合。译官未配置或调用失败时自动回落到单 API 流程。'))
+   +card(sec('译官接口','双 API 模式用')
+     +note('OpenAI 兼容格式（地址 + /chat/completions）。密钥仅存于此浏览器。')
+     +'<input id="zjJpUrl" placeholder="接口地址，如 https://api.deepseek.com/v1" value="'+esc(JPCFG.trUrl)+'" autocomplete="off" spellcheck="false" style="'+inp+'">'
+     +'<input id="zjJpKey" type="password" placeholder="API 密钥" value="'+esc(JPCFG.trKey)+'" autocomplete="off" style="'+inp+'">'
+     +'<input id="zjJpModel" placeholder="模型名，如 deepseek-chat" value="'+esc(JPCFG.trModel)+'" autocomplete="off" spellcheck="false" style="'+inp+'">'
+     +'<div style="display:flex;gap:10px;margin-top:14px"><div class="btn gbtn" data-act="jpSave" style="padding:9px 26px;border-radius:10px;font-size:13.5px;letter-spacing:.15em">保 存</div><div class="btn obtn" data-act="jpTest" style="padding:9px 22px;border-radius:10px;font-size:13.5px;letter-spacing:.15em">试 通</div></div>'
+     +(S.jpMsg?'<div style="font-size:12.5px;margin-top:11px;line-height:1.7;color:'+S.jpMsg.c+'">'+esc(S.jpMsg.t)+'</div>':''))
+   +card(sec('分幕开关','部分开 · 部分关')
+     +'<div style="display:flex;gap:9px;flex-wrap:wrap">'+chip('data-jpact="a1"',JPCFG.a1,'① 输入和訳')+chip('data-jpact="a2"',JPCFG.a2,'② 日文构思')+chip('data-jpact="a3"',JPCFG.a3,'③ 日文草稿')+chip('data-jpact="a4"',JPCFG.a4,'④ 译笔腔调')+'</div>'
+     +note('<b>③日文草稿</b>是沙盒的创作本体：关闭后仅保留文风铁则、直接以中文创作（省 token 但风味打折）。<b>④</b>关闭后按普通中文行文，不再模仿经典日译中译本腔调。双 API 模式下①自动交由译官完成。'))
+   +card(sec('灵动岛')
+     +note('游戏中顶部的灵动岛与本功能联动：新玩家初入游戏显示整卷封面；随剧情推进（按当前卷·EP）自动切换到对应章节的正文插图，闲置时在本卷插图间缓缓轮播——右下角标出「第N卷·EP·话题」。AI 开始输出时自动停下轮播、切到「和文」页，实时直播思考与日文草稿全文，正文区只保留译出的中文。岛可收起（✕）、可全屏，岛上「设置」即回到本页；往幕的和文原稿折叠存于每幕的「和文原稿」栏。原作三卷全部插图与卷首彩页均已入池。'))
+   +'</div></div>';
 }
 
 function buildSystem(history,userInput){
