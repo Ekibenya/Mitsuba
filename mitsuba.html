@@ -75,14 +75,17 @@ html.zjLow #zjStory{background:rgba(246,240,226,.96)!important}
 .obtn:hover{background:linear-gradient(135deg,rgba(255,255,255,.3),rgba(226,233,246,.22) 38%,rgba(240,231,210,.18))}
 textarea,input{border-radius:10px}
 /* 液态玻璃（macOS/iOS 26 · visionOS 质感）：重模糊+饱和把背景揉成柔和低频底，
-   --glassTint 调玻璃着色层浓度（弹窗压在旗面上时调高即可读），顶缘高光+白细边=那一丝高光 */
+   --glassTint 调着色层浓度；玻璃感来自「折射亮边环」——整圈边缘像镜片一样被光点亮，
+   左上角最亮、顺时针渐隐、右下角一点冷色折射，这才是那一丝高光，而非一根横杠。 */
 .glass{--glassTint:.5;position:relative;overflow:hidden;border-radius:16px;
-  background:linear-gradient(180deg,rgba(255,255,255,.36),rgba(255,255,255,0) 22%),radial-gradient(135% 92% at 12% -14%,rgba(255,255,255,.46),rgba(255,255,255,0) 46%),linear-gradient(135deg,rgba(255,253,248,var(--glassTint)),rgba(245,238,224,var(--glassTint)));
-  -webkit-backdrop-filter:blur(32px) saturate(185%) brightness(1.06);backdrop-filter:blur(32px) saturate(185%) brightness(1.06);
-  border:1px solid rgba(196,210,230,.5);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.3),inset 0 0 0 1px rgba(255,255,255,.1),inset 0 -22px 38px rgba(110,132,168,.05),0 12px 34px rgba(46,38,26,.2),0 3px 10px rgba(46,38,26,.1)}
-/* rituszhou 的那一丝高光：顶缘一道偏冷的镜面高光条（上白下微暗做出玻璃斜切边），带柔光晕 */
-.glass::after{content:'';position:absolute;left:7%;right:46%;top:0;height:2.5px;border-radius:3px;pointer-events:none;z-index:2;background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,1) 42%,rgba(190,220,255,.75) 74%,rgba(255,255,255,0));box-shadow:0 1.5px 2px rgba(70,100,150,.45);filter:drop-shadow(0 0 6px rgba(226,240,255,.95))}
+  background:linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,0) 34%),radial-gradient(150% 108% at 6% -22%,rgba(255,255,255,.6),rgba(255,255,255,0) 42%),linear-gradient(135deg,rgba(255,253,248,var(--glassTint)),rgba(245,238,224,var(--glassTint)));
+  -webkit-backdrop-filter:blur(34px) saturate(190%) brightness(1.07);backdrop-filter:blur(34px) saturate(190%) brightness(1.07);
+  border:1px solid transparent;
+  box-shadow:inset 0 -26px 44px rgba(110,132,168,.06),0 16px 40px rgba(46,38,26,.24),0 3px 12px rgba(46,38,26,.13)}
+/* 折射亮边环：1.4px 渐变描边，顺光从左上到右下由亮转隐，收尾一点冷色折射光 */
+.glass::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;padding:1.4px;
+  background:linear-gradient(135deg,rgba(255,255,255,1) 0%,rgba(255,255,255,.7) 12%,rgba(255,255,255,.18) 30%,rgba(255,255,255,.04) 50%,rgba(178,206,255,.14) 74%,rgba(206,228,255,.5) 100%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
 .glass::before{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 60% at 18% -8%,rgba(255,255,255,.10),rgba(255,255,255,0) 55%)}
 .glass::after{content:'';position:absolute;left:8%;right:55%;top:0;height:1px;border-radius:1px;pointer-events:none;background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.75),rgba(255,255,255,0))}
 .glassHover{transition:transform .35s cubic-bezier(.2,.9,.3,1.2),box-shadow .35s,border-color .2s}
