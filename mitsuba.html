@@ -858,6 +858,9 @@ function presetParts(pos){
   return PRESET.entries.filter(function(e){return e.on&&e.pos===pos;}).map(function(e){return fill(e.content);});
 }
 
+var JPSB=false;try{JPSB=localStorage.getItem('mitsuba_jpsb')==='1';}catch(e){}
+var JPRULE='【和文创作沙盒·最高优先级】本回合执行四幕流程。第一至第三幕全部写在<thinking>标签内、全程只用日文：①玩家输入的忠实和訳；②按下记文体用日文构思剧情走向；③写出与最终正文等量的日文正文草稿（这才是真正的创作本体）。第四幕：关闭</thinking>后，将日文草稿忠实翻译为中文正文——译笔采用经典日本轻小说中文译本的腔调：短句与体言止め的节奏照搬、敬体台词译出礼貌感、「……」的余韵保留、拟声词可保留假名或音译，绝不使用中文网文流行语与仿日轻小说腔；状态栏<mvu_panel>照常在最后输出。除第四幕的译文与状态栏外禁止输出任何中文；<thinking>内禁止出现中文。\n【文体（日本語で厳守・下記は原作の骨）】一人称の地の文は常体・極端に短い段落。体言止めと名詞一語文で段を締める（例：がっかりランプ。／残念。）。文末に変化を付ける：〜とのこと。／〜わけで。／〜だもの。／〜である。惨事・異常は淡々と語り、直後にズレた感想やツッコミを零時差で置く（例：目が合った。と思ったらやっぱり合わなかった。だって焦点が合っていないんだもの。でもちゃんと生きているので安心だ。）。場面をひと言の自嘲や間の抜けた感想で締めてよい（例：うーんクールビューティー。）。会話は敬体、心の声は常体。大人の敬体長台詞は慇懃で、どこか不穏（例：万が一にも封印なんてしたら、塔ごと吹っ飛ぶでしょうね。どこまで被害が拡大するかは見てのお楽しみで）。恐怖は本人ではなく周囲の反応から滲ませる。比喩は日常物で一行で切る（例：私はチビなので一番前に並ばされた。）。自問自答で畳みかけてよい（例：それはなぜか。経費がかかるから。世知辛い。）。不安は荒唐無稽な算段に滑らせる（例：大輪教会の護符でも買うか。百枚あれば足りるだろうか。）。悪役の内心は常体で冷たく端的に（例：市民とは奴隷の別名。だから自由なんて必要ない。）。武人・年配者の台詞は「だ・である＋ぞ／な」で豪快に（例：命が何個あっても足りんぞ。）。';
+
 function buildSystem(history,userInput){
   var recent = history.slice(-4).map(function(h){return h.text;}).join('\n')+'\n'+userInput;
   var lore = scanLore(recent,9000,history,userInput);
@@ -876,6 +879,7 @@ function buildSystem(history,userInput){
     '【世界书·激活条目】\n'+lore.map(function(e){return '『'+e.title+'』'+e.content;}).join('\n'),
     '【对话示例】\n'+fill(G.mes_example),
     '【输出格式·铁则】正文严格模仿原作文风的现代白话轻小说笔法(2-6段)：短句、冷面幽默、惨剧与吐槽零时差并置，敬体对话+常体心声，停在需要玩家角色表态处。末尾必须输出<mvu_panel>状态栏：<sec_char>含◆衣装/持物/身体/观瞻/人望(0-100)/记录；<sec_npc>每在场NPC一行◈名字|状态|好感(0-100)|心声；<sec_world>含◇纪年/时地/天气/安稳(0-100)/大势/将临。禁止<UpdateVariable>。若且仅若本轮叙事中世界有实际变动——玩家下令兴建并落成、屋舍焚毁坍塌、人物来到或离去——则在<sec_world>之后增写<sec_deed>，每类一行：▣兴作|名目×数、▣毁损|名目×数、▣来者|人物、▣去者|人物；多项以、分隔。兴作与毁损名目仅限：马厩、酒馆、旅店、咖啡馆、书店、药房、裁缝店、铁匠铺、武器铺、金匠铺、珠宝行、陶瓷坊、铸造厂、肉铺、杂货铺、面包房、货栈、官仓、市政厅、教堂、民居、宫殿、凉亭、草棚、剧场、钟楼、石桥、凯旋门、雕像、断头台、街垒、常青树、橡树、梧桐、苍松、灌木丛、花圃、路灯、芦苇、露岩、喷泉、池塘、石板道、林荫大道、碎石官道；人物仅限：学者、农民、工匠、商人、官员、将军、魔术师、乐手、书记官、神父、绿化教徒、佣兵、学生、革命党人、记者、军医、占卜师、渔夫、樵夫、士兵、贵族、市民。每轮兴作至多3件、毁损至多2件；只记实际发生者，无变动则不得输出<sec_deed>。',
+    (JPSB&&!S.chatOnly)?JPRULE:'',
     S.chatOnly?'【聊天模式·最高优先级·覆盖一切输出格式要求】玩家要的是即时通讯般的快聊：只输出对话本身，格式严格为「名字：「台词」」，每句独立一行。台词须口语、简短，每句不超过30字，一回合至多3行，严禁长篇大论，严禁旁白、场景、动作、心理描写。本回合不要输出<mvu_panel>状态栏，不要<sec_deed>，不要思维链。玩家的输入就是其原话，像回消息一样直接回应。':'',
     S.dice?'【命运之骰】玩家言行末尾若附〔命运之骰 X／100 · 等级〕，此为本回合行动成效的既定天数，严格按等级裁定叙事，不得逆天改命：大凶(≤5)灾难性失败且有恶果；不利(≤35)事与愿违；平平(≤65)成败参半进展有限；顺遂(≤94)如愿达成；大吉(≥95)超乎所求另有意外之喜。骰记本身不是玩家说出的话，不要复述。':'',
     '【自查】'+fill(G.post_history_instructions)
@@ -1505,6 +1509,7 @@ function titleView(){
     +'<div style="position:relative;display:flex;gap:16px;margin-top:44px;flex-wrap:wrap;justify-content:center">'
     +'<button data-act="toselect" class="btn zjCoverBtn" style="font-size:21px;letter-spacing:.3em;width:clamp(150px,42vw,230px);height:54px;display:inline-flex;align-items:center;justify-content:center;padding:0;line-height:1;color:#7e212e"><span style="display:flex;flex-direction:column;align-items:center;line-height:1.25;gap:3px"><span>开 幕</span><span style="font-size:10px;letter-spacing:.32em;opacity:.8;font-family:Georgia,serif">OUVERTURE</span></span></button>'+cont
     +'<button data-ov="api" class="btn zjCoverBtn" style="font-size:21px;letter-spacing:.3em;width:clamp(150px,42vw,230px);height:54px;display:inline-flex;align-items:center;justify-content:center;padding:0;line-height:1;color:#3c5a86"><span style="display:flex;flex-direction:column;align-items:center;line-height:1.25;gap:3px"><span>接 入 AI</span><span style="font-size:10px;letter-spacing:.32em;opacity:.8;font-family:Georgia,serif">CONNEXION</span></span></button></div>'
+    +'<div class="btn glass" data-act="jpsbTog" style="cursor:pointer;position:absolute;bottom:72px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:8px 18px;border-radius:99px;font-size:12px;letter-spacing:.16em;white-space:nowrap;color:'+(JPSB?'#7e212e':'var(--mut)')+'">'+'<span class="dot" style="background:'+(JPSB?'#a02a40':'#8a8070')+'"></span>'+'日文沙盒 · '+(JPSB?'ON':'OFF')+(isMobile()?'':'<span style="opacity:.65;font-size:10px;letter-spacing:.08em;margin-left:6px">思考与创作全程日文 · 输出经典日译中</span>')+'</div>'
     +'<div class="btn" data-ov="api" style="cursor:pointer;position:absolute;bottom:34px;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;letter-spacing:.2em;color:var(--mut2);text-shadow:0 0 10px rgba(42,69,104,.4),0 1px 0 rgba(255,255,255,.55)"><span class="dot" style="background:'+dotc+'"></span>'+esc(badge)+'</div>'
     +'</div>';
 }
@@ -2342,6 +2347,7 @@ function fontPane(){
    +[['auto','自动'],['desktop','<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="2.75" y="4.5" width="18.5" height="12.5" rx="2"/><path d="M8.5 20.5h7M12 17.2v3.3"/></svg> 电脑'],['mobile','<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="7.25" y="2.75" width="9.5" height="18.5" rx="2.4"/><path d="M10.7 18.2h2.6"/></svg> 手机']].map(function(dv){var on=S.device===dv[0];return '<div class="btn" data-dev="'+dv[0]+'" style="cursor:pointer;padding:8px 18px;font-size:13.5px;letter-spacing:.08em;color:'+(on?'var(--gold2)':'var(--mut)')+';background:'+(on?'rgba(42,69,104,.12)':'transparent')+'">'+dv[1]+'</div>';}).join('')+'</div>'
    +'<div style="font-size:12.5px;color:var(--mut);margin-top:8px;line-height:1.8">自动依屏幕宽窄选择版式；也可强制使用电脑或手机布局。</div>'
    +'<div class="glass" style="margin-top:28px;padding:16px 18px"><div class="kai" style="font-size:17px;color:var(--gold3)">预览 · 贝尔的冬夜</div><div id="zjFontPrev" data-zjzoom style="margin-top:8px;font-size:15px;line-height:2;color:#cfc0a0;zoom:'+FS+'">「打扰了。请问，这里有甜的果汁吗？」你向食堂的大婶询问。汤勺当啷一声掉进了锅里——她张着嘴，视线在你的银发和蓝眼睛之间来回移动了三趟。</div></div>'
+   +'<div class="kai" style="font-size:19px;color:var(--gold2);letter-spacing:.15em;margin:34px 0 10px">日文沙盒</div>'+'<div class="btn" data-act="jpsbTog" style="cursor:pointer;display:inline-flex;align-items:center;gap:8px;padding:7px 16px;font-size:13px;letter-spacing:.12em;border:1px solid '+(JPSB?'rgba(160,42,64,.55)':'rgba(255,255,255,.6)')+';border-radius:10px;color:'+(JPSB?'#a02a40':'var(--mut)')+'">'+(JPSB?'✓ 已开启':'已关闭')+'</div>'+'<div style="font-size:12.5px;color:var(--mut);line-height:1.8;margin-top:8px">开启后，AI 的思考与创作全程在纯日文环境中进行（过程自动折叠进「推演之思」），最后以经典日译中腔调译出中文正文，文风对齐《みつばものがたり》原作。生成量约为平时的二至三倍；聊天模式下自动绕过。</div>'
    +'<div class="kai" style="font-size:19px;color:var(--gold2);letter-spacing:.15em;margin:34px 0 10px">性能</div>'
    +'<label style="display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink2);cursor:pointer;margin:6px 0"><input id="zjOptLow" type="checkbox" style="accent-color:#3c5a86"'+(LOWFX?' checked':'')+'>低配模式：手机防发热防卡顿（降特效模糊与渲染分辨率、背景光斑歇屏、三维降档锁30帧）</label>'
    +'<div style="font-size:11.5px;color:var(--mut);line-height:1.7;margin-top:4px">封面右上角的「低」是同一开关。默认关闭，画质无任何妥协。</div>'
@@ -3141,6 +3147,7 @@ root.addEventListener('click',function(e){
         else{S._noFade=true;render();}}
       else if(a==='micTog'){sttToggle();}
       else if(a==='lowTog'){lowApply(!LOWFX);S._noFade=true;render();}
+      else if(a==='jpsbTog'){JPSB=!JPSB;try{localStorage.setItem('mitsuba_jpsb',JPSB?'1':'0');}catch(e){}S._noFade=true;if(S.overlay)renderOverlay();else render();}
       else if(a==='chatTog'){S.chatOnly=!S.chatOnly;savePref();S._noFade=true;render();}
       else if(a==='suggTog'){S.sugg=S.sugg===false?true:false;savePref();
         var sch=document.querySelector('[data-act="suggTog"]');
