@@ -193,26 +193,92 @@ function glInit(){
   if(!window.THREE){ if(GL.tries++<40) setTimeout(glInit,200); return; }
   var cv=document.getElementById('zjGL'); if(!cv)return;
   try{
-    var T=window.THREE, W=window.innerWidth, H=window.innerHeight;
+    var T=window.THREE;
     var rnd=new T.WebGLRenderer({canvas:cv,alpha:false,antialias:true});
     rnd.setClearColor(0xe9dfc6,1);
-    rnd.setPixelRatio(LOWFX?1:Math.min(2,window.devicePixelRatio||1)); rnd.setSize(W,H);
+    rnd.setPixelRatio(LOWFX?1:Math.min(2,window.devicePixelRatio||1));
+    rnd.setSize(window.innerWidth,window.innerHeight);
     GL.applyLow=function(on){try{rnd.setPixelRatio(on?1:Math.min(2,window.devicePixelRatio||1));rnd.setSize(window.innerWidth,window.innerHeight);}catch(e){}};
-    var scene=new T.Scene(); var cam=new T.OrthographicCamera(-1,1,1,-1,0.1,10); cam.position.z=1;
-    var uni={uT:{value:0},uMute:{value:0}};
-    var mat=new T.ShaderMaterial({uniforms:uni,vertexShader:"varying vec2 vUv;varying float vL;uniform float uT;\nvoid main(){\n  vUv=uv;vec3 p=position;\n  float a1=sin(uv.x*6.2+uT*1.5)*0.5+sin(uv.x*11.0-uT*2.2+uv.y*2.0)*0.25;\n  float a2=sin(uv.y*4.5+uT*1.1+uv.x*3.0)*0.3;\n  float amp=0.055+0.03*uv.x;\n  p.z=(a1+a2)*amp;\n  float sl=(cos(uv.x*6.2+uT*1.5)*3.1+cos(uv.x*11.0-uT*2.2+uv.y*2.0)*2.75)*amp;\n  vL=clamp(0.86+sl*1.35,0.6,1.22);\n  gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.0);\n}",fragmentShader:"varying vec2 vUv;varying float vL;uniform float uMute;\nfloat hash(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}\nvoid main(){\n  vec3 c;\n  if(vUv.x<0.33333)c=vec3(0.263,0.345,0.502);\n  else if(vUv.x<0.66667)c=vec3(0.902,0.874,0.808);\n  else c=vec3(0.604,0.268,0.255);\n  float e=smoothstep(0.0,0.014,abs(vUv.x-0.33333))*smoothstep(0.0,0.014,abs(vUv.x-0.66667));\n  c*=mix(0.93,1.0,e);\n  float n1=hash(floor(vUv*vec2(52.0,34.0)));\n  float n2=hash(floor(vUv*vec2(9.0,6.0))+7.3);\n  c*=0.96+0.045*n1+0.05*n2;\n  c=mix(c,vec3(0.898,0.858,0.760),0.16+0.10*n2);\n  float vg=smoothstep(0.42,0.98,distance(vUv,vec2(0.5,0.52)));\n  c*=1.0-0.20*vg;\n  c=mix(c,vec3(0.914,0.875,0.776),uMute);\n  gl_FragColor=vec4(c*vL,1.0);\n}"});
-    var flag=new T.Mesh(new T.PlaneGeometry(2,2,150,100),mat); flag.rotation.z=-0.045; flag.scale.set(1.22,1.34,1); scene.add(flag);
+    var scene=new T.Scene();
+    var cam=new T.PerspectiveCamera(45,window.innerWidth/window.innerHeight,.1,50);
+    cam.position.set(0,0,3.1);
+    scene.add(new T.AmbientLight(0xf2ead8,.72));
+    var sun=new T.DirectionalLight(0xfff4e0,.95); sun.position.set(-2.2,2.6,3.2); scene.add(sun);
+    var fill=new T.DirectionalLight(0xdce4f2,.3); fill.position.set(2.4,-1.4,2.0); scene.add(fill);
+    /* 做旧三色布料贴图：平滑污渍与织纹，画布绘制，无块状噪点 */
+    var tex=(function(){
+      var c=document.createElement('canvas');c.width=1024;c.height=640;var x=c.getContext('2d');
+      x.fillStyle='#405A8A';x.fillRect(0,0,342,640);
+      x.fillStyle='#E6DFCE';x.fillRect(342,0,342,640);
+      x.fillStyle='#A0443E';x.fillRect(684,0,340,640);
+      var i,g;
+      for(i=0;i<16;i++){var sx=Math.random()*1024,sy=Math.random()*640,sr=70+Math.random()*200;
+        g=x.createRadialGradient(sx,sy,0,sx,sy,sr);
+        var dark=Math.random()<.55;
+        g.addColorStop(0,dark?'rgba(70,60,44,'+(0.05+Math.random()*0.07)+')':'rgba(255,250,236,'+(0.06+Math.random()*0.08)+')');
+        g.addColorStop(1,'rgba(0,0,0,0)');
+        x.fillStyle=g;x.fillRect(0,0,1024,640);}
+      x.globalAlpha=.05;x.strokeStyle='#3a2f24';
+      for(i=0;i<640;i+=3){x.beginPath();x.moveTo(0,i);x.lineTo(1024,i);x.stroke();}
+      x.globalAlpha=1;
+      g=x.createLinearGradient(0,0,0,640);
+      g.addColorStop(0,'rgba(60,50,36,.16)');g.addColorStop(.12,'rgba(0,0,0,0)');
+      g.addColorStop(.88,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(60,50,36,.18)');
+      x.fillStyle=g;x.fillRect(0,0,1024,640);
+      g=x.createLinearGradient(0,0,1024,0);
+      g.addColorStop(0,'rgba(60,50,36,.14)');g.addColorStop(.08,'rgba(0,0,0,0)');
+      g.addColorStop(.94,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(70,55,40,.2)');
+      x.fillStyle=g;x.fillRect(0,0,1024,640);
+      var t9=new T.CanvasTexture(c);try{t9.colorSpace='srgb';}catch(e9){}
+      try{t9.anisotropy=rnd.capabilities.getMaxAnisotropy();}catch(e8){}
+      return t9;})();
+    var mat=new T.MeshStandardMaterial({map:tex,roughness:.92,metalness:0,side:T.DoubleSide});
+    var SEG_X=LOWFX?72:110, SEG_Y=LOWFX?48:72;
+    var flag=null,BX=null,BY=null,NV=0;
+    function buildFlag(){
+      if(flag){scene.remove(flag);flag.geometry.dispose();}
+      var d=cam.position.z, h=2*d*Math.tan(cam.fov*Math.PI/360)*1.5;
+      var w=h*Math.max(cam.aspect,1.25)*1.16;
+      var geo=new T.PlaneGeometry(w,h,SEG_X,SEG_Y);
+      flag=new T.Mesh(geo,mat);
+      flag.rotation.y=-0.13; flag.rotation.z=-0.04; flag.position.x=-w*0.015;
+      scene.add(flag);
+      var a=geo.attributes.position.array; NV=a.length/3; BX=new Float32Array(NV); BY=new Float32Array(NV);
+      for(var k=0;k<NV;k++){BX[k]=a[k*3];BY[k]=a[k*3+1];}
+      flag.userData.w=w; flag.userData.h=h;
+    }
+    buildFlag();
+    /* 界面切换的羊皮纸淡化幕（封面浓·其余淡） */
+    var veilScene=new T.Scene(), veilCam=new T.OrthographicCamera(-1,1,1,-1,0,2);
+    var veilMat=new T.MeshBasicMaterial({color:0xe9dfc6,transparent:true,opacity:0,depthTest:false,depthWrite:false});
+    veilScene.add(new T.Mesh(new T.PlaneGeometry(2,2),veilMat));
+    rnd.autoClear=false;
     GL.done=true;
-    window.addEventListener('resize',function(){rnd.setSize(window.innerWidth,window.innerHeight);});
+    window.addEventListener('resize',function(){
+      cam.aspect=window.innerWidth/window.innerHeight;cam.updateProjectionMatrix();
+      rnd.setSize(window.innerWidth,window.innerHeight);buildFlag();
+    });
     var t0=Date.now(),glLast=0;
     (function loop(){
       requestAnimationFrame(loop);
       var scr=(typeof S!=='undefined'&&S&&S.screen)?S.screen:'title';
       if(LOWFX){ if(document.hidden)return; var nw9=Date.now(); if(nw9-glLast<33)return; glLast=nw9; }
-      var mt=(scr==='title')?0.0:0.82;
-      uni.uMute.value+=(mt-uni.uMute.value)*0.06;
-      uni.uT.value=(Date.now()-t0)/1000;
-      rnd.render(scene,cam);
+      var tt=(Date.now()-t0)/1000;
+      var geo=flag.geometry,pos=geo.attributes.position,a=pos.array;
+      var w=flag.userData.w,h=flag.userData.h;
+      for(var k=0;k<NV;k++){
+        var nx=BX[k]/w+0.5, ny=BY[k]/h+0.5;
+        var amp=(0.16+0.84*nx)*h*0.055;
+        var z=Math.sin(nx*6.4+tt*1.55+ny*1.6)*amp
+             +Math.sin(nx*11.3-tt*2.3+ny*3.1)*amp*0.45
+             +Math.sin(ny*5.2+tt*1.15+nx*2.2)*amp*0.5;
+        a[k*3+2]=z;
+        a[k*3+1]=BY[k]+Math.sin(nx*3.1+tt*1.2)*amp*0.16;
+      }
+      pos.needsUpdate=true; geo.computeVertexNormals();
+      var mt=(scr==='title')?0.0:0.9;
+      veilMat.opacity+=(mt-veilMat.opacity)*0.06;
+      rnd.clear(); rnd.render(scene,cam); rnd.render(veilScene,veilCam);
     })();
   }catch(e){}
 }
@@ -1430,7 +1496,7 @@ function titleView(){
     +'<button data-ov="set" class="btn" title="设置" style="position:absolute;top:16px;right:14px;width:30px;height:30px;border:none;background:transparent;cursor:pointer;padding:0;color:var(--mut2);filter:drop-shadow(0 0 7px rgba(42,69,104,.4))"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><circle cx="12" cy="12" r="3.1"/><path d="M19.3 12c0-.5-.05-.99-.15-1.46l2-1.56-1.8-3.12-2.37.95a7.4 7.4 0 0 0-2.52-1.46L14.1 2.8h-4.2l-.36 2.55a7.4 7.4 0 0 0-2.52 1.46l-2.37-.95-1.8 3.12 2 1.56c-.1.47-.15.96-.15 1.46s.05.99.15 1.46l-2 1.56 1.8 3.12 2.37-.95c.75.65 1.6 1.15 2.52 1.46l.36 2.55h4.2l.36-2.55a7.4 7.4 0 0 0 2.52-1.46l2.37.95 1.8-3.12-2-1.56c.1-.47.15-.96.15-1.46z"/></svg></button>';
   return '<div class="col center" style="position:relative;text-align:center;padding-bottom:11vh">'+bgmBtn
     +'<div style="position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 75% 55% at 50% 82%, rgba(146,170,210,.22), transparent 62%)"></div>'
-    +'<div style="position:absolute;inset:0;overflow:hidden;pointer-events:none">'+embersHtml()+'</div>'
+    
     +'<div style="position:relative"><div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(60vh,86vw);aspect-ratio:1;pointer-events:none;background:radial-gradient(circle,rgba(42,69,104,.17),rgba(42,69,104,.06) 45%,transparent 70%)"></div><svg class="zjSeal" viewBox="0 0 772 834" style="position:relative;display:block;margin:0 auto;width:clamp(200px,min(46vh,66vw),480px);height:auto" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="zjGold" gradientUnits="userSpaceOnUse" x1="0" y1="60" x2="0" y2="800"><stop offset="0" stop-color="#ecd3a3"/><stop offset=".5" stop-color="#d4ab6e"/><stop offset="1" stop-color="#a97f45"/></linearGradient></defs><g><animateTransform attributeName="transform" type="rotate" from="0 386 417" to="360 386 417" dur="46s" repeatCount="indefinite"/><g fill="none" stroke="url(#zjGold)"><circle cx="386" cy="417" r="336" stroke-width="7" opacity=".5"/><circle cx="386" cy="417" r="312" stroke-width="2" opacity=".35" stroke-dasharray="4 14"/><circle cx="386" cy="417" r="360" stroke-width="1.5" opacity=".25"/></g><g fill="url(#zjGold)" opacity=".8"><circle cx="722.0" cy="417.0" r="9"/><circle cx="677.0" cy="585.0" r="5"/><circle cx="554.0" cy="708.0" r="5"/><circle cx="386.0" cy="753.0" r="9"/><circle cx="218.0" cy="708.0" r="5"/><circle cx="95.0" cy="585.0" r="5"/><circle cx="50.0" cy="417.0" r="9"/><circle cx="95.0" cy="249.0" r="5"/><circle cx="218.0" cy="126.0" r="5"/><circle cx="386.0" cy="81.0" r="9"/><circle cx="554.0" cy="126.0" r="5"/><circle cx="677.0" cy="249.0" r="5"/></g></g><g fill="url(#zjGold)"><circle cx="386" cy="303" r="112"/><circle cx="287" cy="472" r="112"/><circle cx="485" cy="472" r="112"/><path d="M386 520 q-14 96 -66 150 q66 -18 84 -70 q10 -34 6 -80 Z"/></g></svg></div>'
     +'<div style="position:relative;margin-top:16px;font-size:12px;letter-spacing:.52em;color:#7e212e;font-family:Georgia,serif;text-shadow:0 1px 0 rgba(255,255,255,.75)">LIBERTÉ · ÉGALITÉ · FRATERNITÉ</div><div class="kai" style="position:relative;margin-top:8px;font-size:clamp(34px,7vw,60px);letter-spacing:.18em;color:var(--gold2);text-shadow:0 1px 0 rgba(255,255,255,.7),0 0 34px rgba(58,92,140,.25)">三叶物语</div><div style="position:relative;margin-top:10px;font-size:13px;letter-spacing:.12em;color:var(--gold);font-style:italic;font-family:Georgia,serif;text-shadow:0 1px 0 rgba(255,255,255,.7)">L\'Histoire de Mitsuba 〜 La Fille Maudite et la Ronde de la Mort 〜</div>'
     +'<div class="slip" style="position:relative;width:320px;max-width:74vw;margin:18px auto 12px"></div>'
