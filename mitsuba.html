@@ -79,7 +79,7 @@ textarea,input{border-radius:10px}
    --glassTint 保证零模糊时也可读。 */
 .glass{--glassTint:.52;position:relative;overflow:hidden;border-radius:16px;
   background:radial-gradient(120px 74px at 24px 16px,rgba(255,255,255,.98),rgba(255,255,255,0) 72%),linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,0) 30%),radial-gradient(150% 112% at 3% -22%,rgba(255,255,255,.5),rgba(255,255,255,0) 44%),linear-gradient(140deg,rgba(255,253,248,var(--glassTint)),rgba(244,237,223,var(--glassTint)));
-  -webkit-backdrop-filter:url(#glassR) blur(6px) saturate(184%) brightness(1.05);backdrop-filter:url(#glassR) blur(6px) saturate(184%) brightness(1.05);
+  -webkit-backdrop-filter:url(#glassR) blur(2px) saturate(190%) brightness(1.05);backdrop-filter:url(#glassR) blur(2px) saturate(190%) brightness(1.05);
   border:none;
   box-shadow:inset 0 1.6px 0 rgba(255,255,255,.98),inset 1.6px 0 0 rgba(255,255,255,.6),inset 0 3px 5px -2px rgba(52,84,140,.5),inset 3px 0 6px -3px rgba(52,84,140,.3),inset -1.4px 0 0 rgba(255,255,255,.3),inset 0 -1.4px 0 rgba(255,255,255,.34),inset 0 -22px 40px rgba(96,120,160,.07),0 18px 44px rgba(46,38,26,.26),0 5px 14px rgba(46,38,26,.15)}
 .glass::before{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 60% at 18% -8%,rgba(255,255,255,.10),rgba(255,255,255,0) 55%)}
@@ -136,7 +136,7 @@ textarea,input{border-radius:10px}
 <body>
 <svg width="0" height="0" style="position:absolute;pointer-events:none" aria-hidden="true"><defs>
 <filter id="glassR" x="-12%" y="-12%" width="124%" height="124%" color-interpolation-filters="sRGB">
-<feTurbulence type="fractalNoise" baseFrequency="0.008 0.011" numOctaves="2" seed="7" result="n"/>
+<feTurbulence type="fractalNoise" baseFrequency="0.018 0.022" numOctaves="2" seed="7" result="n"/>
 <feGaussianBlur in="n" stdDeviation="1.1" result="ns"/>
 <feDisplacementMap in="SourceGraphic" in2="ns" scale="20" xChannelSelector="R" yChannelSelector="G"/>
 </filter></defs></svg>
@@ -2135,8 +2135,8 @@ function overlayView(){
   var title=S.overlay==='codex'?'三叶世界书':S.overlay==='map'?'罗泽利亚地图':S.overlay==='preset'?'自定义预设':S.overlay==='api'?'AI 接口设置':S.overlay==='jpsb'?'日文沙盒':S.overlay==='set'?'设 置':S.overlay==='mem'?'长程记忆 · 编年长卷':'存 档';
   var inner=S.overlay==='codex'?codexBody():S.overlay==='map'?mapBody():S.overlay==='preset'?presetBody():S.overlay==='api'?apiBody():S.overlay==='jpsb'?jpsbBody():S.overlay==='set'?setBody():S.overlay==='mem'?memBody():savesBody();
   return '<div id="zjOvWrap" style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:14px">'
-    +'<div id="zjOvDim" data-act="closeov" class="fade" style="position:absolute;inset:0;background:radial-gradient(120% 100% at 50% 40%,rgba(28,22,13,.5),rgba(16,12,7,.66));-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)"></div>'
-    +'<div data-stop="1" id="zjOvBox" class="glass" style="--glassTint:.64;position:relative;width:min(1060px,96vw);height:min(720px,92vh);display:flex;flex-direction:column;overflow:hidden">'
+    +'<div id="zjOvDim" data-act="closeov" class="fade" style="position:absolute;inset:0;background:radial-gradient(120% 100% at 50% 40%,rgba(30,24,15,.14),rgba(18,13,8,.28));-webkit-backdrop-filter:blur(3px) saturate(115%);backdrop-filter:blur(3px) saturate(115%)"></div>'
+    +'<div data-stop="1" id="zjOvBox" class="glass" style="--glassTint:.5;position:relative;width:min(1060px,96vw);height:min(720px,92vh);display:flex;flex-direction:column;overflow:hidden">'
     +'<div style="flex:none;display:flex;align-items:center;gap:14px;padding:13px 18px;border-bottom:1px solid rgba(42,69,104,.22)"><div class="kai" style="font-size:19px;letter-spacing:.22em;color:var(--gold2)">'+title+'</div>'+(S.overlay==='codex'?'<button data-act="editlore" class="obtn btn" title="编辑世界书：自写条目与上传" style="width:30px;height:30px;color:var(--mut);flex:none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><circle cx="12" cy="12" r="3.1"/><path d="M19.3 12c0-.5-.05-.99-.15-1.46l2-1.56-1.8-3.12-2.37.95a7.4 7.4 0 0 0-2.52-1.46L14.1 2.8h-4.2l-.36 2.55a7.4 7.4 0 0 0-2.52 1.46l-2.37-.95-1.8 3.12 2 1.56c-.1.47-.15.96-.15 1.46s.05.99.15 1.46l-2 1.56 1.8 3.12 2.37-.95c.75.65 1.6 1.15 2.52 1.46l.36 2.55h4.2l.36-2.55a7.4 7.4 0 0 0 2.52-1.46l2.37.95 1.8-3.12-2-1.56c.1-.47.15-.96.15-1.46z"/></svg></button>':'')+'<div class="grow"></div><button data-act="closeov" class="obtn btn" style="width:32px;height:32px;color:var(--mut)">✕</button></div>'
     +inner+'</div></div>';
 }
