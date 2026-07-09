@@ -3539,10 +3539,10 @@ function tabIsleAnim(oldTab,newTab){
   setTimeout(function(){
     var b=document.getElementById('zjTabBall');
     if(b&&b.animate)b.animate([
-      {transform:'translate(-50%,-50%) scale(1)',boxShadow:'0 0 5px 1px rgba(140,170,220,.5)',offset:0},
-      {transform:'translate(-50%,-50%) scale(1.45)',boxShadow:'0 0 22px 9px rgba(150,180,230,.8)',offset:.34},
-      {transform:'translate(-50%,-50%) scale(1)',boxShadow:'0 0 34px 5px rgba(140,170,220,0)',offset:1}
-    ],{duration:580,easing:'cubic-bezier(.25,.7,.35,1)'});
+      {boxShadow:'0 0 4px 1px rgba(140,170,220,.5)',offset:0},
+      {boxShadow:'0 0 17px 5px rgba(150,180,230,.72)',offset:.32},
+      {boxShadow:'0 0 44px 12px rgba(140,170,220,0)',offset:1}
+    ],{duration:660,easing:'cubic-bezier(.22,.61,.3,1)'});
     var act=document.getElementById('zjTab_'+newTab);
     if(act&&act.animate)act.animate([
       {textShadow:'0 1px 0 rgba(255,255,255,.55)'},
@@ -3575,6 +3575,8 @@ function zjModeBallRef(md){var row=document.getElementById('zjChipsRow');if(!row
 function positionModeBall(){
   try{
     var ball=document.getElementById('zjModeBall');if(!ball)return;
+    /* 聊天模式开启时台词/行动/自由失效，小球熄灭（控制游戏仍有效则不灭） */
+    if(S.chatOnly&&S.mode!=='world'){ball.style.opacity='0';return;}
     var r=zjModeBallRef(S.mode);if(!r||!r.ref){ball.style.opacity='0';return;}
     ball.style.left=(zjModeBallX(r.ref,r.row)+r.ref.offsetWidth/2)+'px';ball.style.opacity='1';
   }catch(e){}
@@ -3582,19 +3584,23 @@ function positionModeBall(){
 function modeBallFly(nmd){
   var ball=document.getElementById('zjModeBall');var r=zjModeBallRef(nmd);
   if(!ball||!r||!r.ref)return;
+  var dis=(S.chatOnly&&nmd!=='world');
+  if(dis){ball.style.opacity='0';return;}
   var newLeft=zjModeBallX(r.ref,r.row)+r.ref.offsetWidth/2;
   var oldLeft=parseFloat(ball.style.left);if(isNaN(oldLeft))oldLeft=newLeft;
   ball.style.opacity='1';
   if(!ball.animate||reducedMotion()){ball.style.left=newLeft+'px';return;}
-  ball.animate([{left:oldLeft+'px'},{left:newLeft+'px'}],{duration:330,easing:'cubic-bezier(.3,1.05,.3,1)'});
   ball.style.left=newLeft+'px';
+  var _sl=ball.animate([{left:oldLeft+'px'},{left:newLeft+'px'}],{duration:330,easing:'cubic-bezier(.3,1.05,.3,1)'});
+  setTimeout(function(){try{_sl.cancel();}catch(e){}},360); /* 滑动结束后必撤销动画，保证稳落 style.left */
   setTimeout(function(){
     var b=document.getElementById('zjModeBall');
+    /* 纯柔光晕外扩即隐——小球本体不缩放（缩放实心球会像贴图展开、很假），只让光晕自然荡开消散 */
     if(b&&b.animate)b.animate([
-      {transform:'translate(-50%,-50%) scale(1)',boxShadow:'0 0 5px 1px rgba(140,170,220,.5)',offset:0},
-      {transform:'translate(-50%,-50%) scale(1.6)',boxShadow:'0 0 22px 9px rgba(150,180,230,.8)',offset:.34},
-      {transform:'translate(-50%,-50%) scale(1)',boxShadow:'0 0 34px 5px rgba(140,170,220,0)',offset:1}
-    ],{duration:580,easing:'cubic-bezier(.25,.7,.35,1)'});
+      {boxShadow:'0 0 4px 1px rgba(140,170,220,.5)',offset:0},
+      {boxShadow:'0 0 17px 5px rgba(150,180,230,.72)',offset:.32},
+      {boxShadow:'0 0 44px 12px rgba(140,170,220,0)',offset:1}
+    ],{duration:660,easing:'cubic-bezier(.22,.61,.3,1)'});
     var act=document.querySelector('[data-mode="'+nmd+'"]');
     if(act&&act.animate)act.animate([
       {textShadow:'0 1px 0 rgba(255,255,255,.55)'},
