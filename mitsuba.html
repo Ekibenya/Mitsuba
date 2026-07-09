@@ -710,6 +710,144 @@ function illuHtml(h,i){
 }
 /* 版本切换/单条更新：只重建这一条的插画块，不整页 render（消除闪屏）；找不到容器才回退整页 */
 function illuSwap(i,h){var el=document.querySelector('.zjIllu[data-illu="'+i+'"]');if(el){var _oh=el.offsetHeight;if(_oh)el.style.minHeight=_oh+'px';el.innerHTML=illuHtml(h,i);try{imgHydrate();}catch(e){}setTimeout(function(){if(el)el.style.minHeight='';},480);}else{S._noFade=true;render();}}
+function eyeSvg(revealed){return revealed
+  ? '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M2 12s3.6-7 10-7c2.1 0 3.9.6 5.4 1.5M22 12s-3.6 7-10 7c-2.1 0-3.9-.6-5.4-1.5"/><path d="M9.6 9.6a3.4 3.4 0 0 0 4.8 4.8"/><path d="M3 3l18 18"/></svg>'
+  : '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3.1"/></svg>';}
+/* 带小眼睛的密钥输入框：点眼睛在「密文小圆点 ↔ 明文」间切换（纯 DOM，不重渲染、不闪屏）。所有 API 密钥统一用它。 */
+var PW_INP='style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.03);border:1px solid rgba(58,92,140,.3);color:var(--ink);padding:10px 46px 10px 12px;font-size:14px" autocomplete="off" spellcheck="false"';
+function pwField(id,val,ph){return '<div style="position:relative">'
+  +'<input id="'+id+'" type="password" '+PW_INP+' value="'+esc(val||'')+'" placeholder="'+esc(ph||'')+'">'
+  +'<span class="btn" data-eye="'+id+'" title="显示 / 隐藏密钥" style="position:absolute;top:50%;right:5px;transform:translateY(-50%);width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--mut)">'+eyeSvg(false)+'</span>'
+  +'</div>';}
+function imgCacheList(cb){idbOpen(function(db){if(!db)return cb([]);try{var rq=db.transaction('img').objectStore('img').getAllKeys();rq.onsuccess=function(){cb((rq.result||[]).slice());};rq.onerror=function(){cb([]);};}catch(e){cb([]);}});}
+function imgCachePane(){
+  if(S.imgCacheKeys==null){
+    if(!S._imgCacheBusy){S._imgCacheBusy=true;imgCacheList(function(ks){S.imgCacheKeys=ks||[];S._imgCacheBusy=false;if(S.overlay==='set'&&S.setTab==='imgcache')renderOverlay();});}
+    return '<div class="grow bambooV" style="overflow-y:auto;padding:22px"><div style="text-align:center;color:var(--mut);font-size:13px;letter-spacing:.2em;padding:34px 0">读取本机图片缓存…</div></div>';
+  }
+  var ks=S.imgCacheKeys,cols=isMobile()?4:6,gap=6;
+  var clr=ks.length?'<div style="margin-top:12px"><div class="btn" data-act="imgCacheClear" style="display:inline-block;cursor:pointer;font-size:12px;letter-spacing:.1em;padding:6px 15px;background:transparent;border:1px solid rgba(126,33,46,.45);border-radius:9px;color:#a02a40">'+(S.imgCacheClearArm?'确认清空全部？':'⌫ 一键删除全部')+'</div>'+(S.imgCacheClearArm?'<span class="btn" data-act="imgCacheClearNo" style="display:inline-block;cursor:pointer;font-size:12px;letter-spacing:.1em;padding:6px 13px;margin-left:8px;color:var(--mut)">取消</span>':'')+'</div>':'';
+  var head='<div style="padding:18px 20px 4px"><div class="kai" style="font-size:18px;color:var(--gold2);letter-spacing:.14em">缓 · 图片缓存</div><div style="font-size:12px;color:var(--mut);line-height:1.7;margin-top:6px">本机现存、尚未被清理的生成图，共 <b style="color:var(--gold3)">'+ks.length+'</b> 张。点任意图全屏查看，点右上角「×」单张删除；图库存满时会自动清掉最旧的（可在「简·存档简册」备份或清除）。</div>'+clr+'</div>';
+  if(!ks.length)return '<div class="grow bambooV" style="overflow-y:auto">'+head+'<div style="text-align:center;color:var(--mut2);font-size:13px;letter-spacing:.25em;padding:48px 0">暂无缓存图片</div></div>';
+  var basis='calc((100% - '+((cols-1)*gap)+'px) / '+cols+')';
+  var grid='<div style="display:flex;flex-wrap:wrap;gap:'+gap+'px;padding:10px 16px calc(24px + env(safe-area-inset-bottom))">'
+    +ks.slice().reverse().map(function(id){return '<div style="position:relative;flex:0 0 '+basis+';aspect-ratio:3/4;border:1px solid rgba(58,92,140,.14);border-radius:8px;overflow:hidden;background:rgba(255,255,255,.03)"><div data-img="'+esc(id)+'" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center"><span style="font-size:9px;color:var(--mut);letter-spacing:.1em">…</span></div><div class="btn" data-imgdel="'+esc(id)+'" title="删除这张缓存图" style="position:absolute;top:3px;right:3px;z-index:3;width:20px;height:20px;line-height:18px;text-align:center;font-size:14px;border-radius:50%;background:rgba(248,242,228,.72);border:1px solid rgba(58,92,140,.28);color:#1d3350;cursor:pointer">×</div></div>';}).join('')
+    +'</div>';
+  return '<div class="grow bambooV" style="overflow-y:auto">'+head+grid+'</div>';
+}
+function syncImgForm(){
+  function v(id){var e=document.getElementById(id);return e?e.value.trim():null;}
+  function ck(id){var e=document.getElementById(id);return e?e.checked:null;}
+  var m;
+  if((m=v('zjImgUrl'))!=null)IMGCFG.url=m;
+  if((m=v('zjImgKey'))!=null)IMGCFG.key=m;
+  if((m=v('zjImgModel'))!=null)IMGCFG.model=m;
+  if((m=v('zjImgSampler'))!=null)IMGCFG.sampler=m;
+  if((m=v('zjImgNoise'))!=null)IMGCFG.noise=m;
+  if((m=v('zjImgSteps'))!=null)IMGCFG.steps=m;
+  if((m=v('zjImgGuid'))!=null)IMGCFG.guidance=m;
+  if((m=v('zjImgRescale'))!=null)IMGCFG.rescale=m;
+  if((m=v('zjImgW'))!=null)IMGCFG.width=m;
+  if((m=v('zjImgH'))!=null)IMGCFG.height=m;
+  if((m=v('zjImgSeed'))!=null)IMGCFG.seed=m;
+  if((m=v('zjImgPos'))!=null)IMGCFG.pos=m;
+  if((m=v('zjImgNeg'))!=null)IMGCFG.neg=m;
+  var cwf=document.getElementById('zjImgComfyWf');if(cwf)IMGCFG.comfyWorkflow=cwf.value;
+  if((m=v('zjImgClip1'))!=null)IMGCFG.comfyClip1=m;
+  if((m=v('zjImgClip2'))!=null)IMGCFG.comfyClip2=m;
+  if((m=v('zjImgVae'))!=null)IMGCFG.comfyVae=m;
+  var cty=document.getElementById('zjImgClipType');if(cty)IMGCFG.comfyClipType=cty.value;
+  var sz=document.getElementById('zjImgSize');if(sz)IMGCFG.size=sz.value;
+  var a;if((a=ck('zjImgOn'))!=null)IMGCFG.on=a;if((a=ck('zjImgAuto'))!=null)IMGCFG.auto=a;if((a=ck('zjImgCharRef'))!=null)IMGCFG.charRef=a;
+  [].forEach.call(document.querySelectorAll('[data-imglorek]'),function(el){var i=+el.getAttribute('data-imglorek');if(IMGLORE[i])IMGLORE[i].keys=el.value.split(/[、,，;；]/).map(function(x){return x.trim();}).filter(Boolean);});
+  [].forEach.call(document.querySelectorAll('[data-imglorec]'),function(el){var i=+el.getAttribute('data-imglorec');if(IMGLORE[i])IMGLORE[i].content=el.value.trim();});
+}
+function imgPane(){
+  imgFillEmpty(IMGCFG.style);
+  var C=IMGCFG;
+  var inp='style="width:100%;background:rgba(255,255,255,.03);border:1px solid rgba(58,92,140,.3);color:var(--ink);padding:9px 11px;font-size:13.5px" autocomplete="off" spellcheck="false"';
+  var half='style="flex:1;min-width:120px;background:rgba(255,255,255,.03);border:1px solid rgba(58,92,140,.3);color:var(--ink);padding:9px 11px;font-size:13.5px" inputmode="decimal"';
+  var lbl=function(t){return '<div style="font-size:12px;letter-spacing:.2em;color:var(--gold);margin:18px 0 6px">'+t+'</div>';};
+  var seg=function(opts,attr,cur){return '<div style="display:flex;gap:8px;flex-wrap:wrap">'+opts.map(function(o){var on=o[0]===cur;return '<div class="btn" data-'+attr+'="'+o[0]+'" style="cursor:pointer;padding:7px 15px;font-size:13px;border-radius:8px;border:1px solid '+(on?'rgba(58,92,140,.7)':'rgba(58,92,140,.25)')+';color:'+(on?'var(--gold2)':'var(--mut)')+';background:'+(on?'rgba(58,92,140,.12)':'transparent')+'">'+o[1]+'</div>';}).join('')+'</div>';};
+  /* 按每轮张数+设备分档禁用过大的尺寸（见 imgMaxSize） */
+  var segDisp=function(cur){return '<div style="display:flex;gap:8px;flex-wrap:wrap">'+[['mini','迷你'],['sm','小'],['md','中'],['lg','大']].map(function(o){var on=o[0]===cur;var dis=!imgSizeOK(o[0]);return '<div '+(dis?'':'class="btn" data-imgdisp="'+o[0]+'"')+' style="padding:7px 15px;font-size:13px;border-radius:8px;border:1px solid '+(on?'rgba(58,92,140,.7)':'rgba(58,92,140,.25)')+';color:'+(dis?'var(--mut2)':(on?'var(--gold2)':'var(--mut)'))+';background:'+(on?'rgba(58,92,140,.12)':'transparent')+';cursor:'+(dis?'not-allowed':'pointer')+';opacity:'+(dis?'.42':'1')+'">'+o[1]+'</div>';}).join('')+'</div>';};
+  var tog=function(id,on,label){return '<label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mut2);cursor:pointer;margin-top:10px"><input id="'+id+'" type="checkbox" style="accent-color:#3c5a86"'+(on?' checked':'')+'>'+label+'</label>';};
+  var sizes=['','832x1216','1216x832','1024x1024','1024x1536','1536x1024','512x768','768x512'];
+  var ta='style="width:100%;background:rgba(255,255,255,.03);border:1px solid rgba(58,92,140,.3);color:var(--ink);padding:9px 11px;font-size:13px;line-height:1.7;resize:vertical"';
+  var lore=(IMGLORE||[]).map(function(e,i){return '<div style="border:1px solid rgba(58,92,140,.2);border-radius:9px;padding:8px 11px;margin-top:7px">'
+    +'<div style="display:flex;gap:8px;align-items:center"><input data-imglorek="'+i+'" value="'+esc((e.keys||[]).join('、'))+'" placeholder="触发词（顿号分隔，留空=常驻）" style="flex:1;background:rgba(255,255,255,.03);border:1px solid rgba(58,92,140,.25);color:var(--ink);padding:6px 9px;font-size:12.5px">'
+    +'<span class="btn" data-imgloretog="'+i+'" style="cursor:pointer;font-size:11px;padding:3px 9px;color:'+(e.on!==false?'var(--grn2)':'var(--mut)')+'">'+(e.on!==false?'启用':'停用')+'</span>'
+    +'<span class="btn" data-imgloredel="'+i+'" style="cursor:pointer;font-size:14px;padding:3px 8px;color:#a02a40">×</span></div>'
+    +'<input data-imglorec="'+i+'" value="'+esc(e.content||'')+'" placeholder="追加进画面提示词的英文片段，如 wearing crimson royal robe" style="width:100%;margin-top:6px;background:rgba(255,255,255,.03);border:1px solid rgba(58,92,140,.25);color:var(--ink);padding:6px 9px;font-size:12.5px"></div>';}).join('');
+  var refPrev=C.refImg?'<div style="margin-top:8px;display:flex;align-items:center;gap:12px"><img src="'+esc(C.refImg)+'" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid rgba(58,92,140,.35)"><span class="btn" data-act="imgRefClear" style="cursor:pointer;font-size:12.5px;color:#a02a40">移除参考图</span></div>':'';
+  var msg=S.imgSetMsg?'<span style="font-size:13px;color:'+(S.imgSetMsgC||'var(--gold3)')+'">'+esc(S.imgSetMsg)+'</span>':'';
+  return '<div class="grow bambooV" style="overflow-y:auto;padding:20px 26px">'
+    +'<div style="border:1.5px solid rgba(58,92,140,.75);border-radius:13px;background:linear-gradient(135deg,rgba(58,92,140,.18),rgba(126,33,46,.09));box-shadow:0 3px 16px rgba(58,92,140,.2),inset 0 1px 0 rgba(255,255,255,.28);padding:15px 17px;margin-bottom:16px">'
+      +'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px"><span style="font-family:var(--kai);font-size:12.5px;letter-spacing:.14em;color:#ffffff;background:linear-gradient(135deg,#6d89b4,#3c5a86);border-radius:99px;padding:4px 13px">NovelAI 必做</span><span class="kai" style="font-size:17px;color:var(--gold2);letter-spacing:.05em">先建你的专属中转</span></div>'
+      +'<div style="font-size:12.5px;line-height:1.8;color:var(--ink2)">NovelAI 不允许网页直接连（浏览器会拦掉），<b style="color:#1d3350">不做就一张图都看不到</b>。需一个免费中转，约 2 分钟。<br>中转建在<b style="color:#1d3350">你自己的账号</b>里——你的 token 与图片只走<b style="color:#1d3350">你专属的通道，保护隐私</b>，不经任何人转手。<span style="color:var(--mut)">不用 NovelAI 出图可无视本节。</span></div>'
+      +'<div style="margin-top:12px;display:flex;gap:11px;align-items:center;flex-wrap:wrap"><a href="https://deploy.workers.cloudflare.com/?url=https://github.com/Ekibenya/nai-proxy" target="_blank" rel="noopener" class="gbtn btn" style="text-decoration:none;font-size:14.5px;letter-spacing:.06em;padding:11px 22px;display:inline-flex;align-items:center;gap:7px;box-shadow:0 2px 10px rgba(58,92,140,.4)">\u26a1 一键部署我的专属中转</a><span style="font-size:11.5px;color:var(--mut);line-height:1.7">登录 Cloudflare → 授权 GitHub → 点 <b style="color:#1d3350">Deploy/部署</b> → 复制生成的链接 <b style="color:#1d3350">https://nai-proxy.你的用户名.workers.dev</b> → 粘贴到下面「接口地址」</span></div>'
+      +'<details style="margin-top:11px;border-top:1px solid rgba(58,92,140,.22);padding-top:6px"><summary style="cursor:pointer;font-size:12.5px;color:var(--gold2);letter-spacing:.04em;padding:5px 0">▸ 其他问题？</summary>'
+        +'<div style="font-size:12px;color:var(--ink2);line-height:1.95;margin-top:5px">部署成功页会显示你的网址（形如 <b style="color:#1d3350">nai-proxy.你的用户名.workers.dev</b>）；忘了就去 <b style="color:#1d3350">dash.cloudflare.com → Workers &amp; Pages</b> → 点 nai-proxy 顶部即是。打开它显示 <b style="color:#7ea892">NovelAI proxy running.</b> 即成功。<br>把整条网址填进下面「接口地址」（<b style="color:#1d3350">无需</b>加 /ai/generate-image）。<b style="color:#7ea892">懒得找？</b>直接用下面的<b style="color:#7ea892">「懒人拼网址」</b>：右框填你的子域名（<b>常与 GitHub 用户名一致</b>）即自动拼好。</div>'
+      +'</details>'
+      +'<details style="margin-top:6px;border-top:1px solid rgba(58,92,140,.22);padding-top:6px"><summary style="cursor:pointer;font-size:12.5px;color:var(--gold2);letter-spacing:.04em;padding:5px 0">▸ 没有 / 不想用 GitHub？（方法二：复制代码手动粘贴）</summary>'
+        +'<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:6px"><button data-act="imgCopyWorker" class="obtn btn" style="font-size:14px;letter-spacing:.06em;padding:10px 18px">复制中转代码</button><span style="font-size:11.5px;color:var(--mut)">复制后按下面 5 步粘贴到 Cloudflare</span></div>'
+        +'<div style="font-size:12px;color:var(--ink2);line-height:2;margin-top:9px">'
+          +'① 打开 <b style="color:#1d3350">dash.cloudflare.com</b>，注册 / 登录（免费，只需邮箱）<br>'
+          +'② 左侧点 <b style="color:#1d3350">Compute (Workers)</b>（旧版叫 <b style="color:#1d3350">Workers &amp; Pages</b>）<br>'
+          +'③ 点 <b style="color:#1d3350">Create</b> → <b style="color:#1d3350">Create Worker</b> → 起个名 → 点 <b style="color:#1d3350">Deploy/部署</b><br>'
+          +'④ 点 <b style="color:#1d3350">Edit code</b> → 编辑器里原有代码<b style="color:#1d3350">全选删掉</b>，粘贴刚复制的 → 右上再点 <b style="color:#1d3350">Deploy/部署</b><br>'
+          +'⑤ 复制它给你的网址，填到下面「接口地址」'
+        +'</div>'
+        +'<details style="margin-top:8px"><summary style="cursor:pointer;font-size:11.5px;color:var(--mut)">复制按钮没反应？点这手动全选复制</summary><textarea readonly onclick="this.select()" style="width:100%;height:130px;margin-top:6px;background:rgba(0,0,0,.4);border:1px solid rgba(58,92,140,.25);color:var(--ink2);font-size:11px;line-height:1.5;font-family:monospace;padding:8px;resize:vertical">'+esc(NAI_WORKER_CODE)+'</textarea></details>'
+      +'</details>'
+    +'</div>'
+    +'<div style="font-size:12.5px;line-height:1.85;color:var(--ink2)">给每幕正文配 AI 插画。接口、密钥与参数只存本机浏览器。开「每幕自动生图」后每出一幕自动作画，并<b style="color:var(--gold2)">检测本轮图是否真出来、失败自动重试</b>。</div>'
+    +tog('zjImgOn',C.on,'启用生图功能')
+    +tog('zjImgAuto',C.auto,'每幕自动生图（关则手动点正文下的「✦ 绘此幕」）')
+    +lbl('每轮生几张（多张＝不同角度/人物/视角，图下用 '+chev(-1,10)+chev(1,10)+' 翻看）')+seg([['1','1'],['2','2'],['3','3'],['4','4'],['5','5'],['6','6']],'imgcount',String(C.count||1))
+    +'<div style="font-size:11px;color:var(--mut);line-height:1.7;margin-top:5px">超过 1 张时，由副模型据本幕剧情拆出多个<b style="color:var(--gold3)">不同切入点</b>（主场景 / 人物特写 / 在别处的相关 NPC / 不同摄像机机位 / 平行视角），各生一张，非同图重复。需配好 AI 接口。</div>'
+    +lbl('镜头 · 风格（内置提示词，套在每张最前）')+seg([['auto','自动'],['cinematic','电影感'],['illust','插画'],['oil','油画'],['fpv','第一人称'],['god','上帝视角'],['real','写实']],'imgcam',C.cam||'auto')
+    +lbl('图片显示尺寸（迷你 / 小 / 中 / 大；每张图右上角也可单独调）')+segDisp(imgClamp(C.disp||'lg'))
+    +'<div style="font-size:11px;color:var(--mut);line-height:1.7;margin-top:5px">管单图在正文里显示多大。张数越多越不让选大图以免刷屏：<b style="color:var(--gold3)">电脑</b>每轮 1–2 张可选到大、3–4 张到中、5–6 张到小；<b style="color:var(--gold3)">手机</b>多图一律只到小。一次性多图那轮自动小图并排，不受此项影响。</div>'
+    +lbl('接口风格')+seg([['novelai','NovelAI 官方'],['comfyui','本地 ComfyUI'],['openai','OpenAI 兼容'],['sd','SD · A1111'],['custom','自定义 JSON']],'imgstyle',C.style)+(C.style==='novelai'?'<div style="font-size:11.5px;color:var(--mut);line-height:1.75;margin-top:8px;border:1px solid rgba(58,92,140,.2);border-radius:9px;padding:9px 12px">NovelAI 官网禁止网页跨域，需经一个免费中转。仓库 <b style="color:var(--gold3)">proxy/</b> 目录有一份 Cloudflare Worker 脚本（流量不计费）：2 分钟部署后 →「接口地址」填你的 Worker 网址、「密钥」填 NAI <b style="color:var(--gold3)">持久 token</b>、模型如 nai-diffusion-3。返回的 zip 由本游戏内置解压，自动变 PNG 显示。</div>':'')+(C.style==='comfyui'?'<div style="font-size:11.5px;color:var(--mut);line-height:1.8;margin-top:8px;border:1px solid rgba(58,92,140,.2);border-radius:9px;padding:9px 12px">本地 ComfyUI：启动时加 <b style="color:#1d3350">--enable-cors-header "*"</b> 允许网页调用（127.0.0.1 不受 https 混合内容限制）。「接口地址」填 <b style="color:#1d3350">http://127.0.0.1:8188</b>，「模型」填 checkpoint 文件名（如 sd_xl_base_1.0.safetensors），采样器/步数/CFG/尺寸/种子照常填。<br>进阶：下方可粘贴你自己的 <b style="color:#1d3350">API 格式</b>工作流（ComfyUI 里 Save (API Format) 导出），用 %prompt% %negative% %seed% %steps% %cfg% %width% %height% %sampler% %scheduler% %ckpt% 作占位符；留空则用内置默认 txt2img。若最新 Chrome 因 Private Network Access 拦截，可改用本地打开游戏。</div><textarea id="zjImgComfyWf" rows="4" placeholder="（可选）粘贴 ComfyUI API 格式工作流 JSON，含 %prompt% 等占位符" style="width:100%;margin-top:8px;background:rgba(0,0,0,.3);border:1px solid rgba(58,92,140,.3);color:var(--ink2);font-size:11px;font-family:monospace;line-height:1.5;padding:8px;resize:vertical">'+esc(C.comfyWorkflow||'')+'</textarea>':'')
+    +(C.style==='novelai'?'<div style="border:1px solid rgba(58,92,140,.32);border-radius:12px;padding:12px 13px;margin-top:14px;background:rgba(255,255,255,.015)">'+'<div style="font-size:12px;letter-spacing:.22em;color:var(--gold);margin-bottom:7px">接口地址</div>'+'<input id="zjImgUrl" '+inp+' value="'+esc(C.url)+'" placeholder="粘贴你的 Worker 网址（找不到 Cloudflare 链接？用下面的懒人拼网址）">'+'<div style="border-top:1px dashed rgba(58,92,140,.28);margin:13px 0 11px"></div>'+'<div style="font-size:12.5px;color:var(--grn2);letter-spacing:.03em;margin-bottom:8px">\u270e 懒人拼网址（懒得找那条长链接，就填下面的子域名/GitHub 用户名框就好）</div>'+'<div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--mut2)">https://<input id="zjNaiName" placeholder="nai-proxy（默认留空）" autocomplete="off" spellcheck="false" style="width:150px;background:rgba(255,255,255,.04);border:1px solid rgba(58,92,140,.3);color:var(--ink);padding:6px 8px;font-size:13px">.<input id="zjNaiSub" placeholder="子域名/GitHub用户名" autocomplete="off" spellcheck="false" style="width:150px;background:rgba(255,255,255,.04);border:1px solid rgba(58,92,140,.3);color:var(--ink);padding:6px 8px;font-size:13px">.workers.dev</div>'+'<div style="font-size:11px;color:var(--mut);margin-top:8px;line-height:1.75">左框＝Worker 名，部署没改名就留空（默认 <b style="color:var(--gold3)">nai-proxy</b>）；右框＝你的 <b style="color:var(--gold3)">workers.dev 子域名</b>（就是 <b>xxx</b>.workers.dev 里的 xxx，部署成功页 / Cloudflare 面板右上角可见；很多人与 GitHub 用户名一致，可先按用户名试）。填好自动写进上面「接口地址」。</div>'+'</div>':lbl('接口地址')+'<input id="zjImgUrl" '+inp+' value="'+esc(C.url)+'" placeholder="如 https://api.openai.com/v1 或 http://127.0.0.1:7860">')
+    +lbl('密钥（本地 SD 可留空）')+pwField('zjImgKey',C.key,'sk-…')
+    +lbl('模型')
+    +(C.style==='novelai'
+      ? seg([['nai-diffusion-4-5-full','V4.5 Full'],['nai-diffusion-4-5-curated','V4.5 Curated'],['nai-diffusion-4-full','V4 Full'],['nai-diffusion-3','V3（旧版）']],'imgmodel',C.model)
+        +'<div style="font-size:11px;color:var(--mut);line-height:1.7;margin-top:6px">点选即可，免打字免出错。<b style="color:#1d3350">V4.5/V4 需 NAI Opus 订阅</b>；没订阅就选 <b style="color:var(--gold3)">V3（旧版）</b>。V3/V4 的请求体本游戏已自动区分。</div>'
+        +'<details style="margin-top:6px"><summary style="cursor:pointer;font-size:11px;color:var(--mut)">要填别的模型名？点这手动输入</summary><div style="margin-top:6px"><input id="zjImgModel" '+inp+' value="'+esc(C.model)+'" placeholder="手动填写 NAI 模型名"></div></details>'
+      : C.style==='comfyui'
+      ? seg([['checkpoint','Checkpoint 全合一'],['unet','UNet 分离式']],'imgloader',C.comfyLoader||'checkpoint')
+        +'<div style="font-size:11px;color:var(--mut);line-height:1.7;margin:6px 0 8px">全合一 checkpoint（含 模型+CLIP+VAE）选左；<b style="color:#1d3350">anima 等以 UNet 权重分发</b>的模型选右，需另填 CLIP 与 VAE。</div>'
+        +'<div style="display:flex;gap:10px"><input id="zjImgModel" '+inp+' value="'+esc(C.model)+'" placeholder="'+((C.comfyLoader==='unet')?'UNet 文件名（models/unet）':'checkpoint 文件名')+'，或点右侧拉取"><button data-act="imgComfyModels" class="obtn btn" style="flex:none;font-size:13px;letter-spacing:.1em;padding:0 16px;white-space:nowrap">拉取模型</button></div>'
+        +((S.imgComfyModels&&S.imgComfyModels.length)?seg(S.imgComfyModels.map(function(m){return [m,m];}),'imgmodel',C.model):'')
+        +((C.comfyLoader==='unet')
+          ? '<div style="margin-top:10px;display:flex;gap:9px;flex-wrap:wrap"><input id="zjImgClip1" '+half+' value="'+esc(C.comfyClip1)+'" placeholder="CLIP① 如 clip_l.safetensors"><input id="zjImgClip2" '+half+' value="'+esc(C.comfyClip2)+'" placeholder="CLIP② 如 clip_g / t5xxl"></div>'
+            +'<div style="margin-top:9px;display:flex;gap:9px;flex-wrap:wrap;align-items:center"><input id="zjImgVae" '+half+' value="'+esc(C.comfyVae)+'" placeholder="VAE 如 sdxl_vae.safetensors"><select id="zjImgClipType" style="background:rgba(248,242,228,.6);border:1px solid rgba(58,92,140,.3);color:var(--gold3);padding:9px 10px;font-size:13px;border-radius:8px">'+['sdxl','flux','sd3','stable_diffusion','stable_cascade'].map(function(tp){return '<option value="'+tp+'"'+((C.comfyClipType||"sdxl")===tp?' selected':'')+'>'+tp+'</option>';}).join('')+'</select></div>'
+            +'<div style="font-size:11px;color:var(--mut);line-height:1.7;margin-top:6px">CLIP①②＝DualCLIPLoader 的两个文件（SDXL：clip_l + clip_g；FLUX：clip_l + t5xxl），放在 ComfyUI 的 <b style="color:#1d3350">models/clip</b>、VAE 放 <b style="color:#1d3350">models/vae</b>；类型选对架构（anima 多为 <b style="color:#1d3350">sdxl</b>）。</div>'
+          : '')
+        +'<div style="font-size:11px;color:var(--mut);line-height:1.7;margin-top:6px">点「拉取模型」自动列出你 ComfyUI 里的模型，点选即可（需先填好接口地址、且 ComfyUI 启动带 <b style="color:#1d3350">--enable-cors-header "*"</b>）。</div>'
+      : '<input id="zjImgModel" '+inp+' value="'+esc(C.model)+'" placeholder="如 dall-e-3 / gpt-image-1 / nai-diffusion-3 / flux">')
+    +lbl('采样与画质')+'<div style="margin:-2px 0 7px"><span class="btn" data-act="imgReset" style="cursor:pointer;font-size:11.5px;color:var(--gold3);border:1px solid rgba(58,92,140,.3);border-radius:7px;padding:3px 11px">↺ 用本接口推荐默认</span><span style="font-size:11px;color:var(--mut);margin-left:8px">看不懂就用推荐值，直接能出图</span></div>'
+    +'<div style="display:flex;gap:9px;flex-wrap:wrap"><input id="zjImgSampler" '+half+' value="'+esc(C.sampler)+'" placeholder="采样器 sampler 如 k_euler_ancestral"><input id="zjImgNoise" '+half+' value="'+esc(C.noise)+'" placeholder="噪点表 noise 如 karras/native"></div>'
+    +'<div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:9px"><input id="zjImgSteps" '+half+' value="'+esc(C.steps)+'" placeholder="步数 steps 如 28"><input id="zjImgGuid" '+half+' value="'+esc(C.guidance)+'" placeholder="提示词引导 guidance/CFG 如 5"><input id="zjImgRescale" '+half+' value="'+esc(C.rescale)+'" placeholder="引导重缩放 rescale 如 0.2"></div>'
+    +lbl('尺寸')
+    +'<div style="display:flex;gap:9px;flex-wrap:wrap;align-items:center"><select id="zjImgSize" style="background:rgba(248,242,228,.6);border:1px solid rgba(58,92,140,.3);color:var(--gold3);padding:9px 10px;font-size:13px;border-radius:8px">'+sizes.map(function(sz){return '<option value="'+sz+'"'+(C.size===sz?' selected':'')+'>'+(sz||'自定义/接口默认')+'</option>';}).join('')+'</select><input id="zjImgW" '+half+' value="'+esc(C.width)+'" placeholder="宽 width"><input id="zjImgH" '+half+' value="'+esc(C.height)+'" placeholder="高 height"></div>'
+    +lbl('种子 seed（-1 或留空 = 随机）')+'<input id="zjImgSeed" '+inp+' value="'+esc(C.seed)+'" placeholder="-1">'
+    +lbl('固定正面提示词（每张都加在最前）')+'<textarea id="zjImgPos" rows="2" '+ta+'>'+esc(C.pos)+'</textarea>'
+    +lbl('固定负面提示词')+'<textarea id="zjImgNeg" rows="2" '+ta+'>'+esc(C.neg)+'</textarea>'
+    +lbl('角色参考')+tog('zjImgCharRef',C.charRef,'启用角色参考（随图附带参考图，接口需支持 img2img/参考）')
+    +'<div style="margin-top:8px"><label class="btn obtn" style="cursor:pointer;font-size:12.5px;padding:7px 14px">添加参考图<input id="zjImgRefFile" type="file" accept="image/*" style="display:none"></label></div>'+refPrev
+    +lbl('生图世界书（命中触发词即把片段追加进画面提示词）')+lore
+    +'<div style="margin-top:9px;display:flex;gap:9px;flex-wrap:wrap;align-items:center"><button data-act="imgLoreAdd" class="obtn btn" style="font-size:12.5px;padding:7px 15px">＋ 添加条目</button>'
+    +'<label class="btn obtn" style="cursor:pointer;font-size:12.5px;padding:7px 15px;color:#7ea892">\u2191 上传生图世界书<input id="zjImgLoreFile2" type="file" accept=".json,.txt,application/json,text/plain" style="display:none"></label>'
+    +(IMGLORE.length?'<button data-act="imgLoreExport" class="obtn btn" style="font-size:12.5px;padding:7px 15px">导出</button>':'')
+    +'<span style="font-size:11px;color:var(--mut)">上传＝世界书 JSON（content 写英文画面提示词）</span></div>'
+    +'<div style="display:flex;gap:12px;margin-top:22px;flex-wrap:wrap;align-items:center"><button data-act="imgSave" class="gbtn btn" style="font-size:15px;letter-spacing:.2em;padding:10px 28px">保 存</button><button data-act="imgTest" class="obtn btn" style="font-size:14px;letter-spacing:.12em;padding:10px 22px">测试生图</button>'+msg+'</div>'
+    +'<div style="margin-top:14px;font-size:11.5px;line-height:1.8;color:var(--mut)">插画只存本机图库并自动瘦身（手机留最近10张、电脑留30张），存档只记编号。不同接口字段不一：OpenAI 兼容用 size；SD·A1111 走 /sdapi/v1/txt2img；自定义/NovelAI 风格把上面各参数原样作为 JSON 字段发出——请按你服务商的字段名调整。</div>'
+    +'</div>';
+}
 /* ---------------- 酒馆助手脚本兼容层（沙箱 iframe，脚本摸不到密钥与页面本体） ---------------- */
 var JSKEY='mitsuba_scripts_v1';
 var USCRIPTS=[];try{USCRIPTS=JSON.parse(localStorage.getItem(JSKEY)||'[]')||[];}catch(e){}if(!Array.isArray(USCRIPTS))USCRIPTS=[];
@@ -1550,8 +1688,6 @@ function readApiForm(){
   var c=apiCur();
   var u=document.getElementById('zjApiUrl'),k=document.getElementById('zjApiKey'),m=document.getElementById('zjApiModel');
   if(u)c.url=u.value.trim();if(k)c.key=k.value.trim();if(m)c.model=m.value.trim();
-  var iu=document.getElementById('zjImgUrl'),ik=document.getElementById('zjImgKey'),im=document.getElementById('zjImgModel');
-  if(iu)API.img.url=iu.value.trim();if(ik)API.img.key=ik.value.trim();if(im)API.img.model=im.value.trim();
   var au=document.getElementById('zjAuxUrl'),ak=document.getElementById('zjAuxKey'),am=document.getElementById('zjAuxModel');
   if(au)API.aux.url=au.value.trim();if(ak)API.aux.key=ak.value.trim();if(am)API.aux.model=am.value.trim();
   var gt=document.getElementById('zjGenTemp'),gp=document.getElementById('zjGenTopP'),gm=document.getElementById('zjGenMax');
@@ -3023,10 +3159,10 @@ function cardPane(){
    +msg+listBlock+'</div></div>';
 }
 function setBody(){
-  var tabs=[['font','显 · 显示'],['voice','声 · 语音'],['card','卡 · 角色卡'],['lore','书 · 世界书'],['rx','则 · 正则'],['js','脚 · 助手脚本'],['api','链 · AI 接口']].map(function(t){var on=S.setTab===t[0];return '<div class="btn" data-settab="'+t[0]+'" style="position:relative;z-index:1;cursor:pointer;white-space:nowrap;padding:9px 15px;font-family:var(--kai);font-size:15px;letter-spacing:.18em;color:'+(on?'var(--gold2)':'var(--mut)')+'">'+t[1]+'</div>';}).join('');
+  var tabs=[['font','显 · 显示'],['img','图 · 生图'],['voice','声 · 语音'],['card','卡 · 角色卡'],['lore','书 · 世界书'],['rx','则 · 正则'],['js','脚 · 助手脚本'],['api','链 · AI 接口'],['imgcache','缓 · 图片缓存']].map(function(t){var on=S.setTab===t[0];return '<div class="btn" data-settab="'+t[0]+'" style="position:relative;z-index:1;cursor:pointer;white-space:nowrap;padding:9px 15px;font-family:var(--kai);font-size:15px;letter-spacing:.18em;color:'+(on?'var(--gold2)':'var(--mut)')+'">'+t[1]+'</div>';}).join('');
   return '<div class="col grow" style="min-height:0">'
    +'<div id="zjSetBar" style="position:relative;flex:none;display:flex;gap:6px;padding:12px 18px;border-bottom:1px solid rgba(42,69,104,.18);overflow-x:auto;scrollbar-width:none">'+tabs+'</div>'
-   +'<div class="col grow" style="min-height:0">'+(S.setTab==='api'?apiBody():S.setTab==='card'?cardPane():S.setTab==='lore'?lorePane():S.setTab==='rx'?rxPane():S.setTab==='js'?jsPane():S.setTab==='voice'?voicePane():fontPane())+'</div></div>';
+   +'<div class="col grow" style="min-height:0">'+(S.setTab==='api'?apiBody():S.setTab==='img'?imgPane():S.setTab==='imgcache'?imgCachePane():S.setTab==='card'?cardPane():S.setTab==='lore'?lorePane():S.setTab==='rx'?rxPane():S.setTab==='js'?jsPane():S.setTab==='voice'?voicePane():fontPane())+'</div></div>';
 }
 function setPills(){
   if(S.overlay!=='set')return;
@@ -3067,10 +3203,7 @@ function apiBody(){
     +lbl('接口地址（Base URL）')+'<input id="zjApiUrl" '+inp+' value="'+esc(c.url)+'" placeholder="'+esc(def.url)+'"><div style="font-size:11.5px;color:var(--mut);margin-top:5px;line-height:1.7">'+esc(def.hint)+'；留空即使用默认地址。</div>'
     +lbl('API 密钥（API Key）')+'<input id="zjApiKey" type="password" '+inp+' value="'+esc(c.key)+'" placeholder="sk-…">'
     +lbl('模型名')+'<div style="display:flex;gap:10px"><input id="zjApiModel" '+inp+' value="'+esc(c.model)+'" placeholder="如 deepseek-chat / claude-sonnet-4-5 / gemini-2.5-pro"><button data-act="apiModels" class="obtn btn" style="flex:none;font-size:13px;letter-spacing:.1em;padding:0 18px;white-space:nowrap">拉取模型</button></div>'+models
-    +lbl('绘图接口（可选 · OpenAI images 兼容）')+'<input id="zjImgUrl" '+inp+' value="'+esc(API.img.url)+'" placeholder="https://api.openai.com/v1（或中转地址）">'
-    +lbl('绘图密钥')+'<input id="zjImgKey" type="password" '+inp+' value="'+esc(API.img.key)+'" placeholder="sk-…（可与文字接口相同）">'
-    +lbl('绘图模型')+'<input id="zjImgModel" '+inp+' value="'+esc(API.img.model)+'" placeholder="如 gpt-image-1 / dall-e-3 / flux-schnell">'
-    +'<div style="font-size:11.5px;color:var(--mut);margin-top:5px;line-height:1.7">填好保存后，每幕正文下出现「✦ 绘此幕」。插画只存本机图库并自动瘦身（手机留最近10张、电脑留30张），存档只记编号，不撑爆手机内存与存档。</div>'
+    +lbl('绘图接口（生图）')+'<div style="font-size:12px;color:var(--mut);line-height:1.8;border:1px solid rgba(58,92,140,.25);border-radius:9px;padding:9px 12px">生图已升级为独立面板：支持 NovelAI / OpenAI 兼容 / SD·A1111 / 本地 ComfyUI 四类后端、多版本、采样参数与生图世界书。请到上方「<b style="color:var(--gold2)">图 · 生图</b>」标签页配置。</div>'
     +lbl('副模型 · 杂务分工（可选 · OpenAI 兼容）')+'<input id="zjAuxUrl" '+inp+' value="'+esc(API.aux.url)+'" placeholder="接口地址：https://api.openai.com/v1（或中转）">'
     +'<div style="margin-top:9px"><input id="zjAuxKey" type="password" '+inp+' value="'+esc(API.aux.key)+'" placeholder="密钥 sk-…（可与主接口相同）"></div>'
     +'<div style="margin-top:9px"><input id="zjAuxModel" '+inp+' value="'+esc(API.aux.model)+'" placeholder="便宜快模型：如 deepseek-chat / gpt-4o-mini"></div>'
@@ -3305,6 +3438,7 @@ root.addEventListener('input',function(e){
   if(e.target.id==='zjApiUrl'){apiCur().url=e.target.value.trim();saveApi();return;}
   if(e.target.id==='zjApiKey'){apiCur().key=e.target.value.trim();saveApi();return;}
   if(e.target.id==='zjApiModel'){apiCur().model=e.target.value.trim();saveApi();return;}
+  if(e.target.id==='zjNaiSub'||e.target.id==='zjNaiName'){var _sn=(document.getElementById('zjNaiName')||{}).value||'';var _sd=(document.getElementById('zjNaiSub')||{}).value||'';_sn=String(_sn).trim().replace(/[^a-zA-Z0-9-]/g,'')||'nai-proxy';_sd=String(_sd).trim().replace(/^https?:\/\//i,'').replace(/\.workers\.dev.*$/i,'').replace(/[^a-zA-Z0-9-]/g,'');var _uf=document.getElementById('zjImgUrl');if(_sd){var _b='https://'+_sn+'.'+_sd+'.workers.dev';IMGCFG.url=_b;imgCfgSave();if(_uf)_uf.value=_b;}return;}
 });
 root.addEventListener('change',function(e){
   if(!e.target||e.target.id!=='zjFontFile')return;
@@ -3324,6 +3458,21 @@ root.addEventListener('change',function(e){
     }
   };
   rd.readAsArrayBuffer(f);
+});
+root.addEventListener('change',function(e){
+  if(!e.target)return;
+  if(e.target.id==='zjImgRefFile'&&e.target.files&&e.target.files[0]){syncImgForm();imgRefLoad(e.target.files[0]);return;}
+  if((e.target.id==='zjImgLoreFile'||e.target.id==='zjImgLoreFile2')&&e.target.files&&e.target.files[0]){
+    var lf=e.target.files[0];var lrd=new FileReader();
+    lrd.onload=function(){try{
+      var raw=String(lrd.result||'');var arr=null;
+      try{var pj=JSON.parse(raw);if(Array.isArray(pj))arr=pj;else if(pj&&Array.isArray(pj.entries))arr=pj.entries;else if(pj&&typeof pj==='object')arr=Object.keys(pj).map(function(k){return pj[k];});}catch(pe){arr=null;}
+      var added=0;
+      if(arr){arr.forEach(function(en){if(!en||typeof en!=='object')return;var content=String(en.content||en.text||en.value||'').trim();if(!content)return;var keys=en.keys||en.key||en.keywords||[];if(typeof keys==='string')keys=keys.split(/[、,，;；]/);IMGLORE.push({keys:(Array.isArray(keys)?keys:[]).map(function(x){return String(x).trim();}).filter(Boolean).slice(0,20),content:content,on:en.on!==false});added++;});}
+      else{raw.split(/\n+/).forEach(function(ln){ln=ln.trim();if(ln)IMGLORE.push({keys:[],content:ln,on:true});added++;});}
+      imgLoreSave();S.imgSetMsg=added?('已导入 '+added+' 条生图世界书条目'):'未识别到可导入条目';S.imgSetMsgC=added?'var(--grn2)':'var(--red2)';renderOverlay();
+    }catch(err){S.imgSetMsg='导入失败：'+String(err&&err.message||err).slice(0,80);S.imgSetMsgC='var(--red2)';renderOverlay();}};
+    lrd.readAsText(lf);return;}
 });
 /* 棋子拖拽 */
 var DRAG=null;
@@ -3465,6 +3614,16 @@ root.addEventListener('click',function(e){
       if(t.getAttribute('data-ttssrc')){TTS.src=t.getAttribute('data-ttssrc');ttsSave();renderOverlay();return;}
       if(t.getAttribute('data-ttsscope')){TTS.scope=t.getAttribute('data-ttsscope');ttsSave();renderOverlay();return;}
       if(t.getAttribute('data-drawidx')!=null&&t.getAttribute('data-drawidx')!==''){var _di=parseInt(t.getAttribute('data-drawidx'),10);if(S.imgBusy==null&&imgReady()&&S.history[_di]&&S.history[_di].role==='world')drawWorld(_di);return;}
+      if(t.getAttribute('data-eye')){var _eid=t.getAttribute('data-eye');var _ein=document.getElementById(_eid);if(_ein){var _rev=(_ein.type==='password');_ein.type=_rev?'text':'password';t.innerHTML=eyeSvg(_rev);}return;}
+      if(t.getAttribute('data-imgstyle')){syncImgForm();var oldSt=IMGCFG.style,newSt=t.getAttribute('data-imgstyle');var od=imgDefaults(oldSt),nd=imgDefaults(newSt);IMGSAMPFIELDS.forEach(function(k){if(!IMGCFG[k]||IMGCFG[k]===od[k])IMGCFG[k]=nd[k];});IMGCFG.style=newSt;imgCfgSave();renderOverlay();return;}
+      if(t.getAttribute('data-imgloader')){syncImgForm();IMGCFG.comfyLoader=t.getAttribute('data-imgloader');S.imgComfyModels=null;imgCfgSave();renderOverlay();return;}
+      if(t.getAttribute('data-imgmodel')){syncImgForm();IMGCFG.model=t.getAttribute('data-imgmodel');imgCfgSave();renderOverlay();return;}
+      if(t.getAttribute('data-imgcount')){syncImgForm();IMGCFG.count=Math.max(1,Math.min(6,parseInt(t.getAttribute('data-imgcount'),10)||1));imgCfgSave();renderOverlay();return;}
+      if(t.getAttribute('data-imgcam')){syncImgForm();IMGCFG.cam=t.getAttribute('data-imgcam');imgCfgSave();renderOverlay();return;}
+      if(t.getAttribute('data-imgdisp')){var _dv=t.getAttribute('data-imgdisp');if(!imgSizeOK(_dv))return;syncImgForm();IMGCFG.disp=_dv;imgCfgSave();renderOverlay();return;}
+      if(t.getAttribute('data-imgloretog')!=null&&t.getAttribute('data-imgloretog')!==''){syncImgForm();var it=+t.getAttribute('data-imgloretog');if(IMGLORE[it])IMGLORE[it].on=(IMGLORE[it].on===false);imgLoreSave();renderOverlay();return;}
+      if(t.getAttribute('data-imgloredel')!=null&&t.getAttribute('data-imgloredel')!==''){syncImgForm();var idl=+t.getAttribute('data-imgloredel');IMGLORE.splice(idl,1);imgLoreSave();renderOverlay();return;}
+      if(t.getAttribute('data-imgdel')){var _idk=t.getAttribute('data-imgdel');idbDel(_idk,function(){if(S.imgCacheKeys)S.imgCacheKeys=S.imgCacheKeys.filter(function(k){return k!==_idk;});if(S.overlay==='set'&&S.setTab==='imgcache')renderOverlay();});return;}
       if(t.getAttribute('data-imgprev')!=null&&t.getAttribute('data-imgprev')!==''){var _pi=parseInt(t.getAttribute('data-imgprev'),10);var _ph=S.history[_pi];var _pv=_ph&&imgVers(_ph);if(_pv&&_pv.length){var _cx=(_ph.verIx==null?_pv.length-1:_ph.verIx);if(_cx>0){_ph.verIx=_cx-1;_ph.img=(_pv[_ph.verIx]||[])[0]||_ph.img;savePref();illuSwap(_pi,_ph);}}return;}
       if(t.getAttribute('data-imgnext')!=null&&t.getAttribute('data-imgnext')!==''){var _ni=parseInt(t.getAttribute('data-imgnext'),10);var _nh=S.history[_ni];var _nv=_nh&&imgVers(_nh);if(_nv&&_nv.length){var _cy=(_nh.verIx==null?_nv.length-1:_nh.verIx);if(_cy<_nv.length-1){_nh.verIx=_cy+1;_nh.img=(_nv[_nh.verIx]||[])[0]||_nh.img;savePref();illuSwap(_ni,_nh);}}return;}
       if(t.getAttribute('data-imgzoom')!=null&&t.getAttribute('data-imgzoom')!==''){var _zi=parseInt(t.getAttribute('data-imgzoom'),10);var _zh=S.history[_zi];if(_zh){var _zord=['lg','md','sm','mini'];var _zcur=_zh.dispSize||IMGCFG.disp||'lg';var _zk=_zord.indexOf(_zcur);if(_zk<0)_zk=0;var _zn=_zord[(_zk+1)%_zord.length];_zh.dispSize=_zn;var _zw=t.parentElement;if(_zw&&_zw.getAttribute('data-imgwrap'))_zw.style.maxWidth=imgDispW(_zn);savePref();}return;}
@@ -3587,6 +3746,39 @@ root.addEventListener('click',function(e){
         if(dli==null||dli<0)return;
         drawWorld(dli);
         return;}
+      else if(a==='imgCacheClearNo'){S.imgCacheClearArm=false;renderOverlay();return;}
+      else if(a==='imgCacheClear'){if(!S.imgCacheClearArm){S.imgCacheClearArm=true;renderOverlay();return;}S.imgCacheClearArm=false;idbClearAll(function(){S.imgCacheKeys=[];if(S.overlay==='set'&&S.setTab==='imgcache')renderOverlay();});return;}
+      else if(a==='imgCopyWorker'){var okc=function(){S.imgSetMsg='✓ 中转代码已复制！去 Cloudflare 新建 Worker 粘贴（见方法二步骤）';S.imgSetMsgC='var(--grn2)';renderOverlay();};var noc=function(){S.imgSetMsg='复制受限，请点下方「手动全选复制」展开后长按/右键复制';S.imgSetMsgC='var(--red2)';renderOverlay();};try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(NAI_WORKER_CODE).then(okc,noc);}else{noc();}}catch(e){noc();}return;}
+      else if(a==='imgReset'){syncImgForm();imgResetDefaults(IMGCFG.style);imgCfgSave();S.imgSetMsg='已填入本接口的推荐默认值';S.imgSetMsgC='var(--grn2)';renderOverlay();return;}
+      else if(a==='imgSave'){syncImgForm();imgCfgSave();imgLoreSave();S.imgSetMsg='已保存。'+(imgReady()?'现在可生图了。':'还差接口地址/密钥/模型。');S.imgSetMsgC=imgReady()?'var(--grn2)':'var(--red2)';renderOverlay();return;}
+      else if(a==='imgTest'){
+        syncImgForm();imgCfgSave();imgLoreSave();
+        if(!imgReady()){S.imgSetMsg='请先填好接口地址/密钥/模型';S.imgSetMsgC='var(--red2)';renderOverlay();return;}
+        if(IMGCFG.style==='novelai'&&/novelai\.(net|ai)/i.test(IMGCFG.url||'')){S.imgSetMsg='「接口地址」不能填 NovelAI 官网（image.novelai.net）——浏览器跨域必被拦。这里要填你的 Cloudflare Worker 网址（形如 https://xxx.workers.dev）；NAI 官网地址已内置在 Worker 里，不用你填。';S.imgSetMsgC='var(--red2)';renderOverlay();return;}
+        S.imgSetMsg='正在测试生图……';S.imgSetMsgC='var(--mut2)';renderOverlay();
+        var tpos=[IMGCFG.pos,'late 18th century parisian street at dusk, oil painting, cinematic lighting, highly detailed, test'].filter(Boolean).join(', ');
+        var runGen=function(){imgGenBlob(tpos,IMGCFG.neg).then(function(blob){if(blob&&blob.size){S.imgSetMsg='✓ 测试生图成功，接口可用';S.imgSetMsgC='var(--grn2)';}else throw new Error('接口未返回图像');renderOverlay();})['catch'](function(err){var em=String(err&&err.message||err);var extra='';if(IMGCFG.style==='novelai'&&/(500|Internal Server)/.test(em))extra=' ｜ NAI 500 十有八九是「模型名」不对：请在上方直接点选模型（V4.5/V4 需 Opus 订阅，没订阅选 V3）。';S.imgSetMsg='测试失败：'+em.slice(0,260)+extra;S.imgSetMsgC='var(--red2)';renderOverlay();});};
+        if(IMGCFG.style==='novelai'){
+          fetch(imgBase()+'/',{method:'GET'}).then(function(r){return r.text();}).then(function(t){
+            if(/proxy.*running/i.test(t)){S.imgSetMsg='第①步通过：中转在线。正在生图（第②步）……';S.imgSetMsgC='var(--mut2)';renderOverlay();runGen();}
+            else{S.imgSetMsg='第①步失败：「接口地址」能连上，但它不是本游戏的 NAI 中转（返回内容不对）。请确认填的是你部署的 Worker 网址。';S.imgSetMsgC='var(--red2)';renderOverlay();}
+          },function(){S.imgSetMsg='第①步失败：这台浏览器连不到「接口地址」。可能网址有误、或此网络/插件拦截了 *.workers.dev。请换浏览器（Chrome 无痕）、关广告拦截、换 Wi-Fi/流量再试。';S.imgSetMsgC='var(--red2)';renderOverlay();});
+        }else runGen();
+        return;}
+      else if(a==='imgComfyModels'){syncImgForm();
+        if(!IMGCFG.url){S.imgSetMsg='请先填 ComfyUI 接口地址（如 http://127.0.0.1:8188）';S.imgSetMsgC='var(--red2)';renderOverlay();return;}
+        var _unet=(IMGCFG.comfyLoader==='unet');var _node=_unet?'UNETLoader':'CheckpointLoaderSimple',_field=_unet?'unet_name':'ckpt_name';
+        S.imgSetMsg='正在拉取 ComfyUI '+(_unet?'UNet':'checkpoint')+'模型列表……';S.imgSetMsgC='var(--mut2)';renderOverlay();
+        fetch(imgBase()+'/object_info/'+_node).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}).then(function(j){
+          var arr=null;try{arr=j[_node].input.required[_field][0];}catch(e){}
+          if(arr&&arr.length){S.imgComfyModels=arr;if(!IMGCFG.model&&arr[0]){IMGCFG.model=arr[0];imgCfgSave();}S.imgSetMsg='已拉取 '+arr.length+' 个'+(_unet?'UNet ':'')+'模型，下面点选即可';S.imgSetMsgC='var(--grn2)';}
+          else{S.imgSetMsg=_unet?'没拉到 UNet（models/unet 或 models/diffusion_models 里没有？）':'没拉到 checkpoint（ComfyUI 的 models/checkpoints 里没有模型？）';S.imgSetMsgC='var(--red2)';}
+          renderOverlay();
+        })['catch'](function(err){S.imgSetMsg='拉取失败：'+String(err&&err.message||err).slice(0,130)+'（确认 ComfyUI 已启动、接口地址对、且启动参数带 --enable-cors-header "*"）';S.imgSetMsgC='var(--red2)';renderOverlay();});
+        return;}
+      else if(a==='imgLoreAdd'){syncImgForm();IMGLORE.push({keys:[],content:'',on:true});imgLoreSave();renderOverlay();return;}
+      else if(a==='imgLoreExport'){try{syncImgForm();var glb=new Blob([JSON.stringify(IMGLORE,null,2)],{type:'application/json'});var glu=URL.createObjectURL(glb);var gla=document.createElement('a');gla.href=glu;gla.download='三叶生图世界书.json';document.body.appendChild(gla);gla.click();document.body.removeChild(gla);setTimeout(function(){URL.revokeObjectURL(glu);},4000);}catch(e){}return;}
+      else if(a==='imgRefClear'){IMGCFG.refImg=null;imgCfgSave();S.imgSetMsg='参考图已移除';S.imgSetMsgC='var(--mut2)';renderOverlay();return;}
       else if(a==='histmore'){S.histShow=(S.histShow||30)+30;S._stayTop=true;S._noFade=true;render();return;}
       else if(a==='closeov'){var cvk=S.overlay;var dm=document.getElementById('zjOvDim');if(dm){dm.style.pointerEvents='none';dm.style.webkitBackdropFilter='none';dm.style.backdropFilter='none';if(dm.animate)dm.animate([{opacity:1},{opacity:0}],{duration:280,easing:'ease',fill:'forwards'});dm.style.transition='opacity 280ms';dm.style.opacity='0';}zjWglOff();morphClose('zjOvBox','[data-ov="'+cvk+'"]',function(){S.overlay=null;S.movePending=null;var ow=document.getElementById('zjOvWrap');if(ow&&ow.parentNode)ow.parentNode.removeChild(ow);else render();});}
       else if(a==='isleHide'){try{localStorage.setItem('mb3d_hide','1');}catch(e){}S.isleBig=false;S.worldFull=false;S._noFade=true;render();}
