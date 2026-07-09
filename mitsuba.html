@@ -1287,6 +1287,7 @@ function buildSystem(history,userInput){
     '【叙事者定位】'+fill(G.personality),
     '【场景】'+fill(G.scenario),
     (S.memOn!==false&&S.mem&&S.mem.length>1)?('【长程记忆·编年长卷】以下为本局开局至今全部既定事实的编年纪要（越靠后越接近当下）。正文历史若有缺失，以此卷为准；任何叙事不得与之矛盾：\n'+memChronicle()):'',
+    (function(){var _fd=npcFavorDigest();return _fd?('【人物好感·续记（不得健忘）】以下为曾登场人物最近一次的好感度与近况。他们即便暂时离场，好感与关系也须【延续记忆】：再次出场时自此数值起继续自然演变，严禁凭空重置、归零或大幅跳变；确有剧情推动方可增减：\n'+_fd):'';})(),
     '【世界书·激活条目】\n'+lore.map(function(e){return '『'+e.title+'』'+e.content;}).join('\n'),
     SPD?'':('【对话示例】\n'+fill(G.mes_example)),
     '【输出格式·铁则】正文严格模仿原作文风的现代白话轻小说笔法('+(SPD?'2-3段，简洁明快':'2-6段')+')：短句、冷面幽默、惨剧与吐槽零时差并置，敬体对话+常体心声，停在需要玩家角色表态处。末尾必须输出<mvu_panel>状态栏：<sec_char>含◆衣装/持物/身体/观瞻/人望(0-100)/记录；<sec_npc>每在场NPC一行◈名字|状态|好感(0-100)|心声；<sec_world>含◇纪年/时地/天气/安稳(0-100)/大势/将临。禁止<UpdateVariable>。若且仅若本轮叙事中世界有实际变动——玩家下令兴建并落成、屋舍焚毁坍塌、人物来到或离去——则在<sec_world>之后增写<sec_deed>，每类一行：▣兴作|名目×数、▣毁损|名目×数、▣来者|人物、▣去者|人物；多项以、分隔。兴作与毁损名目仅限：马厩、酒馆、旅店、咖啡馆、书店、药房、裁缝店、铁匠铺、武器铺、金匠铺、珠宝行、陶瓷坊、铸造厂、肉铺、杂货铺、面包房、货栈、官仓、市政厅、教堂、民居、宫殿、凉亭、草棚、剧场、钟楼、石桥、凯旋门、雕像、断头台、街垒、常青树、橡树、梧桐、苍松、灌木丛、花圃、路灯、芦苇、露岩、喷泉、池塘、石板道、林荫大道、碎石官道；人物仅限：学者、农民、工匠、商人、官员、将军、魔术师、乐手、书记官、神父、绿化教徒、佣兵、学生、革命党人、记者、军医、占卜师、渔夫、樵夫、士兵、贵族、市民。每轮兴作至多3件、毁损至多2件；只记实际发生者，无变动则不得输出<sec_deed>。',
@@ -2831,6 +2832,9 @@ function savesBody(){
   return '<div class="grow" style="overflow-y:auto;padding:18px 24px"><div style="display:flex;gap:12px;margin-bottom:16px;align-items:center;flex-wrap:wrap"><button data-act="savenow" class="gbtn btn" style="font-size:15px;letter-spacing:.15em;padding:9px 22px">新建存档</button><div style="font-size:12px;color:var(--mut)">最多十二份存档，存于此浏览器。</div></div>'+rows+'</div>';
 }
 
+/* 归一人物名：去空白（含全角空格）、去掉尾部括注（如「克萝内（学姐）」→「克萝内」），
+   使同一人的不同写法合并为同一节点，杜绝图谱里「同一人重复出现、只状态不同」。 */
+function npcKey(name){return String(name||'').replace(/[\s　]+/g,'').replace(/[（(【\[][^）)】\]]*[）)】\]]?\s*$/,'');}
 function npcStats(){
   var map={},order=[];
   S.history.forEach(function(h){
@@ -2839,14 +2843,27 @@ function npcStats(){
     if(!p||!p.npcs)return;
     p.npcs.forEach(function(np){
       if(!np||!np.name)return;
-      if(!map[np.name]){map[np.name]={name:np.name,n:0};order.push(np.name);}
-      var o=map[np.name];o.n++;
+      var disp=String(np.name).trim();var key=npcKey(disp)||disp;
+      if(!key)return;
+      if(!map[key]){map[key]={name:disp,n:0};order.push(key);}
+      var o=map[key];o.n++;
+      /* 展示名取更简洁（去括注）的那个 */
+      if(disp&&disp.length<o.name.length)o.name=disp;
       if(np.favor!=null)o.favor=np.favor;
-      if(np.status)o.status=np.status;
+      if(np.state)o.state=np.state;
       if(np.thought)o.thought=np.thought;
     });
   });
   return order.map(function(k){return map[k];});
+}
+/* 好感度记忆：把曾登场每个人物的最近好感与近况汇成一段，注入系统提示——
+   人物暂时离场也不「健忘」，再登场须自此值续演，不得凭空重置或乱跳。 */
+function npcFavorDigest(){
+  var ns=npcStats();if(!ns.length)return '';
+  var rows=ns.filter(function(o){return o.name&&o.favor!=null;}).slice(-30).map(function(o){
+    return '· '+o.name+'：好感 '+o.favor+(o.state?('（近况：'+String(o.state).slice(0,24)+'）'):'');
+  });
+  return rows.length?rows.join('\n'):'';
 }
 function graphInner(){
   var ns=npcStats();
@@ -2877,7 +2894,7 @@ function graphInner(){
       +'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="kai" style="font-size:15px;color:var(--gold2)">'+esc(sel2.name)+'</span><span style="font-size:11px;color:var(--mut)">出场 '+sel2.n+' 幕</span>'
       +'<div style="flex:1;min-width:80px;height:5px;border-radius:3px;background:rgba(255,255,255,.07);overflow:hidden"><div style="width:'+Math.max(2,Math.min(100,fv2))+'%;height:100%;background:linear-gradient(90deg,#96323f,#8f7430,#3c6494)"></div></div>'
       +'<span style="font-size:11px;color:var(--gold3)">好感 '+fv2+'</span></div>'
-      +(sel2.status?'<div style="font-size:12px;color:var(--ink2);margin-top:6px">近况：'+esc(sel2.status)+'</div>':'')
+      +(sel2.state?'<div style="font-size:12px;color:var(--ink2);margin-top:6px">近况：'+esc(sel2.state)+'</div>':'')
       +(sel2.thought?'<div style="font-size:12px;color:#5d5142;margin-top:3px;line-height:1.7;color:#6b4f8e">心声：'+esc(sel2.thought)+'</div>':'')+'</div>';}
   }
   return '<div style="font-size:11px;color:var(--mut);line-height:1.7;margin:2px 0 2px">线愈粗缘愈深，色由好感定：<span style="color:#3e7256">青亲厚</span> · <span style="color:#3c5a86">金平和</span> · <span style="color:#96323f">赤疏恶</span>。小球可拖拽把玩，轻点看详情。</div>'
