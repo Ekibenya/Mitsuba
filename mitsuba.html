@@ -462,7 +462,13 @@ function parseMvu(text){
   var npcs = lines(sec('npc'),'◈').map(function(p){return {name:p[0]||'',state:p[1]||'',favor:parseInt(p[2],10)||0,thought:p[3]||''};});
   return {char:char,npcs:npcs,world:world};
 }
-function stripMvu(t){return String(t||'').replace(/<mvu_panel>[\s\S]*?<\/mvu_panel>/g,'').replace(/<UpdateVariable>[\s\S]*?<\/UpdateVariable>/g,'').trim();}
+function stripMvu(t){return String(t||'')
+  .replace(/<mvu_panel>[\s\S]*?<\/mvu_panel>/g,'')            /* 完整状态栏 */
+  .replace(/<UpdateVariable>[\s\S]*?<\/UpdateVariable>/g,'')
+  .replace(/<mvu_panel>[\s\S]*$/,'')                          /* 流式：尚未闭合的半截状态栏 */
+  .replace(/<sec_[a-z]*>[\s\S]*$/i,'')                        /* 流式：漏了外层包裹、直冒出的 <sec_…> */
+  .replace(/\n*<\/?[a-z_]{0,14}$/i,'')                        /* 流式：末尾正在逐字成形的半个标签 */
+  .trim();}
 function parseDeed(text){
   var m=/<sec_deed>([\s\S]*?)<\/sec_deed>/.exec(text||'');
   if(!m)return null;
@@ -1127,8 +1133,260 @@ var PROFILES=[];try{PROFILES=JSON.parse(localStorage.getItem(PROFK)||'[]')||[];}
 if(!Array.isArray(PROFILES))PROFILES=[];
 function profSave(){try{localStorage.setItem(PROFK,JSON.stringify(PROFILES));}catch(e){}}
 function apiReady(){var c=apiCur();return !!(c.key&&c.model);}
-function imgReady(){return !!(API.img&&API.img.key&&API.img.model);}
-function imgBase(){return String(API.img.url||'https://api.openai.com/v1').trim().replace(/\/+$/,'');}
+/* ---------------- 生图设置（接口/采样/提示词预设/参考图/生图世界书；仅存本机） ---------------- */
+var IMGCFGKEY='mitsuba_imgcfg_v1';
+var IMGCFG={on:true,auto:false,url:'',key:'',model:'',style:'novelai',sampler:'',noise:'',steps:'',guidance:'',rescale:'',width:'',height:'',size:'1024x1024',seed:'-1',pos:'',neg:'',charRef:false,refImg:null,comfyWorkflow:'',comfyLoader:'checkpoint',comfyClip1:'',comfyClip2:'',comfyVae:'',comfyClipType:'sdxl',count:1,cam:'auto',disp:'lg',grid:'auto'};
+var IMGCAM={auto:{label:'自动',frag:''},cinematic:{label:'电影感',frag:'cinematic film still, dramatic volumetric lighting, shallow depth of field, anamorphic widescreen, color graded, movie scene'},illust:{label:'插画',frag:'detailed light-novel illustration, painterly, vivid colors, clean lineart, official art'},oil:{label:'油画',frag:'classical oil painting, baroque chiaroscuro, rich impasto brushwork, museum masterpiece, late 18th century european'},fpv:{label:'第一人称',frag:'first-person POV, seen through the protagonist own eyes, immersive, own hands and sleeves visible in frame'},god:{label:'上帝视角',frag:"bird's-eye view, high-angle top-down aerial perspective, overhead, vast scale"},real:{label:'写实',frag:'photorealistic, ultra realistic, cinematic photography, detailed skin and fabric, natural light'}};
+try{var _ic=JSON.parse(localStorage.getItem(IMGCFGKEY)||'null');if(_ic&&typeof _ic==='object')Object.assign(IMGCFG,_ic);}catch(e){}
+try{if(!IMGCFG.url&&!IMGCFG.key&&!IMGCFG.model&&API.img&&(API.img.url||API.img.key||API.img.model)){IMGCFG.url=API.img.url||'';IMGCFG.key=API.img.key||'';IMGCFG.model=API.img.model||'';}}catch(e){}
+function imgCfgSave(){try{localStorage.setItem(IMGCFGKEY,JSON.stringify(IMGCFG));}catch(e){}}
+var IMGDEFAULTS={
+  openai:{sampler:'',noise:'',steps:'',guidance:'',rescale:'',width:'',height:'',size:'1024x1024'},
+  novelai:{sampler:'k_euler_ancestral',noise:'native',steps:'28',guidance:'5',rescale:'0',width:'832',height:'1216',size:''},
+  sd:{sampler:'DPM++ 2M',noise:'Karras',steps:'28',guidance:'7',rescale:'0',width:'768',height:'1152',size:''},
+  comfyui:{sampler:'dpmpp_2m',noise:'karras',steps:'25',guidance:'7',rescale:'',width:'768',height:'1024',size:''},
+  custom:{sampler:'euler',noise:'',steps:'28',guidance:'7',rescale:'',width:'',height:'',size:'1024x1024'}
+};
+function imgDefaults(st){return IMGDEFAULTS[st]||IMGDEFAULTS.openai;}
+var IMGSAMPFIELDS=['sampler','noise','steps','guidance','rescale','width','height','size'];
+function imgFillEmpty(st){var d=imgDefaults(st);IMGSAMPFIELDS.forEach(function(k){if(!IMGCFG[k])IMGCFG[k]=d[k];});}
+function imgResetDefaults(st){var d=imgDefaults(st);IMGSAMPFIELDS.forEach(function(k){IMGCFG[k]=d[k];});}
+try{imgFillEmpty(IMGCFG.style);imgCfgSave();}catch(e){}
+var NAI_WORKER_CODE=`const UPSTREAM='https://image.novelai.net';
+export default {
+  async fetch(request){
+    const cors={'Access-Control-Allow-Origin':'*','Access-Control-Allow-Methods':'POST, OPTIONS','Access-Control-Allow-Headers':'authorization, content-type','Access-Control-Max-Age':'86400'};
+    if(request.method==='OPTIONS')return new Response(null,{headers:cors});
+    if(request.method!=='POST')return new Response('NovelAI proxy is running. Point the game here.',{headers:cors});
+    const url=new URL(request.url);
+    try{
+      const upstream=await fetch(UPSTREAM+url.pathname+url.search,{method:'POST',headers:{'authorization':request.headers.get('authorization')||'','content-type':request.headers.get('content-type')||'application/json','accept':'application/x-zip-compressed'},body:await request.arrayBuffer()});
+      const buf=await upstream.arrayBuffer();
+      return new Response(buf,{status:upstream.status,headers:{...cors,'content-type':upstream.headers.get('content-type')||'application/octet-stream'}});
+    }catch(e){
+      return new Response('proxy error: '+((e&&e.message)||String(e)),{status:502,headers:cors});
+    }
+  }
+};`;
+var IMGLOREKEY='mitsuba_imglore_v1';
+var IMGLORE=[];try{IMGLORE=JSON.parse(localStorage.getItem(IMGLOREKEY)||'[]')||[];}catch(e){}if(!Array.isArray(IMGLORE))IMGLORE=[];
+function imgLoreSave(){try{localStorage.setItem(IMGLOREKEY,JSON.stringify(IMGLORE));}catch(e){}}
+function imgReady(){if(!IMGCFG.on)return false;if(IMGCFG.style==='sd'||IMGCFG.style==='comfyui')return !!IMGCFG.url;if(IMGCFG.style==='novelai')return !!(IMGCFG.url&&IMGCFG.key);return !!(IMGCFG.key&&IMGCFG.model);}
+function imgBase(){return String(IMGCFG.url||'https://api.openai.com/v1').trim().replace(/\/+$/,'');}
+function imgActiveLore(text){var out=[];(IMGLORE||[]).forEach(function(e){if(e.on===false||!e.content)return;var ks=e.keys||[];if(!ks.length||ks.some(function(k){return k&&text.indexOf(k)>=0;}))out.push(e.content);});return out.join(', ');}
+function imgSize(){var w=parseInt(IMGCFG.width,10)||0,h=parseInt(IMGCFG.height,10)||0;if(w&&h)return w+'x'+h;return IMGCFG.size||'1024x1024';}
+function imgSeed(){var s=parseInt(IMGCFG.seed,10);return isFinite(s)?s:-1;}
+function imgEndpoint(){var base=imgBase();if(IMGCFG.style==='novelai')return base+'/ai/generate-image';if(IMGCFG.style==='sd')return base+'/sdapi/v1/txt2img';if(IMGCFG.style==='custom')return /\/(generate|txt2img|images|generateimage)/i.test(base)?base:base+'/images/generations';return base+'/images/generations';}
+function imgBuildBody(pos,neg){
+  var C=IMGCFG,w=parseInt(C.width,10)||0,h=parseInt(C.height,10)||0,seed=imgSeed();
+  if(C.style==='novelai'){
+    var naiModel=C.model||'nai-diffusion-3';
+    var isV4=/diffusion-4/.test(naiModel);
+    var seedVal=(seed>=0?seed:Math.floor(Math.random()*4294967295));
+    var noiseIn=(C.noise||'').trim();
+    var np={params_version:(isV4?3:1),width:w||832,height:h||1216,scale:parseFloat(C.guidance)||5,sampler:C.sampler||'k_euler_ancestral',steps:parseInt(C.steps,10)||28,n_samples:1,ucPreset:0,qualityToggle:true,dynamic_thresholding:false,controlnet_strength:1,legacy:false,add_original_image:true,cfg_rescale:(C.rescale!==''&&C.rescale!=null?parseFloat(C.rescale)||0:0),seed:seedVal,negative_prompt:neg||''};
+    if(isV4){
+      np.noise_schedule=(noiseIn&&noiseIn!=='native')?noiseIn:'karras';
+      np.autoSmea=false;np.use_coords=false;np.legacy_v3_extend=false;np.deliberate_euler_ancestral_bug=false;np.prefer_brownian=true;
+      np.v4_prompt={caption:{base_caption:pos,char_captions:[]},use_coords:false,use_order:true};
+      np.v4_negative_prompt={caption:{base_caption:neg||'',char_captions:[]},legacy_uc:false};
+    }else{
+      np.noise_schedule=noiseIn||'native';np.sm=false;np.sm_dyn=false;
+    }
+    if(C.charRef&&C.refImg){np.reference_image_multiple=[String(C.refImg).replace(/^data:image\/\w+;base64,/,'')];np.reference_strength_multiple=[0.6];}
+    return {input:pos,model:naiModel,action:'generate',parameters:np};
+  }
+  if(C.style==='sd'){
+    var b={prompt:pos,negative_prompt:neg||'',steps:parseInt(C.steps,10)||28,cfg_scale:parseFloat(C.guidance)||7,width:w||832,height:h||1216,seed:seed};
+    if(C.sampler)b.sampler_name=C.sampler;if(C.noise)b.scheduler=C.noise;if(C.rescale!==''&&C.rescale!=null)b.cfg_rescale=parseFloat(C.rescale)||0;
+    if(C.model)b.override_settings={sd_model_checkpoint:C.model};
+    if(C.charRef&&C.refImg)b.init_images=[String(C.refImg).replace(/^data:image\/\w+;base64,/,'')];
+    return b;
+  }
+  if(C.style==='custom'){
+    var o={model:C.model,prompt:pos,negative_prompt:neg||'',width:w||1024,height:h||1024,seed:seed,response_format:'b64_json'};
+    if(C.steps)o.steps=parseInt(C.steps,10);if(C.sampler)o.sampler=C.sampler;if(C.noise)o.noise_schedule=C.noise;
+    if(C.guidance)o.guidance=parseFloat(C.guidance);if(C.rescale!=='')o.guidance_rescale=parseFloat(C.rescale)||0;
+    if(C.charRef&&C.refImg)o.reference_image=C.refImg;
+    return o;
+  }
+  return {model:C.model,prompt:pos+(neg?(' . 避免: '+neg):''),n:1,size:imgSize(),response_format:'b64_json'};
+}
+function imgB64ToBlob(b64){b64=String(b64).replace(/^data:image\/\w+;base64,/,'');var bin=atob(b64);var u8=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);return new Blob([u8],{type:'image/png'});}
+function imgParseResult(j){
+  var b64=null,url=null;
+  if(j){
+    if(j.data&&j.data[0]){b64=j.data[0].b64_json;url=j.data[0].url;}
+    else if(j.images&&j.images[0]){b64=j.images[0];}
+    else if(j.image){b64=j.image;}
+    else if(j.b64_json){b64=j.b64_json;}
+    else if(j.artifacts&&j.artifacts[0]){b64=j.artifacts[0].base64;}
+    else if(typeof j==='string'){b64=j;}
+  }
+  if(b64)return {blob:imgB64ToBlob(b64)};
+  if(url)return {url:url};
+  return null;
+}
+/* 内置极速解压：NovelAI 返回的是内含 image_0.png 的 zip，见 zip 即刻抽出 PNG */
+function zipExtractPng(buf){
+  var u8=new Uint8Array(buf);
+  if(u8.length>8&&u8[0]===0x89&&u8[1]===0x50&&u8[2]===0x4E&&u8[3]===0x47)return Promise.resolve(new Blob([u8],{type:'image/png'}));
+  if(!(u8[0]===0x50&&u8[1]===0x4B&&u8[2]===0x03&&u8[3]===0x04))return Promise.reject(new Error('返回既非 PNG 亦非 zip（可能是错误信息或被拦截）'));
+  var dv=new DataView(buf);
+  var method,start,dataEnd;
+  var eocd=-1;for(var i=u8.length-22;i>=0;i--){if(u8[i]===0x50&&u8[i+1]===0x4B&&u8[i+2]===0x05&&u8[i+3]===0x06){eocd=i;break;}}
+  if(eocd>=0){var cd=dv.getUint32(eocd+16,true);
+    if(cd+46<=u8.length&&dv.getUint32(cd,true)===0x02014b50){
+      method=dv.getUint16(cd+10,true);
+      var csize=dv.getUint32(cd+20,true),lho=dv.getUint32(cd+42,true);
+      var nl=dv.getUint16(lho+26,true),el=dv.getUint16(lho+28,true);
+      start=lho+30+nl+el;dataEnd=start+csize;}}
+  if(start==null){method=dv.getUint16(8,true);
+    var nameLen=dv.getUint16(26,true),extraLen=dv.getUint16(28,true);
+    start=30+nameLen+extraLen;var cs0=dv.getUint32(18,true);dataEnd=cs0>0?start+cs0:u8.length;}
+  var data=u8.subarray(start,Math.min(dataEnd,u8.length));
+  if(method===0)return Promise.resolve(new Blob([data],{type:'image/png'}));
+  if(method===8&&typeof DecompressionStream!=='undefined'){var ds=new DecompressionStream('deflate-raw');var wr=ds.writable.getWriter();wr.write(data)['catch'](function(){});wr.close()['catch'](function(){});return new Response(ds.readable).arrayBuffer().then(function(ab){return new Blob([ab],{type:'image/png'});},function(e){throw new Error('zip 解压失败：'+String(e&&e.message||e).slice(0,80));});}
+  return Promise.reject(new Error('zip 压缩方式不支持（method '+method+'）'));
+}
+function imgFetchBlob(url,hdr,body){
+  return fetch(url,{method:'POST',headers:hdr,body:JSON.stringify(body)}).then(function(r){
+    if(!r.ok)return r.text().then(function(t){throw new Error('HTTP '+r.status+'：'+String(t).slice(0,180));});
+    return r.arrayBuffer().then(null,function(){throw new Error('图片下载到一半被切断——你的中转还是旧版脚本。请更新中转后重试。');});
+  },function(e){
+    var hint='连不上「接口地址」（'+(e&&e.message||'Failed to fetch')+'）。NovelAI 必须经中转：请确认「接口地址」填的是你的 <b>Cloudflare Worker 网址</b>（形如 https://xxx.workers.dev），而不是 image.novelai.net——NAI 官网地址已写死在 Worker 里、游戏里不用填。';
+    throw new Error(hint);
+  }).then(function(buf){return zipExtractPng(buf);});
+}
+function comfyBuildWorkflow(pos,neg){
+  var C=IMGCFG,w=parseInt(C.width,10)||512,h=parseInt(C.height,10)||512,seed=imgSeed();if(seed<0)seed=Math.floor(Math.random()*1e15);
+  var steps=parseInt(C.steps,10)||20,cfg=parseFloat(C.guidance)||7,sampler=C.sampler||'euler',sched=C.noise||'normal',ckpt=C.model||'';
+  if(C.comfyWorkflow&&C.comfyWorkflow.trim()){
+    var t=C.comfyWorkflow,sub=function(k,v){t=t.split(k).join(String(v).replace(/\\/g,'\\\\').replace(/"/g,'\\"'));};
+    sub('%prompt%',pos);sub('%negative%',neg||'');sub('%seed%',seed);sub('%steps%',steps);sub('%cfg%',cfg);sub('%width%',w);sub('%height%',h);sub('%sampler%',sampler);sub('%scheduler%',sched);sub('%ckpt%',ckpt);
+    return JSON.parse(t);
+  }
+  /* UNet 分离式加载（anima 等以 UNet 权重分发的模型用）：UNETLoader 出 MODEL，
+     再由 DualCLIPLoader 出 CLIP、VAELoader 出 VAE——不同于 Checkpoint 全合一。 */
+  if(C.comfyLoader==='unet'){
+    var clip1=C.comfyClip1||'',clip2=C.comfyClip2||'',vae=C.comfyVae||'',ctype=C.comfyClipType||'sdxl';
+    return {"3":{"class_type":"KSampler","inputs":{"seed":seed,"steps":steps,"cfg":cfg,"sampler_name":sampler,"scheduler":sched,"denoise":1,"model":["4",0],"positive":["6",0],"negative":["7",0],"latent_image":["5",0]}},
+      "4":{"class_type":"UNETLoader","inputs":{"unet_name":ckpt,"weight_dtype":"default"}},
+      "5":{"class_type":"EmptyLatentImage","inputs":{"width":w,"height":h,"batch_size":1}},
+      "6":{"class_type":"CLIPTextEncode","inputs":{"text":pos,"clip":["10",0]}},
+      "7":{"class_type":"CLIPTextEncode","inputs":{"text":neg||"","clip":["10",0]}},
+      "8":{"class_type":"VAEDecode","inputs":{"samples":["3",0],"vae":["11",0]}},
+      "9":{"class_type":"SaveImage","inputs":{"filename_prefix":"mitsuba","images":["8",0]}},
+      "10":{"class_type":"DualCLIPLoader","inputs":{"clip_name1":clip1,"clip_name2":clip2,"type":ctype}},
+      "11":{"class_type":"VAELoader","inputs":{"vae_name":vae}}};
+  }
+  return {"3":{"class_type":"KSampler","inputs":{"seed":seed,"steps":steps,"cfg":cfg,"sampler_name":sampler,"scheduler":sched,"denoise":1,"model":["4",0],"positive":["6",0],"negative":["7",0],"latent_image":["5",0]}},
+    "4":{"class_type":"CheckpointLoaderSimple","inputs":{"ckpt_name":ckpt}},
+    "5":{"class_type":"EmptyLatentImage","inputs":{"width":w,"height":h,"batch_size":1}},
+    "6":{"class_type":"CLIPTextEncode","inputs":{"text":pos,"clip":["4",1]}},
+    "7":{"class_type":"CLIPTextEncode","inputs":{"text":neg||"","clip":["4",1]}},
+    "8":{"class_type":"VAEDecode","inputs":{"samples":["3",0],"vae":["4",2]}},
+    "9":{"class_type":"SaveImage","inputs":{"filename_prefix":"mitsuba","images":["8",0]}}};
+}
+function comfyGenerate(pos,neg){
+  var base=imgBase(),cid='mitsuba_'+Date.now()+'_'+Math.floor(Math.random()*100000),wf;
+  try{wf=comfyBuildWorkflow(pos,neg);}catch(e){return Promise.reject(new Error('ComfyUI 工作流 JSON 有误：'+(e&&e.message||e)));}
+  return fetch(base+'/prompt',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:wf,client_id:cid})}).then(function(r){
+    if(!r.ok)return r.text().then(function(t){throw new Error('ComfyUI /prompt HTTP '+r.status+'：'+String(t).slice(0,200));});
+    return r.json();
+  }).then(function(j){
+    var pid=j&&j.prompt_id;if(!pid)throw new Error('ComfyUI 未返回 prompt_id（工作流可能有误）');
+    return new Promise(function(resolve,reject){
+      var tries=0,MAX=160;
+      (function poll(){
+        if(++tries>MAX){reject(new Error('ComfyUI 生成超时（约3分钟未出图）'));return;}
+        fetch(base+'/history/'+pid).then(function(r){return r.ok?r.json():{};}).then(function(hh){
+          var rec=hh&&hh[pid];
+          if(rec&&rec.outputs){
+            var img=null;Object.keys(rec.outputs).forEach(function(nid){var o=rec.outputs[nid];if(o&&o.images&&o.images[0]&&!img)img=o.images[0];});
+            if(img){var q='/view?filename='+encodeURIComponent(img.filename)+'&subfolder='+encodeURIComponent(img.subfolder||'')+'&type='+encodeURIComponent(img.type||'output');
+              fetch(base+q).then(function(r){if(!r.ok)throw new Error('ComfyUI 取图 HTTP '+r.status);return r.blob();}).then(resolve,reject);return;}
+          }
+          setTimeout(poll,1200);
+        },function(){setTimeout(poll,1200);});
+      })();
+    });
+  });
+}
+function imgGenBlob(pos,neg){
+  var hdr={'Content-Type':'application/json'};if(IMGCFG.key)hdr['Authorization']='Bearer '+IMGCFG.key;
+  if(IMGCFG.style==='comfyui')return comfyGenerate(pos,neg);
+  if(IMGCFG.style==='novelai')return imgFetchBlob(imgEndpoint(),hdr,imgBuildBody(pos,neg));
+  return apiHttp(imgEndpoint(),{method:'POST',headers:hdr,body:JSON.stringify(imgBuildBody(pos,neg))}).then(function(j){
+    var r=imgParseResult(j);
+    if(!r)throw new Error('接口未返回图像数据（本轮图未出）');
+    if(r.url)return fetch(r.url).then(function(x){if(!x.ok)throw new Error('取图失败 HTTP '+x.status);return x.blob();});
+    return r.blob;
+  });
+}
+/* 多版本记录：每次「绘/重绘」= 一个新版本；旧版本保留供箭头翻看 */
+function imgVers(h){
+  if(h.imgVers&&h.imgVers.length)return h.imgVers;
+  if(h.imgs&&h.imgs.length){h.imgVers=h.imgs.map(function(id){return [id];});h.verIx=(h.imgIx!=null?Math.min(h.imgIx,h.imgVers.length-1):h.imgVers.length-1);return h.imgVers;}
+  if(h.img){h.imgVers=[[h.img]];h.verIx=0;return h.imgVers;}
+  return null;
+}
+/* 生图核心：一定要出图——生成后校验图确实拿到并入库，失败自动重试一次 */
+function drawWorld(idx,tries){
+  if(idx==null||idx<0||!S.history[idx]||S.history[idx].role!=='world')return;
+  if(!imgReady()){S.imgErr='未配置或未启用生图接口（设置→图·生图）';renderSoft();return;}
+  if(S.imgBusy!=null&&S.imgBusy!==idx)return;
+  S.imgBusy=idx;S.imgErr=null;S._noFade=true;render();
+  var dTxt=stripCoT(stripMvu(S.history[idx].text)).slice(0,1200);
+  var loreStr=imgActiveLore(dTxt);
+  var cam=(IMGCAM[IMGCFG.cam]||IMGCAM.auto).frag;
+  var count=Math.max(1,Math.min(6,parseInt(IMGCFG.count,10)||1));
+  var AUX='你是绘画提示词工程师。把给定的近世欧陆（18世纪末法国大革命时代）场景描写浓缩为一条英文AI绘画提示词：主体人物、环境、光线、氛围，风格 late 18th century European historical illustration, oil painting, cinematic lighting, highly detailed。只输出提示词，勿加引号与解释，80词以内。';
+  var fallback='late 18th century European revolution era scene, cinematic lighting, highly detailed illustration: '+dTxt.slice(0,160);
+  var promptsP;
+  if(count>1&&apiReady()){
+    var MAUX='你是分镜师。据给定的近世欧陆（18世纪末）场景，生成 '+count+' 条【互不相同】的英文AI绘画提示词，从不同切入点取材：主场景全景／某在场人物的面部特写与神情／此刻不在场但与剧情相关的角色正在别处做什么／不同摄像机机位(俯瞰、仰视、过肩、极近特写、远景)／平行视角或环境细节等，尽量各异。每条独立成行，只输出提示词本身，勿编号勿解释，每条80词内，统一风格 late 18th century European historical illustration, oil painting, highly detailed。';
+    promptsP=callAuxAI(MAUX,[{role:'user',content:dTxt}]).then(function(t){var ls=String(t||'').split(/\n+/).map(function(x){return x.replace(/^\s*[0-9.、)\-—]+\s*/,'').trim();}).filter(Boolean);if(!ls.length)ls=[fallback];return ls.slice(0,count);},function(){return [fallback];});
+  }else if(apiReady()){
+    promptsP=callAuxAI(AUX,[{role:'user',content:dTxt}]).then(function(t){return [String(t||'').trim().slice(0,700)||fallback];},function(){return [fallback];});
+  }else{promptsP=Promise.resolve([fallback]);}
+  promptsP.then(function(prompts){
+    var made=0,lastErr=null,verArr=null;
+    (function genOne(i,retry){
+      if(!prompts||i>=prompts.length||S.imgBusy!==idx){
+        S.imgBusy=null;
+        if(!made){if((tries||0)<1){setTimeout(function(){drawWorld(idx,(tries||0)+1);},900);return;}S.imgErr='本轮生图失败（已重试）：'+String((lastErr&&lastErr.message)||lastErr||'未知').slice(0,120)+' · 可点「✦ 绘此幕」再试';}
+        S._noFade=true;render();return;
+      }
+      var pos=[IMGCFG.pos,cam,prompts[i],loreStr].filter(Boolean).join(', ');
+      imgGenBlob(pos,IMGCFG.neg).then(function(blob){
+        if(!blob||!blob.size)throw new Error('图像为空');
+        var iid='img_'+Date.now()+'_'+i+'_'+Math.floor(Math.random()*10000);
+        idbPut(iid,blob,function(okp){
+          if(okp&&S.history[idx]){var _h=S.history[idx];
+            if(verArr===null){
+              imgVers(_h);if(!_h.imgVers)_h.imgVers=[];verArr=[];_h.imgVers.push(verArr);if(_h.imgVers.length>8)_h.imgVers=_h.imgVers.slice(-8);_h.verIx=_h.imgVers.length-1;_h.imgs=undefined;_h.imgIx=undefined;}
+            verArr.push(iid);_h.img=verArr[0];made++;savePref();idbPrune(isMobile()?16:40);S.imgErr=null;}
+          S._noFade=true;render();genOne(i+1,0);
+        });
+      })['catch'](function(err){lastErr=err;if((retry||0)<1){setTimeout(function(){genOne(i,1);},900);return;}genOne(i+1,0);});
+    })(0,0);
+  })['catch'](function(err){
+    S.imgBusy=null;
+    if((tries||0)<1){setTimeout(function(){drawWorld(idx,(tries||0)+1);},900);return;}
+    S.imgErr='本轮生图失败（已重试）：'+String(err&&err.message||err).slice(0,120);S._noFade=true;render();
+  });
+}
+function maybeAutoDraw(){
+  if(!(IMGCFG.on&&IMGCFG.auto&&imgReady()))return;
+  var li=-1;for(var i=S.history.length-1;i>=0;i--){if(S.history[i].role==='world'){li=i;break;}}
+  if(li>=0&&!S.history[li].img&&S.imgBusy==null)drawWorld(li);
+}
+function imgRefLoad(file){
+  var rd=new FileReader();
+  rd.onload=function(){var im=new Image();im.onload=function(){var mx=768,w=im.width,h=im.height;if(w>mx||h>mx){var sc=mx/Math.max(w,h);w=Math.round(w*sc);h=Math.round(h*sc);}var cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(im,0,0,w,h);try{IMGCFG.refImg=cv.toDataURL('image/jpeg',0.85);imgCfgSave();S.imgSetMsg='参考图已添加';S.imgSetMsgC='var(--grn2)';}catch(e){S.imgSetMsg='参考图读取失败';S.imgSetMsgC='var(--red2)';}if(S.overlay)renderOverlay();};im.onerror=function(){S.imgSetMsg='参考图不是有效图片';S.imgSetMsgC='var(--red2)';if(S.overlay)renderOverlay();};im.src=String(rd.result||'');};
+  rd.readAsDataURL(file);
+}
 function auxReady(){return !!(API.aux&&API.aux.key&&API.aux.model);}
 function auxBase(){return String(API.aux.url||'https://api.openai.com/v1').trim().replace(/\/+$/,'');}
 function genNum(v){var n=parseFloat(v);return isFinite(n)?n:null;}
@@ -1363,7 +1621,7 @@ function pullHistory(cb){
         S._pulled=S.history.length;
         if(S.history.length && (S.screen==='title')) S.screen='game';
       }
-      render(); cb&&cb();
+      render();maybeAutoDraw(); cb&&cb();
     }).catch(function(){cb&&cb();});
   }catch(e){cb&&cb();}
 }
@@ -1507,7 +1765,7 @@ function advanceLocal(base,text){
     var msg={role:'world',text:reply,panel:parseMvu(reply)};
     if(S._swipeFrom){msg.alts=S._swipeFrom.concat([reply]).slice(-8);msg.altIx=msg.alts.length-1;S._swipeFrom=null;}
     S.thinking=false;S._stream=false;S.aiLive=live;S.history=base.concat([{role:'user',text:text},msg]);render();savePref();
-    if(live)genSuggestions();
+    if(live){genSuggestions();maybeAutoDraw();}
   };
   var claudeOK = window.claude && typeof window.claude.complete==='function';
   if(apiReady()){
@@ -1526,7 +1784,7 @@ function advanceLocal(base,text){
         live.text=t;live.panel=parseMvu(t);S.thinking=false;S.aiLive=true;
         if(S._swipeFrom){live.alts=S._swipeFrom.concat([t]).slice(-8);live.altIx=live.alts.length-1;S._swipeFrom=null;}
         if(!started)S.history=base.concat([{role:'user',text:text},live]);
-        render();savePref();genSuggestions();
+        render();savePref();genSuggestions();maybeAutoDraw();
       }).catch(function(){
         S._stream=false;
         /* 流式中断：撤下半截，回退整段生成重试一次 */
@@ -3252,32 +3510,12 @@ root.addEventListener('click',function(e){
       else if(a==='ttsScene'){var tli=-1;for(var tj=S.history.length-1;tj>=0;tj--){if(S.history[tj].role==='world'){tli=tj;break;}}if(tli>=0)ttsSpeak(tli);return;}
       else if(a==='ttsStop'){ttsStop();return;}
       else if(a==='ttsTest'){if(TTSP.playing&&TTSP.idx===-1){ttsStop(true);}else{ttsSpeak(null,'「打扰了。请问，这里有甜的果汁吗？」你向食堂的大婶询问。汤勺当啷一声掉进了锅里。');}renderOverlay();return;}
-      else if(a==='drawScene'){
-        if(S.imgBusy!=null||!imgReady())return;
-        var dli=-1;for(var dj=S.history.length-1;dj>=0;dj--){if(S.history[dj].role==='world'){dli=dj;break;}}
-        if(dli<0||S.history[dli].img)return;
-        S.imgBusy=dli;S.imgErr=null;S._noFade=true;render();
-        var dTxt=stripCoT(stripMvu(S.history[dli].text)).slice(0,1200);
-        var dP=apiReady()
-          ?callAuxAI('你是绘画提示词工程师。把给定的近世欧陆场景描写浓缩为一条英文AI绘画提示词：主体人物、环境、光线、氛围，风格 late 18th century European historical illustration, oil painting, cinematic lighting, highly detailed。只输出提示词，勿加引号与解释，80词以内。',[{role:'user',content:dTxt}]).then(function(t){return String(t||'').trim().slice(0,700)||('late 18th century European revolution era scene, cinematic, detailed: '+dTxt.slice(0,140));})
-          :Promise.resolve('late 18th century European revolution era scene, cinematic lighting, highly detailed illustration: '+dTxt.slice(0,160));
-        dP.then(function(prompt){
-          return apiHttp(imgBase()+'/images/generations',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+API.img.key},body:JSON.stringify({model:API.img.model,prompt:prompt,n:1,size:'1024x1024',response_format:'b64_json'})});
-        }).then(function(j){
-          var d0=j&&j.data&&j.data[0];
-          if(d0&&d0.b64_json){var bin=atob(d0.b64_json);var u8=new Uint8Array(bin.length);for(var bi=0;bi<bin.length;bi++)u8[bi]=bin.charCodeAt(bi);return new Blob([u8],{type:'image/png'});}
-          if(d0&&d0.url)return fetch(d0.url).then(function(r){if(!r.ok)throw new Error('取图失败 HTTP '+r.status);return r.blob();});
-          throw new Error('接口未返回图像数据');
-        }).then(function(blob){
-          var iid='img_'+Date.now()+'_'+Math.floor(Math.random()*10000);
-          idbPut(iid,blob,function(okp){
-            if(okp){S.history[dli].img=iid;savePref();idbPrune(isMobile()?10:30);}
-            else S.imgErr='插画存储失败（浏览器不支持或空间不足）';
-            S.imgBusy=null;S._noFade=true;render();});
-        })['catch'](function(err){
-          S.imgErr='绘图失败：'+String(err&&err.message||err).slice(0,120);
-          S.imgBusy=null;S._noFade=true;render();
-          setTimeout(function(){if(S.imgErr){S.imgErr=null;renderSoft();}},8000);});
+      else if(a==='drawScene'||a==='draw'){
+        if(!imgReady())return;
+        var dli=t.getAttribute('data-drawidx');
+        if(dli!=null&&dli!==''){dli=parseInt(dli,10);}else{dli=-1;for(var dj=S.history.length-1;dj>=0;dj--){if(S.history[dj].role==='world'){dli=dj;break;}}}
+        if(dli==null||dli<0)return;
+        drawWorld(dli);
         return;}
       else if(a==='histmore'){S.histShow=(S.histShow||30)+30;S._stayTop=true;S._noFade=true;render();return;}
       else if(a==='closeov'){var cvk=S.overlay;var dm=document.getElementById('zjOvDim');if(dm){dm.style.pointerEvents='none';dm.style.webkitBackdropFilter='none';dm.style.backdropFilter='none';if(dm.animate)dm.animate([{opacity:1},{opacity:0}],{duration:280,easing:'ease',fill:'forwards'});dm.style.transition='opacity 280ms';dm.style.opacity='0';}zjWglOff();morphClose('zjOvBox','[data-ov="'+cvk+'"]',function(){S.overlay=null;S.movePending=null;var ow=document.getElementById('zjOvWrap');if(ow&&ow.parentNode)ow.parentNode.removeChild(ow);else render();});}
