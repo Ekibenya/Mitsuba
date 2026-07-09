@@ -665,6 +665,29 @@ function imgSizeOK(sz){return (IMGSZRANK[sz]||0)<=(IMGSZRANK[imgMaxSize()]||3);}
 function imgClamp(sz){var mx=imgMaxSize();return (IMGSZRANK[sz]||0)>(IMGSZRANK[mx]||3)?mx:(sz||'lg');}
 function chev(d,sz){var s=sz||11;return '<svg viewBox="0 0 24 24" width="'+s+'" height="'+s+'" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-1px">'+(d<0?'<path d="M15 4 7 12 15 20"/>':'<path d="M9 4 17 12 9 20"/>')+'</svg>';}
 function zoomIcon(s){s=s||16;return '<svg viewBox="0 0 24 24" width="'+s+'" height="'+s+'" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="display:block;pointer-events:none"><path d="M9 4H5.5A1.5 1.5 0 0 0 4 5.5V9"/><path d="M15 4h3.5A1.5 1.5 0 0 1 20 5.5V9"/><path d="M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15"/><path d="M4 15v3.5A1.5 1.5 0 0 0 5.5 20H9"/></svg>';}
+/* 闪电描边图标（极速模式用；on 时亮蓝发光、off 时全灰） */
+function bolt(on){var c=on?'#3c5a86':'#8a7f68';return '<svg viewBox="0 0 24 24" width="22" height="22" fill="'+c+'" style="display:block'+(on?';filter:drop-shadow(0 0 5px rgba(58,92,140,.6))':'')+'"><path d="M13 2 4.6 13.1c-.34.45-.02 1.1.53 1.1H11l-1.2 7.1c-.11.66.72 1.02 1.12.48L19.4 10c.34-.45.02-1.1-.53-1.1H13l1.2-6.5c.12-.63-.68-1-1.2-.4z"/></svg>';}
+function warn(s,c){s=s||11;c=c||'#c23a4b';return '<svg viewBox="0 0 24 24" width="'+s+'" height="'+s+'" fill="none" stroke="'+c+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px"><path d="M12 3.4 22 20.2H2z"/><path d="M12 9.5v4.2"/><path d="M12 17.2v.01"/></svg>';}
+/* 极速模式开关：置于「链」标签「当前状态」之上。on=亮光发光、off=全灰。默认关（满血全配置）。 */
+function speedToggle(){
+  var on=speedOn();
+  return '<div style="margin:6px 0 20px">'
+    +'<div data-act="toggleSpeed" role="switch" aria-checked="'+on+'" style="cursor:pointer;display:flex;align-items:center;gap:14px;padding:15px 17px;border-radius:15px;border:1px solid '+(on?'rgba(58,92,140,.7)':'rgba(58,92,140,.2)')+';background:'+(on?'linear-gradient(135deg,rgba(90,130,190,.14),rgba(58,92,140,.07))':'rgba(255,255,255,.02)')+';'+(on?'box-shadow:0 0 24px rgba(58,92,140,.22),inset 0 1px 0 rgba(255,255,255,.14);':'')+'transition:all .25s">'
+      +'<div style="flex:1;min-width:0">'
+        +'<div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">'
+          +'<span style="display:inline-flex;width:22px;height:22px;flex:none">'+bolt(on)+'</span>'
+          +'<span style="font-family:var(--kai);font-size:16px;letter-spacing:.16em;color:'+(on?'var(--gold2)':'var(--mut)')+'">极速模式</span>'
+          +'<span style="font-size:12.5px;letter-spacing:.04em;color:#c23a4b;font-weight:600;display:inline-flex;align-items:center;gap:2px">（'+warn(12,'#c23a4b')+'慎开）</span>'
+          +'<span style="font-size:11px;letter-spacing:.24em;font-weight:700;color:'+(on?'#3c5a86':'var(--mut)')+';'+(on?'text-shadow:0 0 10px rgba(58,92,140,.5)':'opacity:.55')+'">'+(on?'ON':'OFF')+'</span>'
+        +'</div>'
+        +'<div style="font-size:11.5px;line-height:1.78;color:var(--mut);margin-top:7px">觉得出字太慢？开启后大幅精简提示词、缩短上下文与长程记忆、去掉示例与自查——出字更快；代价是<b style="color:#a02a40">正文、变量、记忆与角色扮演质量都会下降</b>。默认关闭，满血全配置、绝不缩水；此项只为等不及的玩家留一个选择。</div>'
+      +'</div>'
+      +'<div style="flex:none;width:52px;height:30px;border-radius:15px;position:relative;background:'+(on?'linear-gradient(135deg,#6d89b4,#3c5a86)':'rgba(120,110,92,.32)')+';border:1px solid '+(on?'rgba(160,190,230,.7)':'rgba(58,47,36,.15)')+';'+(on?'box-shadow:0 0 14px rgba(58,92,140,.45);':'')+'transition:all .25s">'
+        +'<div style="position:absolute;top:2px;left:'+(on?'24px':'2px')+';width:24px;height:24px;border-radius:50%;background:'+(on?'#fff':'#d8d2c4')+';box-shadow:0 1px 3px rgba(0,0,0,.35);transition:left .25s"></div>'
+      +'</div>'
+    +'</div>'
+  +'</div>';
+}
 /* 一条世界消息的插画区 HTML（多图=网格/单图=可缩放；多版本=版本箭头；往期=重绘入口） */
 function illuHtml(h,i){
   var illu='';
@@ -1223,8 +1246,9 @@ function jpsbBody(){
 }
 
 function buildSystem(history,userInput){
-  var recent = history.slice(-4).map(function(h){return h.text;}).join('\n')+'\n'+userInput;
-  var lore = scanLore(recent,9000,history,userInput);
+  var SPD=speedOn(); /* 极速模式：精简提示词、缩短上下文与记忆、去示例与自查 */
+  var recent = history.slice(SPD?-2:-4).map(function(h){return h.text;}).join('\n')+'\n'+userInput;
+  var lore = scanLore(recent,SPD?1800:9000,history,userInput);
   var pre=presetParts('pre'), post=presetParts('post');
   var arr=[];
   if(pre.length)arr.push('【玩家预设】\n'+pre.join('\n\n'));
@@ -1238,20 +1262,21 @@ function buildSystem(history,userInput){
     '【场景】'+fill(G.scenario),
     (S.memOn!==false&&S.mem&&S.mem.length>1)?('【长程记忆·编年长卷】以下为本局开局至今全部既定事实的编年纪要（越靠后越接近当下）。正文历史若有缺失，以此卷为准；任何叙事不得与之矛盾：\n'+memChronicle()):'',
     '【世界书·激活条目】\n'+lore.map(function(e){return '『'+e.title+'』'+e.content;}).join('\n'),
-    '【对话示例】\n'+fill(G.mes_example),
-    '【输出格式·铁则】正文严格模仿原作文风的现代白话轻小说笔法(2-6段)：短句、冷面幽默、惨剧与吐槽零时差并置，敬体对话+常体心声，停在需要玩家角色表态处。末尾必须输出<mvu_panel>状态栏：<sec_char>含◆衣装/持物/身体/观瞻/人望(0-100)/记录；<sec_npc>每在场NPC一行◈名字|状态|好感(0-100)|心声；<sec_world>含◇纪年/时地/天气/安稳(0-100)/大势/将临。禁止<UpdateVariable>。若且仅若本轮叙事中世界有实际变动——玩家下令兴建并落成、屋舍焚毁坍塌、人物来到或离去——则在<sec_world>之后增写<sec_deed>，每类一行：▣兴作|名目×数、▣毁损|名目×数、▣来者|人物、▣去者|人物；多项以、分隔。兴作与毁损名目仅限：马厩、酒馆、旅店、咖啡馆、书店、药房、裁缝店、铁匠铺、武器铺、金匠铺、珠宝行、陶瓷坊、铸造厂、肉铺、杂货铺、面包房、货栈、官仓、市政厅、教堂、民居、宫殿、凉亭、草棚、剧场、钟楼、石桥、凯旋门、雕像、断头台、街垒、常青树、橡树、梧桐、苍松、灌木丛、花圃、路灯、芦苇、露岩、喷泉、池塘、石板道、林荫大道、碎石官道；人物仅限：学者、农民、工匠、商人、官员、将军、魔术师、乐手、书记官、神父、绿化教徒、佣兵、学生、革命党人、记者、军医、占卜师、渔夫、樵夫、士兵、贵族、市民。每轮兴作至多3件、毁损至多2件；只记实际发生者，无变动则不得输出<sec_deed>。',
+    SPD?'':('【对话示例】\n'+fill(G.mes_example)),
+    '【输出格式·铁则】正文严格模仿原作文风的现代白话轻小说笔法('+(SPD?'2-3段，简洁明快':'2-6段')+')：短句、冷面幽默、惨剧与吐槽零时差并置，敬体对话+常体心声，停在需要玩家角色表态处。末尾必须输出<mvu_panel>状态栏：<sec_char>含◆衣装/持物/身体/观瞻/人望(0-100)/记录；<sec_npc>每在场NPC一行◈名字|状态|好感(0-100)|心声；<sec_world>含◇纪年/时地/天气/安稳(0-100)/大势/将临。禁止<UpdateVariable>。若且仅若本轮叙事中世界有实际变动——玩家下令兴建并落成、屋舍焚毁坍塌、人物来到或离去——则在<sec_world>之后增写<sec_deed>，每类一行：▣兴作|名目×数、▣毁损|名目×数、▣来者|人物、▣去者|人物；多项以、分隔。兴作与毁损名目仅限：马厩、酒馆、旅店、咖啡馆、书店、药房、裁缝店、铁匠铺、武器铺、金匠铺、珠宝行、陶瓷坊、铸造厂、肉铺、杂货铺、面包房、货栈、官仓、市政厅、教堂、民居、宫殿、凉亭、草棚、剧场、钟楼、石桥、凯旋门、雕像、断头台、街垒、常青树、橡树、梧桐、苍松、灌木丛、花圃、路灯、芦苇、露岩、喷泉、池塘、石板道、林荫大道、碎石官道；人物仅限：学者、农民、工匠、商人、官员、将军、魔术师、乐手、书记官、神父、绿化教徒、佣兵、学生、革命党人、记者、军医、占卜师、渔夫、樵夫、士兵、贵族、市民。每轮兴作至多3件、毁损至多2件；只记实际发生者，无变动则不得输出<sec_deed>。',
     (JPSB&&!S.chatOnly)?jprule():'',
     S.chatOnly?'【聊天模式·最高优先级·覆盖一切输出格式要求】玩家要的是即时通讯般的快聊：只输出对话本身，格式严格为「名字：「台词」」，每句独立一行。台词须口语、简短，每句不超过30字，一回合至多3行，严禁长篇大论，严禁旁白、场景、动作、心理描写。本回合不要输出<mvu_panel>状态栏，不要<sec_deed>，不要思维链。玩家的输入就是其原话，像回消息一样直接回应。':'',
     S.dice?'【命运之骰】玩家言行末尾若附〔命运之骰 X／100 · 等级〕，此为本回合行动成效的既定天数，严格按等级裁定叙事，不得逆天改命：大凶(≤5)灾难性失败且有恶果；不利(≤35)事与愿违；平平(≤65)成败参半进展有限；顺遂(≤94)如愿达成；大吉(≥95)超乎所求另有意外之喜。骰记本身不是玩家说出的话，不要复述。':'',
-    '【自查】'+fill(G.post_history_instructions)
+    SPD?'':('【自查】'+fill(G.post_history_instructions))
   );
   if(post.length)arr.push('【玩家预设·末位指令】\n'+post.join('\n\n'));
   return arr.filter(function(x){return x;}).join('\n\n');
 }
 function buildMessages(history,userInput){
   var msgs=[];
-  /* 长上下文瘦身：原文只带最近30条，更早剧情已由编年长卷以编年纪要形式注入系统提示 */
-  if(history.length>30)history=history.slice(-30);
+  /* 长上下文瘦身：原文只带最近30条（极速模式仅8条），更早剧情已由编年长卷以编年纪要形式注入系统提示 */
+  var _hcap=speedOn()?8:30;
+  if(history.length>_hcap)history=history.slice(-_hcap);
   history.forEach(function(h,i){
     var lastWorld = h.role==='world' && i===history.length-1;
     var mc=h.text;
@@ -1599,7 +1624,8 @@ function imgRefLoad(file){
 function auxReady(){return !!(API.aux&&API.aux.key&&API.aux.model);}
 function auxBase(){return String(API.aux.url||'https://api.openai.com/v1').trim().replace(/\/+$/,'');}
 function genNum(v){var n=parseFloat(v);return isFinite(n)?n:null;}
-function genMax(){var n=parseInt(API.gen&&API.gen.maxtok,10);return (isFinite(n)&&n>0)?Math.min(n,32000):4000;}
+function speedOn(){return !!(API.gen&&API.gen.speed==='1');} /* 极速模式：牺牲正文/变量/记忆/演绎质量，换更快出字。默认关——满血全配置 */
+function genMax(){var n=parseInt(API.gen&&API.gen.maxtok,10);var m=(isFinite(n)&&n>0)?Math.min(n,32000):4000;if(speedOn())m=Math.min(m,1400);/* 极速模式压低单轮上限，短正文更快收笔 */return m;}
 /* 副模型：绘图提示词等杂务走便宜快模型，正文仍由主模型执笔；未配则回落主模型 */
 function callAuxAI(system,messages){
   if(!auxReady())return callCustomAI(system,messages);
@@ -3222,6 +3248,7 @@ function apiBody(){
     +'<button data-act="apiClear" class="btn" style="cursor:pointer;background:transparent;border:1px solid rgba(126,33,46,.4);color:#96323f;font-size:13px;letter-spacing:.1em;padding:10px 18px">清除本机密钥</button></div>'
     +msg
     +(S.pvShow?pvPanel():'')
+    +speedToggle()
     +'<div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(42,69,104,.18);font-size:12px;line-height:1.9;color:var(--mut)">'+st+'<br>提示：若在 SillyTavern（酒馆）中通过酒馆助手加载本页面，则自动走酒馆的生成通道，无需在此配置。浏览器直连若报跨域（CORS）错误，可改用支持跨域的中转地址。</div>'
     +'</div>';
 }
@@ -3812,6 +3839,7 @@ root.addEventListener('click',function(e){
       else if(a==='bgmtoggle'){bgmToggle();}
       else if(a==='bgmprev'){bgmPlay(BGM.idx-1);render();}
       else if(a==='bgmnext'){bgmPlay(BGM.idx+1);render();}
+      else if(a==='toggleSpeed'){readApiForm();if(!API.gen)API.gen={};API.gen.speed=speedOn()?'':'1';saveApi();S.apiMsg=speedOn()?{t:'极速模式已开启：出字更快，但正文/变量/记忆/演绎质量下降。随时可在此关闭。',c:'var(--gold2)'}:{t:'极速模式已关闭：恢复满血全配置。',c:'var(--grn2)'};renderOverlay();return;}
       else if(a==='apiSave'){readApiForm();saveApi();S.apiMsg={t:'已保存。密钥仅存于此浏览器，不会上传。'+(apiReady()?'现在可以开局游玩了。':'还差密钥或模型名未填。'),c:apiReady()?'var(--grn2)':'var(--red2)'};render();}
       else if(a==='apiTest'){apiTestRun();}
       else if(a==='diceTog'){S.dice=!S.dice;savePref();
