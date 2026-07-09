@@ -2562,7 +2562,7 @@ function storyPane(){
     +'</div>';
   var MODES=[['say','台 词'],['do','行 动'],['free','自 由'],['world','控制游戏']];
   /* 模式/开关一律做成柔光字（与封面、正文操作栏同款），去掉方框：选中/开启＝亮色发光，未选/关闭＝暗灰无光。 */
-  var _cpad=isMobile()?'5px 6px':'6px 10px',_cfs=isMobile()?'12px':'13px',_cls=isMobile()?'.05em':'.14em';
+  var _cpad=isMobile()?'3px 7px':'6px 10px',_cfs=isMobile()?'12px':'13px',_cls=isMobile()?'.05em':'.14em';
   var gchip=function(label,on,ac,gl,attrs,dis){
     var c=dis?'var(--mut)':(on?ac:'var(--mut)');
     var ts=on&&!dis?('0 0 11px '+gl+',0 1px 0 rgba(255,255,255,.6)'):'0 1px 0 rgba(255,255,255,.5)';
@@ -2590,7 +2590,7 @@ function storyPane(){
   /* 底部渐变液态玻璃背板：几乎看不见的透明质感——主要靠背景模糊柔化身后内容（利于阅读），只加一丝极淡暖调，绝非黑/深色遮罩。整层向上淡出。 */
   var _glassBg=INPUTGLASS?'<div aria-hidden="true" style="position:absolute;left:'+(mob?'-8px':'-14px')+';right:'+(mob?'-8px':'-14px')+';top:-6px;bottom:calc(-'+(mob?66:14)+'px - env(safe-area-inset-bottom));pointer-events:none;background:linear-gradient(0deg,rgba(246,240,226,.42),rgba(246,240,226,.14) 55%,rgba(246,240,226,0));-webkit-backdrop-filter:blur(22px) saturate(135%);backdrop-filter:blur(22px) saturate(135%);-webkit-mask-image:linear-gradient(0deg,#000 56%,transparent);mask-image:linear-gradient(0deg,#000 56%,transparent);box-shadow:inset 0 1px 0 rgba(255,255,255,.35)"></div>':'';
   var _suggRow=((S.suggList&&S.suggList.length&&!S.thinking)?'<div id="zjSuggRow" style="pointer-events:auto;display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:'+(mob?'5px':'8px')+'">'+S.suggList.map(function(sg,si){return '<div class="btn zjHl" data-sugg="'+si+'" style="cursor:pointer;font-size:'+(mob?'11px':'12px')+';line-height:1.5;letter-spacing:.02em;padding:'+(mob?'6px 10px':'6px 12px')+';border-radius:12px;color:var(--gold3);border:1px solid rgba(58,92,140,.28);background:linear-gradient(135deg,rgba(255,253,244,.5),rgba(240,232,212,.28));-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 2px 8px rgba(58,47,36,.18);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(sg)+'</div>';}).join('')+'</div>':'');
-  var _chipsRow='<div id="zjChipsRow" style="pointer-events:auto;display:flex;gap:'+(mob?'6px':'8px')+';margin-bottom:'+(mob?'5px':'8px')+';padding:2px 2px 3px;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch">'+chips+'</div>';
+  var _chipsRow='<div id="zjChipsRow" style="pointer-events:auto;display:flex;gap:'+(mob?'6px':'8px')+';margin-bottom:'+(mob?'3px':'8px')+';padding:2px 2px 1px;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch">'+chips+'</div>';
   var input='<div id="zjInWrap" style="position:absolute;left:'+(mob?'8px':'14px')+';right:'+(mob?'8px':'14px')+';bottom:'+(mob?'calc(52px + env(safe-area-inset-bottom))':'12px')+';z-index:5;pointer-events:none">'
     +_glassBg
     +'<div style="max-width:860px;margin:0 auto;position:relative">'
