@@ -127,6 +127,7 @@ textarea,input{border-radius:10px}
 @keyframes rise{0%{transform:translateY(0) scale(1);opacity:0}15%{opacity:1}100%{transform:translateY(-440px) scale(.35);opacity:0}}
 @keyframes fadeup{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @keyframes blink{0%,80%,100%{opacity:.15}40%{opacity:1}}
+@keyframes zjCaretBlink{0%,49%{opacity:1}50%,100%{opacity:0}}
 .fade{animation:fadeup .45s ease}
 .zjNoFade .fade{animation:none!important}
 .dot{display:inline-block;width:6px;height:6px;border-radius:50%}
@@ -200,6 +201,12 @@ function lowApply(on){
   try{if(GL.applyLow)GL.applyLow(LOWFX);}catch(e){}
   try{if(window.ZJ3D&&ZJ3D.setLow)ZJ3D.setLow(LOWFX);}catch(e){}
 }
+/* 输入栏样式：默认底部渐变液态玻璃、无框、发送/语音用 iOS 图标；可在设置·显切回传统框。 */
+var INPUTGLASS=true;try{INPUTGLASS=localStorage.getItem('mitsuba_inputglass')!=='0';}catch(e){}
+/* 「我之言行」气泡：默认无框、只留右对齐柔光文字；可在设置·显切回气泡框。 */
+var WANGFRAME=false;try{WANGFRAME=localStorage.getItem('mitsuba_wangframe')==='1';}catch(e){}
+function sendIcon(s){s=s||30;return '<svg viewBox="0 0 24 24" width="'+s+'" height="'+s+'" style="display:block"><circle cx="12" cy="12" r="11" fill="var(--gold2)"/><path d="M12 17.2V7.6M12 7.2l-4.3 4.3M12 7.2l4.3 4.3" fill="none" stroke="#f6f0e2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';}
+function micIcon(s,active){s=s||22;var c=active?'#e06a50':'currentColor';return '<svg viewBox="0 0 24 24" width="'+s+'" height="'+s+'" fill="'+(active?'#e06a50':'none')+'" stroke="'+c+'" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:block"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0" fill="none"/><path d="M12 17.5V21M8.5 21h7" fill="none"/></svg>';}
 var GL={done:false,tries:0};
 function glInit(){
   if(GL.done)return;
@@ -2447,7 +2454,9 @@ function storyPane(){
         ubody='<div style="max-width:82%;flex:1"><textarea id="zjMsgEditBox" style="width:100%;min-height:90px;background:rgba(255,255,255,.03);border:1px solid rgba(58,92,140,.5);border-radius:12px;color:#8fa3c4;font-size:14px;line-height:1.8;padding:10px 13px;resize:vertical;font-family:inherit">'+esc(jpStripTr(h.text))+'</textarea>'
           +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:7px"><div class="btn obtn" data-act="mCancel" style="font-size:12px;padding:5px 14px">取消</div><div class="btn gbtn" data-act="mSave" style="font-size:12px;letter-spacing:.15em;padding:5px 16px">保存</div></div></div>';
       }else{
-        ubody='<div style="max-width:82%;border:1px solid rgba(126,33,46,.28);border-right:3px solid var(--red);border-radius:12px;background:linear-gradient(135deg,rgba(126,33,46,.11),rgba(126,33,46,.04));box-shadow:inset 0 1px 0 rgba(240,222,228,.1);padding:11px 15px"><div style="font-size:10px;letter-spacing:.35em;color:var(--red2);text-align:right;margin-bottom:5px">我 之 言 行</div><div style="font-size:15px;line-height:1.9;color:#8fa3c4;white-space:pre-wrap">'+esc(jpStripTr(h.text))+'</div></div>';
+        ubody=WANGFRAME
+          ? '<div style="max-width:82%;border:1px solid rgba(126,33,46,.28);border-radius:14px;background:linear-gradient(135deg,rgba(126,33,46,.1),rgba(126,33,46,.03));box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 2px 8px rgba(58,47,36,.16);-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);padding:11px 15px"><div style="font-size:10px;letter-spacing:.35em;color:var(--red2);text-align:right;margin-bottom:5px">我 之 言 行</div><div style="font-size:15px;line-height:1.9;color:var(--ink);white-space:pre-wrap">'+esc(jpStripTr(h.text))+'</div></div>'
+          : '<div style="max-width:86%;text-align:right"><div style="font-size:9.5px;letter-spacing:.4em;color:var(--red2);margin-bottom:4px;text-shadow:0 1px 0 rgba(255,255,255,.6)">我 之 言 行</div><div style="font-size:15px;line-height:1.9;color:var(--ink);white-space:pre-wrap;text-shadow:0 1px 0 rgba(255,255,255,.5)">'+esc(jpStripTr(h.text))+'</div></div>';
       }
       var utools=(S.msgTools===i&&S.msgEdit!==i)?'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:7px">'
         +'<div class="btn obtn" data-act="mEdit" style="font-size:12px;padding:5px 14px">✎ 修此言</div>'
@@ -2524,22 +2533,41 @@ function storyPane(){
     +(m.wx?'<div style="position:absolute;left:14px;bottom:10px;font-size:11px;letter-spacing:.2em;color:rgba(93,81,66,.9);background:rgba(248,242,228,.55);padding:4px 10px;border:1px solid rgba(42,69,104,.2);border-radius:8px">'+esc(m.wx)+'</div>':'')
     +'</div>';
   var MODES=[['say','台 词'],['do','行 动'],['free','自 由'],['world','控制游戏']];
-  var modeChip=function(md){var on=md[0]===S.mode;var dis=S.chatOnly&&md[0]!=='world';return '<div class="btn zjHl" data-mode="'+md[0]+'" style="cursor:'+(dis?'default':'pointer')+';opacity:'+(dis?'.35':'1')+';flex:none;white-space:nowrap;line-height:1.45;padding:'+(isMobile()?'5px 11px':'5px 15px')+';font-size:'+(isMobile()?'11px':'12.5px')+';letter-spacing:'+(isMobile()?'.04em':'.2em')+';border-radius:99px;-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 2px 8px rgba(58,47,36,.3);border:1px solid '+(on?'rgba(58,92,140,.75)':'rgba(58,47,36,.22)')+';color:'+(on?'var(--gold2)':'var(--mut)')+';background:'+(on?'linear-gradient(135deg,rgba(255,253,244,.16),rgba(42,69,104,.08))':'linear-gradient(135deg,rgba(255,253,244,.05),rgba(240,232,212,.02))')+'">'+(isMobile()?md[1].replace(/\s/g,''):md[1])+'</div>';};
+  /* 模式/开关一律做成柔光字（与封面、正文操作栏同款），去掉方框：选中/开启＝亮色发光，未选/关闭＝暗灰无光。 */
+  var _cpad=isMobile()?'5px 6px':'6px 10px',_cfs=isMobile()?'12px':'13px',_cls=isMobile()?'.05em':'.14em';
+  var gchip=function(label,on,ac,gl,attrs,dis){
+    var c=dis?'var(--mut)':(on?ac:'var(--mut)');
+    var ts=on&&!dis?('0 0 11px '+gl+',0 1px 0 rgba(255,255,255,.6)'):'0 1px 0 rgba(255,255,255,.5)';
+    return '<div class="btn" '+attrs+' style="cursor:'+(dis?'default':'pointer')+';opacity:'+(dis?'.45':'1')+';flex:none;white-space:nowrap;line-height:1.4;padding:'+_cpad+';font-size:'+_cfs+';letter-spacing:'+_cls+';color:'+c+';text-shadow:'+ts+';transition:color .2s,text-shadow .2s">'+label+'</div>';
+  };
+  var modeChip=function(md){var on=md[0]===S.mode;var dis=S.chatOnly&&md[0]!=='world';return gchip(isMobile()?md[1].replace(/\s/g,''):md[1],on,'var(--gold2)','rgba(58,92,140,.5)','data-mode="'+md[0]+'"',dis);};
   var chips=MODES.slice(0,3).map(modeChip).join('');
   var con=!!S.chatOnly;
-  chips+='<div class="btn zjHl" data-act="chatTog" title="聊天模式：不写旁白剧情，与在场之人像聊天软件一样快速对谈" style="cursor:pointer;flex:none;white-space:nowrap;line-height:1.45;padding:'+(isMobile()?'5px 11px':'5px 15px')+';font-size:'+(isMobile()?'11px':'12.5px')+';letter-spacing:'+(isMobile()?'.04em':'.2em')+';border-radius:99px;-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 2px 8px rgba(58,47,36,.3);border:1px solid '+(con?'rgba(157,184,216,.75)':'rgba(58,47,36,.22)')+';color:'+(con?'#54718f':'var(--mut)')+';background:'+(con?'linear-gradient(135deg,rgba(157,184,216,.16),rgba(90,110,140,.08))':'linear-gradient(135deg,rgba(255,253,244,.05),rgba(240,232,212,.02))')+'">聊天模式</div>'+modeChip(MODES[3]);
+  chips+=gchip('聊天模式',con,'#54718f','rgba(120,150,190,.55)','data-act="chatTog" title="聊天模式：不写旁白剧情，与在场之人像聊天软件一样快速对谈"')+modeChip(MODES[3]);
   var don=!!S.dice;
-  chips+='<div class="btn zjHl" data-act="diceTog" title="命运之骰：曰／行／书递呈时掷骰定成败" style="cursor:pointer;flex:none;white-space:nowrap;line-height:1.45;padding:'+(isMobile()?'5px 11px':'5px 15px')+';font-size:'+(isMobile()?'11px':'12.5px')+';letter-spacing:'+(isMobile()?'.04em':'.2em')+';border-radius:99px;-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 2px 8px rgba(58,47,36,.3);border:1px solid '+(don?'rgba(120,148,200,.8)':'rgba(58,47,36,.22)')+';color:'+(don?'#6d89b4':'var(--mut)')+';background:'+(don?'linear-gradient(135deg,rgba(110,140,190,.18),rgba(80,110,160,.08))':'linear-gradient(135deg,rgba(255,253,244,.05),rgba(240,232,212,.02))')+'">'+(isMobile()?'骰':'命 运 骰')+'</div>';
+  chips+=gchip(isMobile()?'骰':'命 运 骰',don,'#6d89b4','rgba(110,140,190,.55)','data-act="diceTog" title="命运之骰：台词／行动／自由递呈时掷骰定成败"');
   var son=S.sugg!==false;
-  chips+='<div class="btn zjHl" data-act="suggTog" title="懒人灵感：每幕后由 AI 拟四条可点选的下一步" style="cursor:pointer;flex:none;white-space:nowrap;line-height:1.45;padding:'+(isMobile()?'5px 11px':'5px 15px')+';font-size:'+(isMobile()?'11px':'12.5px')+';letter-spacing:'+(isMobile()?'.04em':'.2em')+';border-radius:99px;-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 2px 8px rgba(58,47,36,.3);border:1px solid '+(son?'rgba(58,92,140,.75)':'rgba(58,47,36,.22)')+';color:'+(son?'var(--gold2)':'var(--mut)')+';background:'+(son?'linear-gradient(135deg,rgba(255,253,244,.16),rgba(42,69,104,.08))':'linear-gradient(135deg,rgba(255,253,244,.05),rgba(240,232,212,.02))')+'">'+(isMobile()?'灵':'灵 感')+'</div>';
+  chips+=gchip(isMobile()?'灵':'灵 感',son,'var(--gold2)','rgba(58,92,140,.5)','data-act="suggTog" title="懒人灵感：每幕后由 AI 拟四条可点选的下一步"');
   var ph=(S.chatOnly&&S.mode!=='world')?'像发消息一样聊起来……':MODE_PH[S.mode];
-  var input='<div id="zjInWrap" style="position:absolute;left:'+(mob?'8px':'14px')+';right:'+(mob?'8px':'14px')+';bottom:'+(mob?'calc(66px + env(safe-area-inset-bottom))':'12px')+';z-index:5;pointer-events:none"><div style="max-width:860px;margin:0 auto">'
-    +((S.suggList&&S.suggList.length&&!S.thinking)?'<div id="zjSuggRow" style="pointer-events:auto;display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">'+S.suggList.map(function(sg,si){return '<div class="btn zjHl" data-sugg="'+si+'" style="cursor:pointer;font-size:'+(mob?'11px':'12px')+';line-height:1.5;letter-spacing:.02em;padding:'+(mob?'6px 10px':'6px 12px')+';border-radius:12px;color:#c8b48e;border:1px solid rgba(255,255,255,.55);background:linear-gradient(135deg,rgba(255,253,244,.05),rgba(240,232,212,.03));-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 2px 8px rgba(58,47,36,.25);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(sg)+'</div>';}).join('')+'</div>':'')
-    +'<div id="zjChipsRow" style="pointer-events:auto;display:flex;gap:'+(mob?'6px':'8px')+';margin-bottom:8px;padding:2px 2px 3px;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch">'+chips+'</div>'
-    +'<div class="glass" style="pointer-events:auto;padding:'+(mob?'7px 9px 8px':'8px 12px 9px')+';border-radius:20px">'
-    +'<div style="display:flex;gap:8px;align-items:stretch"><textarea id="zjInput" rows="1" placeholder="'+esc(ph)+'" style="flex:1;resize:none;background:rgba(246,240,226,.28);border:1px solid rgba(42,69,104,.28);border-radius:12px;color:var(--gold3);font-size:16px;line-height:1.7;padding:'+(mob?'6px 10px':'6px 12px')+'">'+esc(S.input)+'</textarea>'
-    +((sttOK()&&(S.micOn===true||(S.micOn==null&&!mob)))?'<button id="zjMicBtn" data-act="micTog" class="btn glass" title="语音输入（说完自动停）" style="flex:none;width:'+(mob?'38px':'44px')+';font-size:15px;color:'+(S.rec?'#e06a50':'var(--mut2)')+';border-color:'+(S.rec?'rgba(224,106,80,.65)':'rgba(58,47,36,.25)')+';border-radius:12px;cursor:pointer">'+(S.rec?'●':'声')+'</button>':'')
-    +'<button data-act="send" class="btn glass kai" style="flex:none;width:'+(mob?'44px':'56px')+';font-size:14px;letter-spacing:.15em;writing-mode:vertical-rl;color:var(--gold2);border-color:rgba(58,92,140,.5);border-radius:12px;cursor:pointer;opacity:'+(S.thinking?.5:1)+'">送 出</button></div>'+(S.cmdHint?'<div id="zjCmdHint" style="margin-top:7px;font-size:12.5px;line-height:1.6;color:#a04a30">指令未执行：'+esc(S.cmdHint)+'</div>':'')+'</div></div></div>';
+  var _taSh=INPUTGLASS?';text-shadow:0 1px 0 rgba(255,255,255,.7)':'';
+  var _micBtn=(sttOK()&&(S.micOn===true||(S.micOn==null&&!mob)))?'<button id="zjMicBtn" data-act="micTog" class="btn" title="语音输入（说完自动停）" style="flex:none;background:transparent;border:none;padding:3px;cursor:pointer;color:'+(S.rec?'#e06a50':'var(--gold2)')+';filter:drop-shadow(0 0 6px '+(S.rec?'rgba(224,106,80,.6)':'rgba(58,92,140,.4)')+')">'+micIcon(mob?21:23,S.rec)+'</button>':'';
+  var _sendBtn='<button data-act="send" class="btn" title="递呈（回车）" style="flex:none;background:transparent;border:none;padding:0;cursor:pointer;filter:drop-shadow(0 0 6px rgba(58,92,140,.4));opacity:'+(S.thinking?.5:1)+'">'+sendIcon(mob?32:34)+'</button>';
+  var _ta='<textarea id="zjInput" rows="1" placeholder="'+esc(ph)+'" style="flex:1;resize:none;background:transparent;border:none;outline:none;color:var(--gold3)'+_taSh+';font-size:16px;line-height:1.65;padding:'+(mob?'6px 2px 6px 11px':'6px 2px 6px 13px')+';caret-color:var(--gold2)">'+esc(S.input)+'</textarea>';
+  var _caret='<span class="zjCaretHint" aria-hidden="true" style="position:absolute;left:'+(mob?'11px':'13px')+';top:50%;transform:translateY(-50%);width:2px;height:20px;border-radius:2px;background:var(--gold2);box-shadow:0 0 8px rgba(58,92,140,.9),0 0 3px rgba(58,92,140,.75);animation:zjCaretBlink 1.1s infinite;pointer-events:none;z-index:1"></span>';
+  var _cmd=(S.cmdHint?'<div id="zjCmdHint" style="margin-top:6px;font-size:12.5px;line-height:1.6;color:#a04a30'+(INPUTGLASS?';text-shadow:0 1px 0 rgba(255,255,255,.6)':'')+'">指令未执行：'+esc(S.cmdHint)+'</div>':'');
+  var _row='<div style="display:flex;gap:'+(mob?'8px':'12px')+';align-items:center;position:relative">'+_ta+_caret+_micBtn+_sendBtn+'</div>';
+  var _inputBox=INPUTGLASS
+    ? '<div style="position:relative;pointer-events:auto;padding:'+(mob?'2px 6px 0':'2px 8px 0')+'">'+_row+_cmd+'</div>'
+    : '<div class="glass" style="pointer-events:auto;padding:'+(mob?'3px 13px':'4px 15px')+';border-radius:15px">'+_row+_cmd+'</div>';
+  /* 底部渐变液态玻璃背板：几乎看不见的透明质感——主要靠背景模糊柔化身后内容（利于阅读），只加一丝极淡暖调，绝非黑/深色遮罩。整层向上淡出。 */
+  var _glassBg=INPUTGLASS?'<div aria-hidden="true" style="position:absolute;left:'+(mob?'-8px':'-14px')+';right:'+(mob?'-8px':'-14px')+';top:-6px;bottom:calc(-'+(mob?66:14)+'px - env(safe-area-inset-bottom));pointer-events:none;background:linear-gradient(0deg,rgba(246,240,226,.42),rgba(246,240,226,.14) 55%,rgba(246,240,226,0));-webkit-backdrop-filter:blur(22px) saturate(135%);backdrop-filter:blur(22px) saturate(135%);-webkit-mask-image:linear-gradient(0deg,#000 56%,transparent);mask-image:linear-gradient(0deg,#000 56%,transparent);box-shadow:inset 0 1px 0 rgba(255,255,255,.35)"></div>':'';
+  var _suggRow=((S.suggList&&S.suggList.length&&!S.thinking)?'<div id="zjSuggRow" style="pointer-events:auto;display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">'+S.suggList.map(function(sg,si){return '<div class="btn zjHl" data-sugg="'+si+'" style="cursor:pointer;font-size:'+(mob?'11px':'12px')+';line-height:1.5;letter-spacing:.02em;padding:'+(mob?'6px 10px':'6px 12px')+';border-radius:12px;color:var(--gold3);border:1px solid rgba(58,92,140,.28);background:linear-gradient(135deg,rgba(255,253,244,.5),rgba(240,232,212,.28));-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 2px 8px rgba(58,47,36,.18);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(sg)+'</div>';}).join('')+'</div>':'');
+  var _chipsRow='<div id="zjChipsRow" style="pointer-events:auto;display:flex;gap:'+(mob?'6px':'8px')+';margin-bottom:8px;padding:2px 2px 3px;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch">'+chips+'</div>';
+  var input='<div id="zjInWrap" style="position:absolute;left:'+(mob?'8px':'14px')+';right:'+(mob?'8px':'14px')+';bottom:'+(mob?'calc(66px + env(safe-area-inset-bottom))':'12px')+';z-index:5;pointer-events:none">'
+    +_glassBg
+    +'<div style="max-width:860px;margin:0 auto;position:relative">'
+    +_suggRow+_chipsRow+_inputBox
+    +'</div></div>';
   if(S.worldFull){input='';}
   else if(S.zen){
     input=S.zenInput
@@ -3047,6 +3075,8 @@ function fontPane(){
    +'<div class="kai" style="font-size:19px;color:var(--gold2);letter-spacing:.15em;margin:34px 0 10px">输入栏功能</div>'
    +'<label style="display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink2);cursor:pointer;margin:6px 0"><input id="zjOptMic" type="checkbox" style="accent-color:#3c5a86"'+((S.micOn===true||(S.micOn==null&&!isMobile()))?' checked':'')+'>「声」语音输入按钮（说话成文；手机默认关，输入法自带语音）</label>'
    +'<label style="display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink2);cursor:pointer;margin:6px 0"><input id="zjOptSugg" type="checkbox" style="accent-color:#3c5a86"'+(S.sugg!==false?' checked':'')+'>懒人灵感：每幕后 AI 拟四条可点选项（每轮多一次杂务调用）</label>'
+   +'<label style="display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink2);cursor:pointer;margin:6px 0"><input id="zjOptInputBox" type="checkbox" style="accent-color:#3c5a86"'+(INPUTGLASS?'':' checked')+'>传统输入框（默认关：底部用渐变液态玻璃、无框、发送/语音用图标）</label>'
+   +'<label style="display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink2);cursor:pointer;margin:6px 0"><input id="zjOptWangFrame" type="checkbox" style="accent-color:#3c5a86"'+(WANGFRAME?' checked':'')+'>「我之言行」加气泡边框（默认关：只留右对齐柔光文字）</label>'
    +'<div style="font-size:11.5px;color:var(--mut);line-height:1.7;margin-top:4px">灵感也可用输入栏上的「灵」钮随时开关，两处同步。</div>'
    +'<div class="kai" style="font-size:19px;color:var(--gold2);letter-spacing:.15em;margin:34px 0 10px">对话字色</div>'
    +'<div style="font-size:12.5px;color:var(--mut);line-height:1.8">正文里引号内的台词以此色区分。示例：灯花哔剥响了一声。<span id="zjDlgPrev" style="color:'+(DLGC==='off'?'inherit':DLGC)+'">「三、三叶大人……灯。」</span></div>'
@@ -3591,6 +3621,8 @@ root.addEventListener('change',function(e){
   if(e.target&&e.target.id==='zjOptLow'){lowApply(!!e.target.checked);render();return;}
   if(e.target&&e.target.id==='zjOptMic'){S.micOn=!!e.target.checked;savePref();render();return;}
   if(e.target&&e.target.id==='zjOptSugg'){S.sugg=!!e.target.checked;if(S.sugg===false)S.suggList=null;savePref();render();return;}
+  if(e.target&&e.target.id==='zjOptInputBox'){INPUTGLASS=!e.target.checked;try{localStorage.setItem('mitsuba_inputglass',INPUTGLASS?'1':'0');}catch(er){}render();return;}
+  if(e.target&&e.target.id==='zjOptWangFrame'){WANGFRAME=!!e.target.checked;try{localStorage.setItem('mitsuba_wangframe',WANGFRAME?'1':'0');}catch(er){}render();return;}
   if(e.target&&e.target.id==='zjJsFile'&&e.target.files&&e.target.files.length){
     [].forEach.call(e.target.files,function(jf){var jr=new FileReader();jr.onload=function(){USCRIPTS.push({name:jf.name.replace(/\.[^.]+$/,'').slice(0,40),code:String(jr.result||''),on:true});uscriptsSave();sbxStartAll();S.jsMsg='已导入「'+jf.name+'」';if(S.overlay)renderOverlay();};jr.readAsText(jf);});
     return;
