@@ -343,7 +343,9 @@ function glInit(){
       var geo=new T.PlaneGeometry(w,h,SEG_X,SEG_Y);
       flag=new T.Mesh(geo,mat);
       flag.userData.va=vh; /* 振幅基准＝视口高（与旗面放大倍数解耦，深褶回缩吃不掉出血边） */
-      flag.rotation.y=-0.10; flag.rotation.z=-0.02; flag.position.x=0;
+      flag.userData.hz=cam.aspect>=1; /* 蛇形行进轴：横屏沿宽、竖屏沿高（竖屏纵向才有空间伸展 S 形） */
+      if(flag.userData.hz){flag.rotation.y=-0.10;flag.rotation.x=0;}else{flag.rotation.x=-0.09;flag.rotation.y=-0.05;}
+      flag.rotation.z=-0.02; flag.position.x=0;
       scene.add(flag);
       var a=geo.attributes.position.array; NV=a.length/3; BX=new Float32Array(NV); BY=new Float32Array(NV);
       for(var k=0;k<NV;k++){BX[k]=a[k*3];BY[k]=a[k*3+1];}
@@ -385,22 +387,27 @@ function glInit(){
       var dtp=Math.min(0.1,Math.max(0,tt-(loop._pt||tt)));loop._pt=tt;
       loop._ph=(loop._ph||0)+(1.9+1.1*gust)*dtp;
       var PH=loop._ph;
+      var hz=flag.userData.hz;
       for(var k=0;k<NV;k++){
         var nx=BX[k]/w+0.5, ny=BY[k]/h+0.5;
-        /* 要的是「一凸一凹」的大波浪：主波波长放大（整面旗约一个完整凸凹）、深度加倍，
-           次波只留一点布纹感、碎浪压到极低——深度靠主波，不靠又碎又急的高频。 */
-        /* 「已」字级深褶：深度再翻倍——顶边剪影要能弯出 S 钩，凹凸是形不是纹理 */
-        var amp=(0.10+0.90*nx*nx)*va*(0.17+0.21*gust);
-        var mph=nx*5.2-PH+ny*1.0;
+        /* 极度 S 蛇形：行进轴上可见范围内约两个完整「前-后」周期，一前一后一前一后地织行——
+           布面像绸带蛇一样穿梭；固定端（横屏=旗杆侧，竖屏=顶端）绷紧，自由端甩开。 */
+        var u=hz?nx:ny, vv=hz?ny:nx;
+        var amp=(0.10+0.90*u*u)*va*(0.13+0.11*gust);
+        var mph=u*22.0-PH*2.2+vv*2.6; /* 横轴相位加深：波前斜切，S 弯在另一轴上也看得见 */
         var z=Math.sin(mph)*amp
-             +Math.sin(nx*11.0-PH*1.62+ny*2.2)*amp*0.20
-             +Math.sin(nx*21.0-PH*2.5+ny*4.0)*amp*0.07*nx;
+             +Math.sin(u*37.0-PH*3.5+vv*2.2)*amp*0.16
+             +Math.sin(u*61.0-PH*5.4+vv*4.0)*amp*0.05*u;
         a[k*3+2]=z;
-        /* 横向收缩：布往 Z 向拱起时表面被「借走」长度，投影上该处横向压缩——
-           褶皱滚过时条带边界肉眼可见地左右摆，这才是「一凸一凹」的波浪形。 */
-        a[k*3+0]=BX[k]-Math.cos(mph)*amp*0.85*(0.3+0.7*nx);
-        /* 布面被风抬起/垂落：随行波起伏、随阵风整体上扬，旗尾幅度最大 */
-        a[k*3+1]=BY[k]+Math.sin(nx*3.4-PH*0.55)*amp*0.30*nx+h*0.05*nx*(gust-0.55); /* 旗尾重力：风歇下垂、阵风上扬 */
+        /* 行进轴收缩：布拱起处表面长度被「借走」，投影压缩——蛇形的 S 弯就从这来 */
+        var comp=Math.cos(mph)*amp*0.7*(0.3+0.7*u);
+        if(hz){
+          a[k*3+0]=BX[k]-comp+Math.sin(ny*5.2-PH*0.7+nx*2.0)*amp*0.95; /* 竖向条带边界的大幅 S 蛇摆 */
+          a[k*3+1]=BY[k]+Math.sin(nx*3.4-PH*0.55)*amp*0.30*nx+h*0.05*nx*(gust-0.55); /* 旗尾重力：风歇下垂、阵风上扬 */
+        }else{
+          a[k*3+1]=BY[k]+comp;
+          a[k*3+0]=BX[k]+Math.sin(ny*3.4-PH*0.55)*amp*0.25*ny; /* 底摆左右轻甩 */
+        }
       }
       pos.needsUpdate=true; geo.computeVertexNormals();
       var mt=(scr==='title')?0.0:0.4;
