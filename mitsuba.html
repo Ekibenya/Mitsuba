@@ -337,15 +337,13 @@ function glInit(){
     function buildFlag(){
       if(flag){scene.remove(flag);flag.geometry.dispose();}
       var d=cam.position.z, vh=2*d*Math.tan(cam.fov*Math.PI/360), vw=vh*cam.aspect;
-      /* 重做：不再是全屏贴脸的板子，而是一面有真实比例和边缘的旗——
-         竖屏＝垂挂纵幅（2:3，法国街头挂旗形制），近满宽、上下露出起伏的布边；
-         横屏＝标准 3:2 横旗，纵向近满、居中如巨旗。带侧倾让褶皱有近大远小的透视。 */
-      var w,h;
-      if(cam.aspect<1){ w=vw*1.06; h=w*1.5; if(h>vh*0.86){h=vh*0.86;w=h/1.5;} }
-      else { h=vh*0.86; w=h*1.5; if(w>vw*1.05){w=vw*1.05;h=w/1.5;} }
+      /* 全屏出血（手机电脑一致）：旗面放大到视口 170%，深褶最猛时的横向回缩也吃不掉边——
+         屏内永远是旗；深褶、透视侧倾、横向收缩全保留，凹凸靠条带分界的 S 弯与光影读出来。 */
+      var w=vw*1.7, h=vh*1.7;
       var geo=new T.PlaneGeometry(w,h,SEG_X,SEG_Y);
       flag=new T.Mesh(geo,mat);
-      flag.rotation.y=(cam.aspect<1)?-0.15:-0.22; flag.rotation.z=-0.02; flag.position.x=0;
+      flag.userData.va=vh; /* 振幅基准＝视口高（与旗面放大倍数解耦，深褶回缩吃不掉出血边） */
+      flag.rotation.y=-0.10; flag.rotation.z=-0.02; flag.position.x=0;
       scene.add(flag);
       var a=geo.attributes.position.array; NV=a.length/3; BX=new Float32Array(NV); BY=new Float32Array(NV);
       for(var k=0;k<NV;k++){BX[k]=a[k*3];BY[k]=a[k*3+1];}
@@ -374,7 +372,7 @@ function glInit(){
       glLast=nw9;
       var tt=(Date.now()-t0)/1000;
       var geo=flag.geometry,pos=geo.attributes.position,a=pos.array;
-      var w=flag.userData.w,h=flag.userData.h;
+      var w=flag.userData.w,h=flag.userData.h,va=flag.userData.va||h;
       /* 真实风感：①三组波全部改成从旗杆向旗尾传播的「行波」（同向、谐波关系），
             不再是原地明灭的驻波干涉；②振幅随旗宽平方增长——旗杆侧绷紧、旗尾自由端甩得开，
             这是真旗最典型的形态；③「阵风包络」：两个不可通约的慢正弦相乘再平方，
@@ -392,7 +390,7 @@ function glInit(){
         /* 要的是「一凸一凹」的大波浪：主波波长放大（整面旗约一个完整凸凹）、深度加倍，
            次波只留一点布纹感、碎浪压到极低——深度靠主波，不靠又碎又急的高频。 */
         /* 「已」字级深褶：深度再翻倍——顶边剪影要能弯出 S 钩，凹凸是形不是纹理 */
-        var amp=(0.10+0.90*nx*nx)*h*(0.17+0.21*gust);
+        var amp=(0.10+0.90*nx*nx)*va*(0.17+0.21*gust);
         var mph=nx*5.2-PH+ny*1.0;
         var z=Math.sin(mph)*amp
              +Math.sin(nx*11.0-PH*1.62+ny*2.2)*amp*0.20
