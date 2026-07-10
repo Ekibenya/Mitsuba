@@ -338,8 +338,21 @@ function glInit(){
       return t9;})();
     var mat=new T.MeshStandardMaterial({map:tex,roughness:.62,metalness:0,side:T.DoubleSide}); /* 降粗糙度：布面波峰带一线柔光泽，凹凸更立体 */
     mat.shadowSide=T.BackSide; /* 双面网格投影用背面深度，避免自阴影痤疮 */
-    var SEG_X=LOWFX?72:110, SEG_Y=LOWFX?48:72;
-    var flag=null,BX=null,BY=null,NV=0;
+    var SEG_X=LOWFX?64:96, SEG_Y=LOWFX?42:64;
+    var flag=null,BX=null,BY=null,NV=0,SIM={acc:0};
+    /* 布料约束投影：把一对质点距离拉回静止长度（st=刚度，斜向半刚度抗剪）；
+       固定点不动，全部修正量给自由端 */
+    function rlx(P,PIN,ka,kb,rest,st){
+      var a1=ka*3,b1=kb*3;
+      var dx=P[b1]-P[a1],dy=P[b1+1]-P[a1+1],dz=P[b1+2]-P[a1+2];
+      var d=Math.sqrt(dx*dx+dy*dy+dz*dz); if(d<1e-9)return;
+      var f=(d-rest)/d*0.5*st;
+      var pa=PIN[ka],pb=PIN[kb];
+      if(pa&&pb)return;
+      if(pa){P[b1]-=dx*f*2;P[b1+1]-=dy*f*2;P[b1+2]-=dz*f*2;}
+      else if(pb){P[a1]+=dx*f*2;P[a1+1]+=dy*f*2;P[a1+2]+=dz*f*2;}
+      else{P[a1]+=dx*f;P[a1+1]+=dy*f;P[a1+2]+=dz*f;P[b1]-=dx*f;P[b1+1]-=dy*f;P[b1+2]-=dz*f;}
+    }
     function buildFlag(){
       if(flag){scene.remove(flag);flag.geometry.dispose();}
       var d=cam.position.z, vh=2*d*Math.tan(cam.fov*Math.PI/360), vw=vh*cam.aspect;
@@ -361,6 +374,14 @@ function glInit(){
       var a=geo.attributes.position.array; NV=a.length/3; BX=new Float32Array(NV); BY=new Float32Array(NV);
       for(var k=0;k<NV;k++){BX[k]=a[k*3];BY[k]=a[k*3+1];}
       flag.userData.w=w; flag.userData.h=h;
+      /* 真 3D 布料的物理状态：Verlet 粒子（当前位置+上一位置）＋固定边标记。
+         横屏钉旗杆左边一列、竖屏钉顶边一行；其余质点全由风与约束自然演化。 */
+      var P=new Float32Array(a.length), PP=new Float32Array(a.length);
+      P.set(a); PP.set(a);
+      var PIN=new Uint8Array(NV), NXP=SEG_X+1;
+      for(var k2=0;k2<NV;k2++){ PIN[k2]=flag.userData.hz?((k2%NXP===0)?1:0):((k2<NXP)?1:0); }
+      flag.userData.P=P; flag.userData.PP=PP; flag.userData.PIN=PIN;
+      SIM.acc=0;
     }
     buildFlag();
     /* 界面切换的羊皮纸淡化幕（封面浓·其余淡） */
@@ -386,41 +407,53 @@ function glInit(){
       var tt=(Date.now()-t0)/1000;
       var geo=flag.geometry,pos=geo.attributes.position,a=pos.array;
       var w=flag.userData.w,h=flag.userData.h,va=flag.userData.va||h;
-      /* 真实风感：①三组波全部改成从旗杆向旗尾传播的「行波」（同向、谐波关系），
-            不再是原地明灭的驻波干涉；②振幅随旗宽平方增长——旗杆侧绷紧、旗尾自由端甩得开，
-            这是真旗最典型的形态；③「阵风包络」：两个不可通约的慢正弦相乘再平方，
-            风一阵一阵地来，风大时波传得更快、旗抬得更高，风歇时整面旗松下来；
-            ④旗尾叠一层高频碎浪（乘 nx 只在尾端出现），模拟猎猎抖动的布边。 */
+      /* 阵风包络：两个不可通约的慢正弦相乘再平方——风一阵一阵地来，永不循环 */
       var gust=0.55+0.45*Math.sin(tt*0.53+Math.sin(tt*0.31)*1.7);gust*=gust;
-      /* 相位必须累积（相位 += 波速×dt），不能写成 tt×spd：spd 随阵风变化时，
-         tt×spd 的瞬时频率里会多出一项「tt×spd变化率」，运行越久越大——
-         之前那种“飘着飘着莫名其妙哆嗦”就是它。累积式下风速变化只表现为平滑加减速。 */
+      /* 风场相位累积（相位+=波速×dt）：阵风变速只表现为平滑加减速，绝不发抖 */
       var dtp=Math.min(0.1,Math.max(0,tt-(loop._pt||tt)));loop._pt=tt;
       loop._ph=(loop._ph||0)+(1.9+1.1*gust)*dtp;
       var PH=loop._ph;
-      var hz=flag.userData.hz;
-      for(var k=0;k<NV;k++){
-        var nx=BX[k]/w+0.5, ny=BY[k]/h+0.5;
-        /* 极度 S 蛇形：行进轴上可见范围内约两个完整「前-后」周期，一前一后一前一后地织行——
-           布面像绸带蛇一样穿梭；固定端（横屏=旗杆侧，竖屏=顶端）绷紧，自由端甩开。 */
-        var u=hz?nx:ny, vv=hz?ny:nx;
-        var amp=(0.10+0.90*u*u)*va*(0.13+0.11*gust);
-        var mph=u*22.0-PH*2.2+vv*2.6; /* 横轴相位加深：波前斜切，S 弯在另一轴上也看得见 */
-        var z=Math.sin(mph)*amp
-             +Math.sin(u*37.0-PH*3.5+vv*2.2)*amp*0.16
-             +Math.sin(u*61.0-PH*5.4+vv*4.0)*amp*0.05*u;
-        a[k*3+2]=z;
-        /* 行进轴收缩：布拱起处表面长度被「借走」，投影压缩——蛇形的 S 弯就从这来 */
-        var comp=Math.cos(mph)*amp*0.7*(0.3+0.7*u);
-        if(hz){
-          a[k*3+0]=BX[k]-comp+Math.sin(ny*5.2-PH*0.7+nx*2.0)*amp*0.95; /* 竖向条带边界的大幅 S 蛇摆 */
-          a[k*3+1]=BY[k]+Math.sin(nx*3.4-PH*0.55)*amp*0.30*nx+h*0.05*nx*(gust-0.55); /* 旗尾重力：风歇下垂、阵风上扬 */
-        }else{
-          a[k*3+1]=BY[k]+comp;
-          a[k*3+0]=BX[k]+Math.sin(ny*3.4-PH*0.55)*amp*0.25*ny; /* 底摆左右轻甩 */
+      /* ============ 真 3D 布料物理（Verlet 质点-弹簧-约束投影） ============
+         每个顶点都是真实质点：受行进波风压（法向）、顺风张力（拉向自由端）、
+         重力与微弱回位弹簧；经纬结构约束不可伸缩＋斜向半刚度抗剪。
+         褶皱、极度 S 蛇形、边界蛇摆、旗尾甩动全部是物理解出来的形变，
+         不再是手写正弦。固定 substep=1/60s，每帧最多 3 步（降帧不加速）。 */
+      var P=flag.userData.P, PP=flag.userData.PP, PIN=flag.userData.PIN, hz=flag.userData.hz;
+      var NXP=SEG_X+1,NYP=SEG_Y+1;
+      SIM.acc=Math.min(SIM.acc+dtp,0.09);
+      var HS=1/60,stepped=0;
+      while(SIM.acc>=HS&&stepped<3){
+        SIM.acc-=HS;stepped++;
+        var h2=HS*HS;
+        for(var k=0;k<NV;k++){
+          var i3=k*3;
+          if(PIN[k]){P[i3]=PP[i3]=BX[k];P[i3+1]=PP[i3+1]=BY[k];P[i3+2]=PP[i3+2]=0;continue;}
+          var u=hz?(BX[k]/w+0.5):(0.5-BY[k]/h), vv=hz?(BY[k]/h+0.5):(BX[k]/w+0.5);
+          var drv=0.15+0.85*u; /* 固定端绷紧、自由端甩开 */
+          /* 面内回位弹簧只管住整体漂移（保全屏不露底），z 向留给风自由发挥 */
+          var fx=(BX[k]-P[i3])*8, fy=(BY[k]-P[i3+1])*8, fz=-P[i3+2]*0.4;
+          fz+=va*drv*((3.4+10.0*gust)*Math.sin(u*22.0-PH*2.2+vv*2.6)
+                     +(0.9+2.6*gust)*Math.sin(u*37.0-PH*3.5+vv*4.0));
+          /* 横轴压力波：让横向褶皱也长出来——条带分界线因此逐点错相、蛇形弯 */
+          fz+=va*(0.9+2.4*gust)*Math.sin(vv*7.0-PH*0.9+u*3.0)*(0.3+0.7*u);
+          var tl=1.6+3.2*gust; /* 顺风拉向自由端：把布幅撑开 */
+          if(hz){fx+=tl;fy-=1.1;}else{fy-=tl;fx+=0.5*Math.sin(PH*0.35);}
+          var vx=(P[i3]-PP[i3])*0.985,vy=(P[i3+1]-PP[i3+1])*0.985,vz=(P[i3+2]-PP[i3+2])*0.985;
+          var vm=vx*vx+vy*vy+vz*vz; if(vm>0.0081){vm=0.09/Math.sqrt(vm);vx*=vm;vy*=vm;vz*=vm;} /* 数值安全阀 */
+          PP[i3]=P[i3];PP[i3+1]=P[i3+1];PP[i3+2]=P[i3+2];
+          P[i3]+=vx+fx*h2;P[i3+1]+=vy+fy*h2;P[i3+2]+=vz+fz*h2;
+        }
+        var sx=w/SEG_X, sy=h/SEG_Y, sd=Math.sqrt(sx*sx+sy*sy);
+        for(var it=0;it<3;it++){
+          for(var iy=0;iy<NYP;iy++){var r0=iy*NXP;
+            for(var ix=0;ix<SEG_X;ix++){rlx(P,PIN,r0+ix,r0+ix+1,sx,1);}}
+          for(var iy2=0;iy2<SEG_Y;iy2++){var r1=iy2*NXP,r2=(iy2+1)*NXP;
+            for(var ix2=0;ix2<NXP;ix2++){rlx(P,PIN,r1+ix2,r2+ix2,sy,1);}}
+          for(var iy3=0;iy3<SEG_Y;iy3++){var r3=iy3*NXP,r4=(iy3+1)*NXP;
+            for(var ix3=0;ix3<SEG_X;ix3++){rlx(P,PIN,r3+ix3,r4+ix3+1,sd,0.5);rlx(P,PIN,r3+ix3+1,r4+ix3,sd,0.5);}}
         }
       }
-      pos.needsUpdate=true; geo.computeVertexNormals();
+      if(stepped){a.set(P);pos.needsUpdate=true;geo.computeVertexNormals();}
       var mt=(scr==='title')?0.0:0.4;
       veilMat.opacity+=(mt-veilMat.opacity)*0.06;
       rnd.clear(); rnd.render(scene,cam); rnd.render(veilScene,veilCam);
