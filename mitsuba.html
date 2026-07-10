@@ -1536,13 +1536,20 @@ function jpPool(){
   return {list:pool,anchor:V.extra.length+epi,cap:cap};
 }
 function jpOut(){return !!(S.thinking||S._stream);}
+/* 巡展池：游戏未运行（尚无剧情锚点）时的轮播清单——当前卷领头，三卷 封面+卷首彩页+正文插图 全部入列 */
+function jpAmbList(){
+  var ord=[jpCtx().vol||1,1,2,3],seen={},out=[];
+  ord.forEach(function(v){var V=JP_VOLS[v];if(!V||seen[v])return;seen[v]=1;
+    out.push({s:V.cover,oy:16});V.extra.concat(V.story).forEach(function(x){out.push(x);});});
+  return out;}
 function jpLastCot(){for(var i=S.history.length-1;i>=0;i--){var h=S.history[i];if(h.role==='world')return extractCoT(stripMvu(h.text)).cot||'';}return '';}
 function jpIsleTick(){var p=document.getElementById('jpIslePane');if(!p)return;var t=jpLastCot();p.textContent=t||(S.thinking?'……執筆中……':'');p.scrollTop=p.scrollHeight;}
 setInterval(function(){
-  if(!JPSB||jpOut()||document.hidden||JPIL.manual==='jp')return;
+  if(jpOut()||document.hidden||JPIL.manual==='jp')return;
   var el=document.getElementById('jpIsleImg');if(!el)return;
-  var Pp=jpPool();if(Pp.cover||Pp.list.length<2)return;
-  JPIL.ix=(JPIL.ix+1)%Pp.list.length;var nx=Pp.list[JPIL.ix%Pp.list.length];
+  var Pp=jpPool(),nx;
+  if(Pp.cover){var amb=jpAmbList();if(amb.length<2)return;JPIL.aix=((JPIL.aix||0)+1)%amb.length;nx=amb[JPIL.aix];}
+  else{if(Pp.list.length<2)return;JPIL.ix=(JPIL.ix+1)%Pp.list.length;nx=Pp.list[JPIL.ix%Pp.list.length];}
   el.style.opacity='0';
   setTimeout(function(){el.src=JP_A+nx.s;el.style.objectPosition='50% '+(nx.oy||30)+'%';el.style.opacity='1';},450);
 },6000);
@@ -1567,7 +1574,9 @@ function jpIsleInner(m){
     var t=jpLastCot();
     return '<div id="jpIslePane" style="position:absolute;inset:0;overflow-y:auto;padding:36px 20px 16px;font-size:13px;line-height:2.1;color:#e6dcc8;white-space:pre-wrap;font-family:\'Hiragino Mincho ProN\',\'Yu Mincho\',var(--serif)">'+esc(t||(S.thinking?'……執筆中……':'（此幕暂无和文原稿）'))+'</div>'+tabs;
   }
-  var P=jpPool(),cur=P.list[JPIL.ix%P.list.length]||P.list[0];
+  var P=jpPool(),cur;
+  if(P.cover){var amb=jpAmbList();cur=amb[(JPIL.aix||0)%amb.length]||P.list[0];}
+  else cur=P.list[JPIL.ix%P.list.length]||P.list[0];
   var body='<img id="jpIsleImg" src="'+esc(JP_A+cur.s)+'" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% '+(cur.oy||30)+'%;transition:opacity .45s ease,object-position .6s ease">'
     +'<div style="position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(11,9,6,.42),rgba(11,9,6,0) 26%,rgba(11,9,6,0) 66%,rgba(11,9,6,.5))"></div>';
   var cap=P.cap?'<div style="position:absolute;right:12px;bottom:10px;z-index:2;max-width:66%;text-align:right;font-size:11px;letter-spacing:.12em;line-height:1.5;color:#ece3cf;text-shadow:0 1px 6px rgba(0,0,0,.95)">'+esc(P.cap)+'</div>':'';
@@ -1600,7 +1609,7 @@ function jpsbBody(){
      +'<div style="display:flex;gap:9px;flex-wrap:wrap">'+chip('data-jpact="a1"',JPCFG.a1,'① 输入和訳')+chip('data-jpact="a2"',JPCFG.a2,'② 日文构思')+chip('data-jpact="a3"',JPCFG.a3,'③ 日文草稿')+chip('data-jpact="a4"',JPCFG.a4,'④ 译笔腔调')+'</div>'
      +note('<b>③日文草稿</b>是沙盒的创作本体：关闭后仅保留文风铁则、直接以中文创作（省 token 但风味打折）。<b>④</b>关闭后按普通中文行文，不再模仿经典日译中译本腔调。双 API 模式下①自动交由译官完成。'))
    +card(sec('灵动岛')
-     +note('游戏中顶部的灵动岛与本功能联动：新玩家初入游戏显示整卷封面；随剧情推进（按当前卷·EP）自动切换到对应章节的正文插图，闲置时在本卷插图间缓缓轮播——右下角标出「第N卷·EP·话题」。AI 开始输出时自动停下轮播、切到「和文」页，实时直播思考与日文草稿全文，正文区只保留译出的中文。岛可收起（✕）、可全屏，岛上「设置」即回到本页；往幕的和文原稿折叠存于每幕的「和文原稿」栏。原作三卷全部插图与卷首彩页均已入池。'))
+     +note('游戏中顶部的灵动岛与本功能联动：新玩家初入游戏显示整卷封面；<b style="color:var(--gold3)">游戏尚未运行时也不闲着</b>——每 6 秒在三卷全部封面、卷首彩页与正文插图间缓缓巡展。随剧情推进（按当前卷·EP）自动切换到对应章节的正文插图，闲置时在本卷插图间轮播——右下角标出「第N卷·EP·话题」。AI 开始输出时自动停下轮播、切到「和文」页，实时直播思考与日文草稿全文，正文区只保留译出的中文。岛可收起（✕）、可全屏，岛上「设置」即回到本页；往幕的和文原稿折叠存于每幕的「和文原稿」栏。原作三卷全部插图与卷首彩页均已入池。'))
    +'</div></div>';
 }
 
