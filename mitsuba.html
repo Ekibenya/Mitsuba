@@ -312,7 +312,7 @@ function glInit(){
     var tex=(function(){
       var c=document.createElement('canvas');c.width=1024;c.height=640;var x=c.getContext('2d');
       x.fillStyle='#5B76AC';x.fillRect(0,0,378,640);
-      x.fillStyle='#F6F0E2';x.fillRect(378,0,268,640);
+      x.fillStyle='#EDE4C9';x.fillRect(378,0,268,640); /* 中带压到纸色亮度：不再是一条比页面还亮的发光柱 */
       x.fillStyle='#BE5A50';x.fillRect(646,0,378,640);
       var i,g;
       for(i=0;i<16;i++){var sx=Math.random()*1024,sy=Math.random()*640,sr=70+Math.random()*200;
@@ -332,6 +332,9 @@ function glInit(){
       g.addColorStop(0,'rgba(60,50,36,.07)');g.addColorStop(.08,'rgba(0,0,0,0)');
       g.addColorStop(.94,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(70,55,40,.1)');
       x.fillStyle=g;x.fillRect(0,0,1024,640);
+      /* 羊皮纸色蒙纱：三色带整体向纸色收拢——布纹、尘斑、光影全保留，只驯服亮度与饱和度，
+         旗从「扎眼的国旗」退成「褪色的旧布」，正文区不再被高饱和色带顶得晃眼 */
+      x.fillStyle='rgba(236,227,204,.38)';x.fillRect(0,0,1024,640);
       var t9=new T.CanvasTexture(c);try{t9.colorSpace='srgb';}catch(e9){}
       try{t9.anisotropy=rnd.capabilities.getMaxAnisotropy();}catch(e8){}
       return t9;})();
