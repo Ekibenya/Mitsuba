@@ -2546,6 +2546,7 @@ function titleView(){
     +erb('data-act="toselect"','开 幕','OUVERTURE')
     +cont
     +erb('data-ov="api"','接 入 AI','CONNEXION')
+    +erb('data-act="g3d"','三 维 鉴 赏','GALERIE DES POUPÉES')
     +erb('data-ov="jpsb"','日 文 沙 盒','SANDBOX JAPONAIS'+(JPSB?' · ON':''))
     +'</div>'
     +'<div class="btn" data-ov="api" style="cursor:pointer;position:absolute;bottom:34px;left:0;right:0;text-align:center;font-size:12px;letter-spacing:.2em;color:var(--mut2);text-shadow:0 0 10px rgba(42,69,104,.4),0 1px 0 rgba(255,255,255,.6)"><span class="dot" style="vertical-align:middle;margin-right:8px;background:'+dotc+'"></span><span style="vertical-align:middle">'+esc(badge)+'</span></div>'
@@ -2848,6 +2849,174 @@ function psW(w,cc,cw){
   return '';
 }
 
+
+/* ---------------- 三维鉴赏 · 立体画像装置 ---------------- */
+var G3D={btn:'偶',title:'人偶座 · 三维鉴赏',
+ bg:'radial-gradient(120% 90% at 50% 0%,#241a30 0%,#150f1d 55%,#0c0812 100%)',
+ ink:'#e8ddf2',mut:'#9d8fb8',hl:'linear-gradient(90deg,#8d6cb8,#c9a0e8)',
+ key:0xfff0e0,rim:0xc0a8ff,amb:0x3a3244,
+ models:[
+  {f:'core/res/models/dance1.glb',n:'死之轮舞 · 甲',d:'白貂斗篷与王冠。恶意越聚越多，舞台越转越快。'},
+  {f:'core/res/models/dance2.glb',n:'死之轮舞 · 乙',d:'同一场轮舞的另一次落幕姿态。'},
+  {f:'core/res/models/winter1.glb',n:'冬之使者 · 甲',d:'黑军服与初雪色的长发。冬天替谁递来了请柬。'},
+  {f:'core/res/models/winter2.glb',n:'冬之使者 · 乙',d:'同一位使者，另一步舞。'},
+  {f:'core/res/models/conductor.glb',n:'天体的指挥者',d:'三色军礼服。整个天空都是她的乐池。'}]};
+var G3DS={ov:null,r:null,sc:null,cam:null,grp:null,pm:null,raf:0,cur:-1,bufs:{},rot:0,tilt:0.05,dist:2.5,ptrs:{},pin:0,lastAct:0,key:null,rsz:null,seq:0};
+function g3dOpen(){
+  if(G3DS.ov||!G3D.models.length)return;
+  var d=document.createElement('div');d.id='g3dOv';
+  d.style.cssText='position:fixed;inset:0;z-index:340;display:flex;flex-direction:column;background:'+G3D.bg;
+  d.innerHTML='<div style="flex:none;display:flex;align-items:center;justify-content:space-between;padding:14px 18px 8px">'
+    +'<div class="kai" style="font-size:16px;letter-spacing:.3em;color:'+G3D.ink+'">'+G3D.title+'</div>'
+    +'<button id="g3dX" class="kai" style="width:40px;height:40px;border-radius:12px;font-size:17px;background:rgba(0,0,0,.28);border:1px solid rgba(128,128,128,.35);color:'+G3D.ink+';cursor:pointer">✕</button></div>'
+    +'<div id="g3dStage" style="flex:1;position:relative;min-height:0;touch-action:none;cursor:grab;overflow:hidden">'
+      +'<div id="g3dMsg" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;pointer-events:none">'
+        +'<div style="width:min(320px,70vw);height:4px;border-radius:99px;background:rgba(128,128,128,.22);overflow:hidden"><div id="g3dBar" style="height:100%;width:0%;border-radius:99px;background:'+G3D.hl+';transition:width .2s"></div></div>'
+        +'<div id="g3dPct" class="kai" style="font-size:12px;letter-spacing:.22em;color:'+G3D.mut+'">0%</div></div>'
+      +'<div id="g3dHint" style="position:absolute;left:0;right:0;bottom:10px;text-align:center;font-size:11px;letter-spacing:.24em;color:'+G3D.mut+';opacity:.85;transition:opacity 1.4s;pointer-events:none">拖 动 旋 转 · 滚 轮 双 指 缩 放</div></div>'
+    +'<div style="flex:none;padding:8px 14px calc(14px + env(safe-area-inset-bottom,0px))">'
+      +'<div id="g3dCap" style="font-size:12px;line-height:1.7;color:'+G3D.mut+';text-align:center;letter-spacing:.06em;min-height:1.6em;padding:0 12px"></div>'
+      +(G3D.models.length>1?'<div id="g3dChips" style="display:flex;gap:8px;justify-content:safe center;overflow-x:auto;padding:10px 2px 2px;-webkit-overflow-scrolling:touch">'
+        +G3D.models.map(function(m,i){return '<button data-g3di="'+i+'" class="kai" style="flex:none;padding:9px 15px;border-radius:99px;font-size:12.5px;letter-spacing:.12em;border:1px solid rgba(128,128,128,.35);background:rgba(0,0,0,.22);color:'+G3D.mut+';cursor:pointer">'+m.n+'</button>';}).join('')+'</div>':'')
+      +'</div>';
+  document.body.appendChild(d);G3DS.ov=d;
+  d.addEventListener('click',function(e){var n=e.target;
+    while(n&&n!==d){
+      if(n.id==='g3dX'){g3dClose();return;}
+      if(n.getAttribute&&n.getAttribute('data-g3di')!=null){g3dShow(parseInt(n.getAttribute('data-g3di'),10));return;}
+      n=n.parentNode;}});
+  G3DS.key=function(e){if(e.key==='Escape')g3dClose();};
+  document.addEventListener('keydown',G3DS.key);
+  G3DS.rsz=function(){g3dFit();};
+  window.addEventListener('resize',G3DS.rsz);
+  var st=d.querySelector('#g3dStage');
+  st.addEventListener('pointerdown',function(e){st.setPointerCapture(e.pointerId);G3DS.ptrs[e.pointerId]=[e.clientX,e.clientY];G3DS.lastAct=Date.now();
+    var ks=Object.keys(G3DS.ptrs);if(ks.length===2){var a=G3DS.ptrs[ks[0]],b=G3DS.ptrs[ks[1]];G3DS.pin=Math.hypot(a[0]-b[0],a[1]-b[1]);}});
+  st.addEventListener('pointermove',function(e){var p=G3DS.ptrs[e.pointerId];if(!p)return;
+    var ks=Object.keys(G3DS.ptrs);G3DS.lastAct=Date.now();
+    if(ks.length===1){G3DS.rot+=(e.clientX-p[0])*0.008;G3DS.tilt=Math.max(-0.45,Math.min(0.55,G3DS.tilt+(e.clientY-p[1])*0.004));}
+    G3DS.ptrs[e.pointerId]=[e.clientX,e.clientY];
+    if(ks.length===2){var a=G3DS.ptrs[ks[0]],b=G3DS.ptrs[ks[1]];var d2=Math.hypot(a[0]-b[0],a[1]-b[1]);
+      if(G3DS.pin>0)G3DS.dist=Math.max(1.25,Math.min(4.4,G3DS.dist*G3DS.pin/d2));G3DS.pin=d2;}});
+  var up=function(e){delete G3DS.ptrs[e.pointerId];G3DS.pin=0;};
+  st.addEventListener('pointerup',up);st.addEventListener('pointercancel',up);
+  st.addEventListener('wheel',function(e){e.preventDefault();G3DS.lastAct=Date.now();
+    G3DS.dist=Math.max(1.25,Math.min(4.4,G3DS.dist*(1+(e.deltaY>0?0.09:-0.09))));},{passive:false});
+  setTimeout(function(){var h=document.getElementById('g3dHint');if(h)h.style.opacity='0';},4200);
+  g3dShow(0);
+}
+function g3dMsg(pct,txt){var b=document.getElementById('g3dBar'),p=document.getElementById('g3dPct'),m=document.getElementById('g3dMsg');
+  if(!p)return;if(pct==null){m.style.display='none';return;}m.style.display='flex';b.style.width=Math.round(pct*100)+'%';p.textContent=txt;}
+function g3dBoot(){
+  if(G3DS.r)return true;
+  var T=window.THREE;if(!T||!window.ZJ_GLTFLoader)return false;
+  var st=document.getElementById('g3dStage');
+  var r=new T.WebGLRenderer({antialias:!(typeof LOWFX!=='undefined'&&LOWFX),alpha:true});
+  r.setPixelRatio(Math.min(window.devicePixelRatio||1,(typeof LOWFX!=='undefined'&&LOWFX)?1.25:2));
+  r.setSize(st.clientWidth,st.clientHeight);
+  r.toneMapping=T.ACESFilmicToneMapping;r.toneMappingExposure=1.12;
+  r.domElement.style.cssText='position:absolute;inset:0;width:100%;height:100%';
+  st.insertBefore(r.domElement,st.firstChild);
+  var sc=new T.Scene();
+  var env=new T.Scene();env.background=new T.Color(0x0b0908);
+  var mk=function(c,it,w,h,x,y,z,rx,ry){var m=new T.Mesh(new T.PlaneGeometry(w,h),new T.MeshBasicMaterial({color:new T.Color(c)}));m.material.color.multiplyScalar(it);m.position.set(x,y,z);m.rotation.set(rx,ry,0);env.add(m);};
+  mk(0xfff4e2,6,6,3, 0,5,0, Math.PI/2,0); mk(0xbfd4ff,2.2,4,4, -5,1.5,0, 0,Math.PI/2);
+  mk(0xffd9b8,2.6,4,4, 5,1.5,-1, 0,-Math.PI/2); mk(0xfffefa,1.4,8,4, 0,1.5,-6, 0,0);
+  G3DS.pm=new T.PMREMGenerator(r);sc.environment=G3DS.pm.fromScene(env,0.04).texture;
+  var key=new T.DirectionalLight(G3D.key,2.4);key.position.set(2.4,4,2.6);sc.add(key);
+  var rim=new T.DirectionalLight(G3D.rim,1.5);rim.position.set(-2.6,3,-3);sc.add(rim);
+  sc.add(new T.AmbientLight(G3D.amb,1.3));
+  var cam=new T.PerspectiveCamera(34,st.clientWidth/Math.max(1,st.clientHeight),0.01,100);
+  var grp=new T.Group();sc.add(grp);
+  G3DS.r=r;G3DS.sc=sc;G3DS.cam=cam;G3DS.grp=grp;
+  var loop=function(){
+    G3DS.raf=requestAnimationFrame(loop);
+    if(Date.now()-G3DS.lastAct>2600)G3DS.rot+=0.0032;
+    grp.rotation.y=G3DS.rot;grp.rotation.x=G3DS.tilt;
+    cam.position.set(0,0.1,G3DS.dist);cam.lookAt(0,0,0);
+    r.render(sc,cam);};
+  loop();
+  return true;
+}
+function g3dFit(){
+  var st=document.getElementById('g3dStage');
+  if(!st||!G3DS.r)return;
+  G3DS.r.setSize(st.clientWidth,st.clientHeight);
+  G3DS.cam.aspect=st.clientWidth/Math.max(1,st.clientHeight);G3DS.cam.updateProjectionMatrix();
+}
+function g3dShow(i){
+  var seq=++G3DS.seq;
+  var m=G3D.models[i];if(!m)return;
+  var chips=G3DS.ov.querySelectorAll('[data-g3di]');
+  for(var c=0;c<chips.length;c++){var on=+chips[c].getAttribute('data-g3di')===i;
+    chips[c].style.borderColor=on?'rgba(220,200,160,.75)':'rgba(128,128,128,.35)';
+    chips[c].style.color=on?G3D.ink:G3D.mut;chips[c].style.background=on?'rgba(255,255,255,.09)':'rgba(0,0,0,.22)';}
+  var cap=document.getElementById('g3dCap');if(cap)cap.textContent='';
+  var tries=0;(function waitBoot(){
+    if(!G3DS.ov||seq!==G3DS.seq)return;
+    if(!g3dBoot()){tries++;if(tries>40){g3dMsg(0,'三维引擎加载失败');return;}g3dMsg(0.02,'三维引擎准备中…');setTimeout(waitBoot,400);return;}
+    g3dGo(i,m,seq);})();
+}
+function g3dGo(i,m,seq){
+  var done=function(buf){
+    if(!G3DS.ov||seq!==G3DS.seq)return;
+    g3dMsg(0.99,'铸型中…');
+    new window.ZJ_GLTFLoader().parse(buf,'',function(g){
+      if(!G3DS.ov||seq!==G3DS.seq)return;
+      var T=window.THREE,grp=G3DS.grp;
+      while(grp.children.length){var ch=grp.children[0];grp.remove(ch);
+        ch.traverse&&ch.traverse(function(o){if(o.geometry)o.geometry.dispose();
+          if(o.material){var ms=[].concat(o.material);ms.forEach(function(mm){for(var k in mm)if(mm[k]&&mm[k].isTexture)mm[k].dispose();mm.dispose&&mm.dispose();});}});}
+      var obj=g.scene;
+      var box=new T.Box3().setFromObject(obj);
+      var size=box.getSize(new T.Vector3());
+      var s=1.58/Math.max(size.x,size.y,size.z);
+      obj.scale.setScalar(s);
+      box.setFromObject(obj);var ctr=box.getCenter(new T.Vector3());
+      obj.position.sub(ctr);
+      var inner=new T.Group();inner.add(obj);grp.add(inner);
+      // 地面接触影
+      var cv=document.createElement('canvas');cv.width=cv.height=256;var cx=cv.getContext('2d');
+      var gr=cx.createRadialGradient(128,128,10,128,128,120);gr.addColorStop(0,'rgba(0,0,0,.42)');gr.addColorStop(1,'rgba(0,0,0,0)');
+      cx.fillStyle=gr;cx.fillRect(0,0,256,256);
+      var sh=new T.Mesh(new T.PlaneGeometry(1.5,1.5),new T.MeshBasicMaterial({map:new T.CanvasTexture(cv),transparent:true,depthWrite:false}));
+      sh.rotation.x=-Math.PI/2;sh.position.y=box.min.y-ctr.y+0.001;inner.add(sh);
+      G3DS.cur=i;G3DS.rot=0.35;G3DS.tilt=0.05;G3DS.lastAct=0;
+      g3dMsg(null);
+      var cap=document.getElementById('g3dCap');if(cap)cap.textContent=m.d||'';
+    },function(e){if(G3DS.ov&&seq===G3DS.seq)g3dMsg(0,'模型解析失败');});
+  };
+  if(G3DS.bufs[m.f]){done(G3DS.bufs[m.f]);return;}
+  g3dMsg(0.03,'0%');
+  fetch(m.f).then(function(res){
+    if(!res.ok)throw new Error(res.status);
+    var total=+res.headers.get('Content-Length')||0;
+    if(!res.body||!total)return res.arrayBuffer();
+    var rd=res.body.getReader(),chunks=[],got=0;
+    return new Promise(function(ok,no){(function pump(){rd.read().then(function(x){
+      if(x.done){var out=new Uint8Array(got),off=0;chunks.forEach(function(ch){out.set(ch,off);off+=ch.length;});ok(out.buffer);return;}
+      chunks.push(x.value);got+=x.value.length;
+      if(G3DS.ov&&seq===G3DS.seq)g3dMsg(Math.min(0.97,got/total),Math.round(got/total*100)+'% · '+(got/1048576).toFixed(1)+'MB / '+(total/1048576).toFixed(1)+'MB');
+      pump();}).catch(no);})();});
+  }).then(function(buf){if(buf){G3DS.bufs[m.f]=buf;done(buf);}})
+  .catch(function(e){if(G3DS.ov&&seq===G3DS.seq)g3dMsg(0,'模型加载失败：'+e.message);});
+}
+function g3dClose(){
+  if(!G3DS.ov)return;
+  G3DS.seq++;
+  cancelAnimationFrame(G3DS.raf);
+  document.removeEventListener('keydown',G3DS.key);window.removeEventListener('resize',G3DS.rsz);
+  if(G3DS.grp)while(G3DS.grp.children.length){var ch=G3DS.grp.children[0];G3DS.grp.remove(ch);
+    ch.traverse&&ch.traverse(function(o){if(o.geometry)o.geometry.dispose();
+      if(o.material){var ms=[].concat(o.material);ms.forEach(function(mm){for(var k in mm)if(mm[k]&&mm[k].isTexture)mm[k].dispose();mm.dispose&&mm.dispose();});}});}
+  if(G3DS.pm)G3DS.pm.dispose();
+  if(G3DS.r)G3DS.r.dispose();
+  G3DS.ov.remove();
+  G3DS.ov=null;G3DS.r=null;G3DS.sc=null;G3DS.cam=null;G3DS.grp=null;G3DS.pm=null;G3DS.cur=-1;G3DS.ptrs={};
+}
+document.addEventListener('click',function(e){var n=e.target;
+  while(n&&n!==document){if(n.getAttribute&&n.getAttribute('data-act')==='g3d'){g3dOpen();return;}n=n.parentNode;}});
+
 function sidebar(){
   var p=currentPanel();var cc=p?p.char:{};var cw=p?p.world:{};
   var PS=(G&&G.panelSpec)||null;
@@ -3116,6 +3285,7 @@ function gameView(){
     +'<button data-ov="preset" class="obtn btn kai" title="自定义预设" style="width:34px;height:34px;font-size:16px;color:'+(PRESET&&PRESET.on?'var(--gold2)':'var(--mut)')+'">预</button>'
     +'<button data-ov="codex" class="obtn btn kai" title="世界书图鉴" style="width:34px;height:34px;font-size:16px">书</button>'
     +'<button data-ov="map" class="obtn btn kai" title="罗泽利亚地图" style="width:34px;height:34px;font-size:16px">图</button>'
+    +'<button data-act="g3d" class="obtn btn kai" title="'+G3D.title+'" style="width:34px;height:34px;font-size:16px">'+G3D.btn+'</button>'
     +'<button data-ov="saves" class="obtn btn kai" title="存档" style="width:34px;height:34px;font-size:16px">档</button>'
     +'<button data-act="toselect" class="obtn btn kai" title="另择开局" style="width:34px;height:34px;font-size:16px;border-color:rgba(126,33,46,.5);color:#96323f">返</button>';
   var logo='<svg viewBox="0 0 512 512" width="28" height="28" style="flex:none;display:block;border-radius:6px;box-shadow:0 1px 4px rgba(58,47,36,.35)"><rect width="512" height="512" rx="116" fill="#1d2433"/><circle cx="256" cy="256" r="186" fill="#2a4568"/><circle cx="256" cy="256" r="124" fill="#e8dfc8"/><circle cx="256" cy="256" r="64" fill="#7e212e"/></svg>';
