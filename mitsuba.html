@@ -305,21 +305,20 @@ function glInit(){
     var scene=new T.Scene();
     var cam=new T.PerspectiveCamera(45,window.innerWidth/window.innerHeight,.1,50);
     cam.position.set(0,0,3.1);
-    scene.add(new T.AmbientLight(0xf8f2e4,1.05));
-    var sun=new T.DirectionalLight(0xfff4e0,.6); sun.position.set(-2.2,2.6,3.2); scene.add(sun);
+    scene.add(new T.AmbientLight(0xfdfbf7,1.02));
+    var sun=new T.DirectionalLight(0xfff9f0,.55); sun.position.set(-2.2,2.6,3.2); scene.add(sun);
     var fill=new T.DirectionalLight(0xdce4f2,.42); fill.position.set(2.4,-1.4,2.0); scene.add(fill);
     /* 做旧三色布料贴图：平滑污渍与织纹，画布绘制，无块状噪点 */
     var tex=(function(){
       var c=document.createElement('canvas');c.width=1024;c.height=640;var x=c.getContext('2d');
       /* 蓝白红三带等分（各 1/3） */
-      x.fillStyle='#5B76AC';x.fillRect(0,0,341,640);
+      x.fillStyle='#4A6BB0';x.fillRect(0,0,341,640);
       x.fillStyle='#F6F0E2';x.fillRect(341,0,342,640);
-      x.fillStyle='#BE5A50';x.fillRect(683,0,341,640);
+      x.fillStyle='#C04A3D';x.fillRect(683,0,341,640);
       var i,g;
-      for(i=0;i<16;i++){var sx=Math.random()*1024,sy=Math.random()*640,sr=70+Math.random()*200;
+      for(i=0;i<6;i++){var sx=Math.random()*1024,sy=Math.random()*640,sr=90+Math.random()*180;
         g=x.createRadialGradient(sx,sy,0,sx,sy,sr);
-        var dark=Math.random()<.55;
-        g.addColorStop(0,dark?'rgba(70,60,44,'+(0.03+Math.random()*0.045)+')':'rgba(255,250,236,'+(0.05+Math.random()*0.07)+')');
+        g.addColorStop(0,'rgba(70,60,44,'+(0.02+Math.random()*0.03)+')');
         g.addColorStop(1,'rgba(0,0,0,0)');
         x.fillStyle=g;x.fillRect(0,0,1024,640);}
       x.globalAlpha=.032;x.strokeStyle='#3a2f24';
