@@ -311,9 +311,10 @@ function glInit(){
     /* 做旧三色布料贴图：平滑污渍与织纹，画布绘制，无块状噪点 */
     var tex=(function(){
       var c=document.createElement('canvas');c.width=1024;c.height=640;var x=c.getContext('2d');
-      x.fillStyle='#5B76AC';x.fillRect(0,0,378,640);
-      x.fillStyle='#EDE4C9';x.fillRect(378,0,268,640); /* 中带压到纸色亮度：不再是一条比页面还亮的发光柱 */
-      x.fillStyle='#BE5A50';x.fillRect(646,0,378,640);
+      /* 蓝白红三带等分（各 1/3）；中带压到纸色亮度，不再是一条比页面还亮的发光柱 */
+      x.fillStyle='#5B76AC';x.fillRect(0,0,341,640);
+      x.fillStyle='#EDE4C9';x.fillRect(341,0,342,640);
+      x.fillStyle='#BE5A50';x.fillRect(683,0,341,640);
       var i,g;
       for(i=0;i<16;i++){var sx=Math.random()*1024,sy=Math.random()*640,sr=70+Math.random()*200;
         g=x.createRadialGradient(sx,sy,0,sx,sy,sr);
