@@ -2908,7 +2908,8 @@ var G3D={btn:'偶',title:'人偶座 · 三维鉴赏',
   {f:'core/res/models/dance2.glb',n:'死之轮舞 · 乙',d:'同一场轮舞的另一次落幕姿态。'},
   {f:'core/res/models/winter1.glb',n:'冬之使者 · 甲',d:'黑军服与初雪色的长发。冬天替谁递来了请柬。'},
   {f:'core/res/models/winter2.glb',n:'冬之使者 · 乙',d:'同一位使者，另一步舞。'},
-  {f:'core/res/models/conductor.glb',n:'天体的指挥者',d:'三色军礼服。整个天空都是她的乐池。'}]};
+  {f:'core/res/models/conductor.glb',n:'天体的指挥者',d:'三色军礼服。整个天空都是她的乐池。'},
+  {frame:'paris/index.html',n:'巴黎 1789 · 街区',d:'大革命前夜的街区，可走入其中。石像广场东行直抵阿姆尔皮埃塔；V 键俯瞰：营造、拆除、布军、开战。'}]};
 var G3DS={ov:null,r:null,sc:null,cam:null,grp:null,pm:null,raf:0,cur:-1,bufs:{},rot:0,tilt:0.05,dist:2.5,ptrs:{},pin:0,lastAct:0,key:null,rsz:null,seq:0};
 function g3dOpen(){
   if(G3DS.ov||!G3D.models.length)return;
@@ -2928,7 +2929,7 @@ function g3dOpen(){
         +G3D.models.map(function(m,i){return '<button data-g3di="'+i+'" class="kai" style="flex:none;padding:9px 15px;border-radius:99px;font-size:12.5px;letter-spacing:.12em;border:1px solid rgba(128,128,128,.35);background:rgba(0,0,0,.22);color:'+G3D.mut+';cursor:pointer">'+m.n+'</button>';}).join('')+'</div>':'')
       +'</div>';
   document.body.appendChild(d);G3DS.ov=d;
-  d.addEventListener('click',function(e){var n=e.target;
+  d.addEventListener('click',function(e){e.stopPropagation();var n=e.target;
     while(n&&n!==d){
       if(n.id==='g3dX'){g3dClose();return;}
       if(n.getAttribute&&n.getAttribute('data-g3di')!=null){g3dShow(parseInt(n.getAttribute('data-g3di'),10));return;}
@@ -3000,6 +3001,17 @@ function g3dShow(i){
     chips[c].style.borderColor=on?'rgba(220,200,160,.75)':'rgba(128,128,128,.35)';
     chips[c].style.color=on?G3D.ink:G3D.mut;chips[c].style.background=on?'rgba(255,255,255,.09)':'rgba(0,0,0,.22)';}
   var cap=document.getElementById('g3dCap');if(cap)cap.textContent='';
+  var old=document.getElementById('g3dFrame');if(old&&old.parentNode)old.parentNode.removeChild(old);
+  if(m.frame){
+    g3dMsg(null);
+    if(cap)cap.textContent=m.d||'';
+    var stf=document.getElementById('g3dStage');
+    if(stf){var fr=document.createElement('iframe');fr.id='g3dFrame';fr.src=m.frame;
+      fr.setAttribute('allow','pointer-lock; fullscreen');
+      fr.style.cssText='position:absolute;inset:0;width:100%;height:100%;border:0;background:#0d0b09;z-index:3';
+      stf.appendChild(fr);}
+    return;
+  }
   var tries=0;(function waitBoot(){
     if(!G3DS.ov||seq!==G3DS.seq)return;
     if(!g3dBoot()){tries++;if(tries>40){g3dMsg(0,'三维引擎加载失败');return;}g3dMsg(0.02,'三维引擎准备中…');setTimeout(waitBoot,400);return;}
