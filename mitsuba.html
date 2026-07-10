@@ -313,15 +313,113 @@ function glInit(){
     sun.castShadow=true; sun.shadow.mapSize.set(LOWFX?512:1024,LOWFX?512:1024);
     sun.shadow.bias=-0.0002; sun.shadow.normalBias=0.05;
     var fill=new T.DirectionalLight(0xdce4f2,.3); fill.position.set(2.6,-1.8,1.2); scene.add(fill);
-    /* 做旧三色布料贴图：平滑污渍与织纹，画布绘制，无块状噪点 */
-    var tex=(function(){
-      var c=document.createElement('canvas');c.width=1024;c.height=640;var x=c.getContext('2d');
+    /* 做旧三色布料贴图：可重绘（buildFlag 按纵横比校正徽记印花），画布绘制，无块状噪点 */
+    var texC=document.createElement('canvas');texC.width=1024;texC.height=640;
+    var tex=new T.CanvasTexture(texC);try{tex.colorSpace='srgb';}catch(e9){}
+    try{tex.anisotropy=rnd.capabilities.getMaxAnisotropy();}catch(e8){}
+    function drawFlagTex(w,h,va){
+      var x=texC.getContext('2d');
       /* 蓝白红三带等分（各 1/3），法国国旗官方亮色版：高饱和正色，旗就是旗 */
-      x.fillStyle='#0055A4';x.fillRect(0,0,341,640);
-      x.fillStyle='#FFFFFF';x.fillRect(341,0,342,640);
-      x.fillStyle='#EF4135';x.fillRect(683,0,341,640);
+      x.setTransform(1,0,0,1,0,0);x.globalAlpha=1;x.globalCompositeOperation='source-over';
+      /* 三带按「可见窗口」等分：屏幕只看到旗面中间 1/OVS，若按整布三等分则白带独占画面。
+         把白带压到可见宽的三分之一、蓝红各自延伸进出血区——屏上三色面积相等；
+         横屏再按顺风漂移把窗口中心左移一格。 */
+      var vis=1024/OVS, cw=(w>=h)?(512-0.37/w*1024):512;
+      var b1=Math.round(cw-vis/6*3+vis/3), b2=Math.round(cw-vis/2+vis*2/3);
+      x.fillStyle='#0055A4';x.fillRect(0,0,b1,640);
+      x.fillStyle='#FFFFFF';x.fillRect(b1,0,b2-b1,640);
+      x.fillStyle='#EF4135';x.fillRect(b2,0,1024-b2,640);
       var i,g;
-
+      /* —— 三叶徽记印花：印在封面徽记的对应部位（白带中上），随布一起飘 —— */
+      (function(){
+        var vwW=w/1.9; /* 视口宽（世界单位） */
+        var D=(w>=h)?0.56*va:Math.min(0.38*va,0.66*vwW); /* 横屏（电脑）加大到 56% 视口高，竖屏沿用封面徽记尺寸规则 */
+        var lw=D/w*1024, lh=(D*834/772)/h*640;
+        var tx=512, ty=320-(0.20*va/h)*640; /* 屏幕中上（约 30% 高度处），白带正中 */
+        /* 顺风张力与回位弹簧平衡后布整体向自由端漂 ~0.37 世界单位：印花预偏一格，飘回屏幕中线 */
+        if(w>=h){tx-=0.37/w*1024;}else{ty-=0.37/h*640;}
+        var lg=document.createElement('canvas');lg.width=Math.max(2,Math.ceil(lw));lg.height=Math.max(2,Math.ceil(lh));
+        var g2=lg.getContext('2d'),kx=lg.width/772,ky=lg.height/834;
+        g2.setTransform(kx,0,0,ky,0,0);
+        /* —— 大革命时期雕版国徽：日芒·月桂花环·束带·弧形铭文·三叶草纹章 —— */
+        var gr=g2.createLinearGradient(0,60,0,800);
+        gr.addColorStop(0,'#d9b981');gr.addColorStop(.5,'#bf9455');gr.addColorStop(1,'#93683a');
+        var CX=386,CY=417,TAU=6.28318530718,HPI=1.57079632679;
+        g2.strokeStyle=gr;g2.fillStyle=gr;
+        /* 放射日芒（长短相间的雕版线）：革命印章最典型的背景 */
+        g2.lineWidth=2.2;g2.globalAlpha=.5;
+        for(var ri=0;ri<40;ri++){var rt=ri*TAU/40,rr=(ri%2)?206:176;
+          g2.beginPath();g2.moveTo(CX+142*Math.cos(rt),CY+142*Math.sin(rt));
+          g2.lineTo(CX+rr*Math.cos(rt),CY+rr*Math.sin(rt));g2.stroke();}
+        /* 月桂花环：左右两枝自底部向上环抱，叶片沿枝错生 */
+        function lf9(px,py,ang,ln9,wd9){g2.save();g2.translate(px,py);g2.rotate(ang);
+          g2.beginPath();g2.moveTo(0,0);g2.quadraticCurveTo(ln9*.5,-wd9,ln9,0);
+          g2.quadraticCurveTo(ln9*.5,wd9,0,0);g2.fill();g2.restore();}
+        g2.globalAlpha=.9;g2.lineWidth=3.5;
+        g2.beginPath();g2.arc(CX,CY,250,1.68,2.92);g2.stroke();      /* 左枝干 */
+        g2.beginPath();g2.arc(CX,CY,250,0.22,1.46);g2.stroke();      /* 右枝干 */
+        for(var li=0;li<13;li++){
+          var tL=1.74+li*0.096,tR=1.40-li*0.096;
+          lf9(CX+250*Math.cos(tL),CY+250*Math.sin(tL),tL+HPI+((li%2)?.52:.18),42,13);
+          lf9(CX+250*Math.cos(tR),CY+250*Math.sin(tR),tR-HPI-((li%2)?.52:.18)+3.14159,-42,13);
+        }
+        /* 底部束带交叉 */
+        g2.lineWidth=5;g2.globalAlpha=.85;
+        g2.beginPath();g2.moveTo(CX-30,CY+236);g2.lineTo(CX+30,CY+266);g2.stroke();
+        g2.beginPath();g2.moveTo(CX+30,CY+236);g2.lineTo(CX-30,CY+266);g2.stroke();
+        /* 内外饰环：外粗环＋铭文带内侧的雕版虚线环 */
+        g2.globalAlpha=.75;g2.lineWidth=7;g2.beginPath();g2.arc(CX,CY,350,0,TAU);g2.stroke();
+        g2.globalAlpha=.3;g2.lineWidth=1.5;g2.beginPath();g2.arc(CX,CY,366,0,TAU);g2.stroke();
+        g2.globalAlpha=.45;g2.lineWidth=1.5;g2.setLineDash([3,10]);g2.beginPath();g2.arc(CX,CY,288,0,TAU);g2.stroke();g2.setLineDash([]);
+        /* 弧形铭文：革命口号，上弧三词、下弧「不自由毋宁死」 */
+        function arc9(str,r9,a0,a1,sz,flp){
+          g2.font='600 '+sz+'px Georgia,serif';g2.textAlign='center';g2.textBaseline='middle';
+          for(var ci=0;ci<str.length;ci++){
+            var t9a=a0+(ci+0.5)/str.length*(a1-a0);
+            g2.save();g2.translate(CX+r9*Math.cos(t9a),CY+r9*Math.sin(t9a));
+            g2.rotate(t9a+(flp?-HPI:HPI));g2.fillText(str.charAt(ci),0,0);g2.restore();
+          }
+        }
+        g2.globalAlpha=.92;
+        arc9('LIBERT\u00c9 \u00b7 \u00c9GALIT\u00c9 \u00b7 FRATERNIT\u00c9',320,-3.14159+0.40,-0.40,36,false);
+        arc9('\u00b7 OU LA MORT \u00b7',318,3.14159-0.55,0.55,36,true);
+        /* 左右分隔玫瑰点 */
+        g2.beginPath();g2.arc(CX-320,CY,7,0,TAU);g2.fill();
+        g2.beginPath();g2.arc(CX+320,CY,7,0,TAU);g2.fill();
+        /* 中心三叶草纹章（雕版感：实心＋深色描边勒出体积） */
+        g2.save();g2.translate(CX,CY+10);g2.scale(0.78,0.78);g2.translate(-386,-417);
+        g2.globalAlpha=1;
+        g2.beginPath();g2.arc(386,303,112,0,TAU);g2.fill();
+        g2.beginPath();g2.arc(287,472,112,0,TAU);g2.fill();
+        g2.beginPath();g2.arc(485,472,112,0,TAU);g2.fill();
+        try{g2.fill(new Path2D('M386 520 q-14 96 -66 150 q66 -18 84 -70 q10 -34 6 -80 Z'));}catch(ep){}
+        g2.strokeStyle='#7a5730';g2.lineWidth=4;g2.globalAlpha=.5;
+        g2.beginPath();g2.arc(386,303,112,0,TAU);g2.stroke();
+        g2.beginPath();g2.arc(287,472,112,0,TAU);g2.stroke();
+        g2.beginPath();g2.arc(485,472,112,0,TAU);g2.stroke();
+        g2.restore();
+        /* 做旧腐蚀：定种伪随机（不用 Math.random，重绘结果稳定）——
+           斑驳噪点抠掉印花碎屑＋几道横向磨痕，边角褪得更狠 */
+        g2.setTransform(1,0,0,1,0,0);
+        g2.globalCompositeOperation='destination-out';
+        var sd=48271;function pr(){sd=(sd*16807)%2147483647;return sd/2147483647;}
+        var n=Math.round(lg.width*lg.height/520);
+        for(var e=0;e<n;e++){
+          var ex=pr()*lg.width,ey=pr()*lg.height,er=(0.4+pr()*1.9)*(lg.width/300);
+          g2.globalAlpha=.35+.55*pr();
+          g2.beginPath();g2.arc(ex,ey,er,0,6.2832);g2.fill();
+        }
+        for(var e2=0;e2<14;e2++){
+          var sy2=pr()*lg.height,sh2=(0.6+pr()*1.6)*(lg.width/300);
+          g2.globalAlpha=.16+.26*pr();
+          g2.fillRect(0,sy2,lg.width,sh2);
+        }
+        g2.globalCompositeOperation='source-over';g2.globalAlpha=1;
+        x.globalAlpha=.8; /* 印花integrated：略透出布色 */
+        x.drawImage(lg,tx-lw/2,ty-lh/2,lw,lh);
+        x.globalAlpha=1;
+      })();
+      /* 织纹与边缘旧渍盖在印花之上：印花融进布里而不是浮在布上 */
       x.globalAlpha=.032;x.strokeStyle='#3a2f24';
       for(i=0;i<640;i+=3){x.beginPath();x.moveTo(0,i);x.lineTo(1024,i);x.stroke();}
       x.globalAlpha=1;
@@ -333,11 +431,11 @@ function glInit(){
       g.addColorStop(0,'rgba(60,50,36,.07)');g.addColorStop(.08,'rgba(0,0,0,0)');
       g.addColorStop(.94,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(70,55,40,.1)');
       x.fillStyle=g;x.fillRect(0,0,1024,640);
-      var t9=new T.CanvasTexture(c);try{t9.colorSpace='srgb';}catch(e9){}
-      try{t9.anisotropy=rnd.capabilities.getMaxAnisotropy();}catch(e8){}
-      return t9;})();
+      tex.needsUpdate=true;
+    }
     var mat=new T.MeshStandardMaterial({map:tex,roughness:.62,metalness:0,side:T.DoubleSide}); /* 降粗糙度：布面波峰带一线柔光泽，凹凸更立体 */
     mat.shadowSide=T.BackSide; /* 双面网格投影用背面深度，避免自阴影痤疮 */
+    var OVS=2.05; /* 旗面出血倍数（贴图分带与几何共用，务必同步） */
     var SEG_X=LOWFX?64:96, SEG_Y=LOWFX?42:64;
     var flag=null,BX=null,BY=null,NV=0,SIM={acc:0};
     /* 布料约束投影：把一对质点距离拉回静止长度（st=刚度，斜向半刚度抗剪）；
@@ -358,7 +456,8 @@ function glInit(){
       var d=cam.position.z, vh=2*d*Math.tan(cam.fov*Math.PI/360), vw=vh*cam.aspect;
       /* 全屏出血（手机电脑一致）：旗面放大到视口 170%，深褶最猛时的横向回缩也吃不掉边——
          屏内永远是旗；深褶、透视侧倾、横向收缩全保留，凹凸靠条带分界的 S 弯与光影读出来。 */
-      var w=vw*1.9, h=vh*1.9; /* 出血余量再加大：连极端阵风帧也吃不到边 */
+      var w=vw*OVS, h=vh*OVS; /* 出血余量 205%：真布料细褶收缩比正弦模型吃边更狠，再让一档 */
+      drawFlagTex(w,h,vh); /* 重绘贴图：徽记印花按当前纵横比校正成正圆 */
       var geo=new T.PlaneGeometry(w,h,SEG_X,SEG_Y);
       flag=new T.Mesh(geo,mat);
       flag.userData.va=vh; /* 振幅基准＝视口高（与旗面放大倍数解耦，深褶回缩吃不掉出血边） */
@@ -436,6 +535,9 @@ function glInit(){
                      +(0.9+2.6*gust)*Math.sin(u*37.0-PH*3.5+vv*4.0));
           /* 横轴压力波：让横向褶皱也长出来——条带分界线因此逐点错相、蛇形弯 */
           fz+=va*(0.9+2.4*gust)*Math.sin(vv*7.0-PH*0.9+u*3.0)*(0.3+0.7*u);
+          /* 高频湍流：两组斜向细波相乘成「涡格」，细碎折痕常驻布面——
+             这是布料感的关键，缺了它只剩平滑鼓包 */
+          fz+=va*(0.8+2.0*gust)*Math.sin(u*47.0-PH*4.6+vv*11.0)*Math.sin(vv*13.0-PH*1.7+u*9.0)*(0.25+0.75*u);
           var tl=1.6+3.2*gust; /* 顺风拉向自由端：把布幅撑开 */
           if(hz){fx+=tl;fy-=1.1;}else{fy-=tl;fx+=0.5*Math.sin(PH*0.35);}
           var vx=(P[i3]-PP[i3])*0.985,vy=(P[i3+1]-PP[i3+1])*0.985,vz=(P[i3+2]-PP[i3+2])*0.985;
@@ -450,7 +552,7 @@ function glInit(){
           for(var iy2=0;iy2<SEG_Y;iy2++){var r1=iy2*NXP,r2=(iy2+1)*NXP;
             for(var ix2=0;ix2<NXP;ix2++){rlx(P,PIN,r1+ix2,r2+ix2,sy,1);}}
           for(var iy3=0;iy3<SEG_Y;iy3++){var r3=iy3*NXP,r4=(iy3+1)*NXP;
-            for(var ix3=0;ix3<SEG_X;ix3++){rlx(P,PIN,r3+ix3,r4+ix3+1,sd,0.5);rlx(P,PIN,r3+ix3+1,r4+ix3,sd,0.5);}}
+            for(var ix3=0;ix3<SEG_X;ix3++){rlx(P,PIN,r3+ix3,r4+ix3+1,sd,0.32);rlx(P,PIN,r3+ix3+1,r4+ix3,sd,0.32);}} /* 低剪切刚度：允许布面折出棱线 */
         }
       }
       if(stepped){a.set(P);pos.needsUpdate=true;geo.computeVertexNormals();}
@@ -2410,7 +2512,7 @@ function titleView(){
     +'<button data-ov="set" class="btn" title="设置" style="position:absolute;top:16px;right:14px;width:30px;height:30px;border:none;background:transparent;cursor:pointer;padding:0;color:var(--mut2);filter:drop-shadow(0 0 7px rgba(42,69,104,.4))"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><circle cx="12" cy="12" r="3.1"/><path d="M19.3 12c0-.5-.05-.99-.15-1.46l2-1.56-1.8-3.12-2.37.95a7.4 7.4 0 0 0-2.52-1.46L14.1 2.8h-4.2l-.36 2.55a7.4 7.4 0 0 0-2.52 1.46l-2.37-.95-1.8 3.12 2 1.56c-.1.47-.15.96-.15 1.46s.05.99.15 1.46l-2 1.56 1.8 3.12 2.37-.95c.75.65 1.6 1.15 2.52 1.46l.36 2.55h4.2l.36-2.55a7.4 7.4 0 0 0 2.52-1.46l2.37.95 1.8-3.12-2-1.56c.1-.47.15-.96.15-1.46z"/></svg></button>';
   return '<div class="col center" style="position:relative;text-align:center;padding-bottom:11vh">'+bgmBtn
     
-    +'<div style="position:relative"><svg class="zjSeal" viewBox="0 0 772 834" style="position:relative;display:block;margin:0 auto;width:clamp(170px,min(38vh,66vw),480px);height:auto" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="zjGold" gradientUnits="userSpaceOnUse" x1="0" y1="60" x2="0" y2="800"><stop offset="0" stop-color="#ecd3a3"/><stop offset=".5" stop-color="#d4ab6e"/><stop offset="1" stop-color="#a97f45"/></linearGradient></defs><g><animateTransform attributeName="transform" type="rotate" from="0 386 417" to="360 386 417" dur="46s" repeatCount="indefinite"/><g fill="none" stroke="url(#zjGold)"><circle cx="386" cy="417" r="336" stroke-width="7" opacity=".5"/><circle cx="386" cy="417" r="312" stroke-width="2" opacity=".35" stroke-dasharray="4 14"/><circle cx="386" cy="417" r="360" stroke-width="1.5" opacity=".25"/></g><g fill="url(#zjGold)" opacity=".8"><circle cx="722.0" cy="417.0" r="9"/><circle cx="677.0" cy="585.0" r="5"/><circle cx="554.0" cy="708.0" r="5"/><circle cx="386.0" cy="753.0" r="9"/><circle cx="218.0" cy="708.0" r="5"/><circle cx="95.0" cy="585.0" r="5"/><circle cx="50.0" cy="417.0" r="9"/><circle cx="95.0" cy="249.0" r="5"/><circle cx="218.0" cy="126.0" r="5"/><circle cx="386.0" cy="81.0" r="9"/><circle cx="554.0" cy="126.0" r="5"/><circle cx="677.0" cy="249.0" r="5"/></g></g><g fill="url(#zjGold)"><circle cx="386" cy="303" r="112"/><circle cx="287" cy="472" r="112"/><circle cx="485" cy="472" r="112"/><path d="M386 520 q-14 96 -66 150 q66 -18 84 -70 q10 -34 6 -80 Z"/></g></svg></div>'
+    +'<div style="position:relative"><svg class="zjSeal" viewBox="0 0 772 834" style="visibility:hidden;position:relative;display:block;margin:0 auto;width:clamp(170px,min(38vh,66vw),480px);height:auto" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="zjGold" gradientUnits="userSpaceOnUse" x1="0" y1="60" x2="0" y2="800"><stop offset="0" stop-color="#ecd3a3"/><stop offset=".5" stop-color="#d4ab6e"/><stop offset="1" stop-color="#a97f45"/></linearGradient></defs><g><animateTransform attributeName="transform" type="rotate" from="0 386 417" to="360 386 417" dur="46s" repeatCount="indefinite"/><g fill="none" stroke="url(#zjGold)"><circle cx="386" cy="417" r="336" stroke-width="7" opacity=".5"/><circle cx="386" cy="417" r="312" stroke-width="2" opacity=".35" stroke-dasharray="4 14"/><circle cx="386" cy="417" r="360" stroke-width="1.5" opacity=".25"/></g><g fill="url(#zjGold)" opacity=".8"><circle cx="722.0" cy="417.0" r="9"/><circle cx="677.0" cy="585.0" r="5"/><circle cx="554.0" cy="708.0" r="5"/><circle cx="386.0" cy="753.0" r="9"/><circle cx="218.0" cy="708.0" r="5"/><circle cx="95.0" cy="585.0" r="5"/><circle cx="50.0" cy="417.0" r="9"/><circle cx="95.0" cy="249.0" r="5"/><circle cx="218.0" cy="126.0" r="5"/><circle cx="386.0" cy="81.0" r="9"/><circle cx="554.0" cy="126.0" r="5"/><circle cx="677.0" cy="249.0" r="5"/></g></g><g fill="url(#zjGold)"><circle cx="386" cy="303" r="112"/><circle cx="287" cy="472" r="112"/><circle cx="485" cy="472" r="112"/><path d="M386 520 q-14 96 -66 150 q66 -18 84 -70 q10 -34 6 -80 Z"/></g></svg></div>'
     +'<div style="position:relative;margin-top:clamp(8px,1.6vh,16px);font-size:12px;letter-spacing:.52em;color:#7e212e;font-family:Georgia,serif;text-shadow:0 1px 0 rgba(255,255,255,.75)">LIBERTÉ · ÉGALITÉ · FRATERNITÉ</div><div class="kai" style="position:relative;margin-top:clamp(4px,0.9vh,8px);font-size:min(clamp(34px,7vw,60px),6vh);letter-spacing:.18em;color:var(--gold2);text-shadow:0 1px 0 rgba(255,255,255,.7),0 0 34px rgba(58,92,140,.25)">三叶物语</div><div style="position:relative;margin-top:10px;font-size:13px;letter-spacing:.12em;color:var(--gold);font-style:italic;font-family:Georgia,serif;text-shadow:0 1px 0 rgba(255,255,255,.7)">L\'Histoire de Mitsuba 〜 La Fille Maudite et la Ronde de la Mort 〜</div>'
     +'<div class="slip" style="position:relative;width:320px;max-width:74vw;margin:clamp(8px,1.7vh,18px) auto clamp(6px,1.2vh,12px)"></div>'
     +'<div style="position:relative;font-size:13px;letter-spacing:.34em;color:var(--mut2);padding:0 20px;text-shadow:0 0 12px rgba(42,69,104,.45),0 1px 0 rgba(255,255,255,.55)">诅咒的少女与死之轮舞 · 你即三叶 · 世界由 AI 扮演</div>'
