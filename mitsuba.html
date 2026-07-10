@@ -337,10 +337,15 @@ function glInit(){
     function buildFlag(){
       if(flag){scene.remove(flag);flag.geometry.dispose();}
       var d=cam.position.z, vh=2*d*Math.tan(cam.fov*Math.PI/360), vw=vh*cam.aspect;
-      var h=vh*1.38, w=vw*1.16;
+      /* 重做：不再是全屏贴脸的板子，而是一面有真实比例和边缘的旗——
+         竖屏＝垂挂纵幅（2:3，法国街头挂旗形制），近满宽、上下露出起伏的布边；
+         横屏＝标准 3:2 横旗，纵向近满、居中如巨旗。带侧倾让褶皱有近大远小的透视。 */
+      var w,h;
+      if(cam.aspect<1){ w=vw*1.06; h=w*1.5; if(h>vh*0.86){h=vh*0.86;w=h/1.5;} }
+      else { h=vh*0.86; w=h*1.5; if(w>vw*1.05){w=vw*1.05;h=w/1.5;} }
       var geo=new T.PlaneGeometry(w,h,SEG_X,SEG_Y);
       flag=new T.Mesh(geo,mat);
-      flag.rotation.y=-0.07; flag.rotation.z=-0.035; flag.position.x=0;
+      flag.rotation.y=(cam.aspect<1)?-0.15:-0.22; flag.rotation.z=-0.02; flag.position.x=0;
       scene.add(flag);
       var a=geo.attributes.position.array; NV=a.length/3; BX=new Float32Array(NV); BY=new Float32Array(NV);
       for(var k=0;k<NV;k++){BX[k]=a[k*3];BY[k]=a[k*3+1];}
@@ -396,7 +401,7 @@ function glInit(){
            褶皱滚过时条带边界肉眼可见地左右摆，这才是「一凸一凹」的波浪形。 */
         a[k*3+0]=BX[k]-Math.cos(mph)*amp*0.55*(0.3+0.7*nx);
         /* 布面被风抬起/垂落：随行波起伏、随阵风整体上扬，旗尾幅度最大 */
-        a[k*3+1]=BY[k]+Math.sin(nx*3.4-PH*0.55)*amp*0.30*nx+h*0.012*gust*nx;
+        a[k*3+1]=BY[k]+Math.sin(nx*3.4-PH*0.55)*amp*0.30*nx+h*0.05*nx*(gust-0.55); /* 旗尾重力：风歇下垂、阵风上扬 */
       }
       pos.needsUpdate=true; geo.computeVertexNormals();
       var mt=(scr==='title')?0.0:0.4;
