@@ -1546,14 +1546,12 @@ function jpLastCot(){for(var i=S.history.length-1;i>=0;i--){var h=S.history[i];i
 function jpIsleTick(){var p=document.getElementById('jpIslePane');if(!p)return;var t=jpLastCot();p.textContent=t||(S.thinking?'……執筆中……':'');p.scrollTop=p.scrollHeight;}
 setInterval(function(){
   if(jpOut()||document.hidden||JPIL.manual==='jp')return;
-  var el=document.getElementById('jpIsleImg'),tl=document.getElementById('zjCovIllImg');
-  if(!el&&!tl)return;
-  var nx;
-  if(tl||jpPool().cover){var amb=jpAmbList();if(amb.length<2)return;JPIL.aix=((JPIL.aix||0)+1)%amb.length;nx=amb[JPIL.aix];}
-  else{var Pp=jpPool();if(Pp.list.length<2)return;JPIL.ix=(JPIL.ix+1)%Pp.list.length;nx=Pp.list[JPIL.ix%Pp.list.length];}
-  var tgt=el||tl;
-  tgt.style.opacity='0';
-  setTimeout(function(){tgt.src=JP_A+nx.s;tgt.style.objectPosition='50% '+(nx.oy||30)+'%';tgt.style.opacity='1';},450);
+  var el=document.getElementById('jpIsleImg');if(!el)return;
+  var Pp=jpPool(),nx;
+  if(Pp.cover){var amb=jpAmbList();if(amb.length<2)return;JPIL.aix=((JPIL.aix||0)+1)%amb.length;nx=amb[JPIL.aix];}
+  else{if(Pp.list.length<2)return;JPIL.ix=(JPIL.ix+1)%Pp.list.length;nx=Pp.list[JPIL.ix%Pp.list.length];}
+  el.style.opacity='0';
+  setTimeout(function(){el.src=JP_A+nx.s;el.style.objectPosition='50% '+(nx.oy||30)+'%';el.style.opacity='1';},450);
 },6000);
 function jpIsleCtl(){
   var pill='padding:2px 9px;background:rgba(12,9,6,.62);border:1px solid rgba(42,69,104,.45);color:#dfe8f6;font-size:11px;letter-spacing:.15em;cursor:pointer;border-radius:8px';
@@ -2582,13 +2580,7 @@ function titleView(){
   var bgmBtn='<button data-act="bgm" class="btn kai" title="幕间音乐" style="position:absolute;top:16px;right:'+(isMobile()?100:50)+'px;width:30px;height:30px;font-size:14px;border:none;background:transparent;cursor:pointer;padding:0;color:'+(BGM.playing?'var(--gold2)':'var(--mut2)')+';text-shadow:0 0 12px rgba(58,92,140,'+(BGM.playing||S.bgmOpen?'.65':'.3')+'),0 1px 0 rgba(255,255,255,.55)">'+'<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:block;margin:auto"><path d="M20 2.6 8.8 4.9v10.9a3.5 3.5 0 1 0 1.7 3V9.5l7.8-1.6v4.9a3.5 3.5 0 1 0 1.7 3V2.6z"/></svg>'+'</button>'
     +(isMobile()?'<button data-act="lowTog" class="btn kai" title="低配模式：降特效省电防发热（不满意随时关回）" style="position:absolute;top:16px;right:50px;height:30px;padding:0 9px;font-size:12.5px;letter-spacing:.12em;border:none;cursor:pointer;border-radius:99px;'+(LOWFX?'background:linear-gradient(180deg,#9db8dd,#3a5c8c);color:#0e2038;font-weight:600;box-shadow:0 0 16px rgba(58,92,140,.55),inset 0 1px 0 rgba(255,255,255,.6);text-shadow:none':'background:transparent;color:var(--mut2);text-shadow:0 0 12px rgba(58,92,140,.3),0 1px 0 rgba(255,255,255,.55)')+'">低配</button>':'')
     +'<button data-ov="set" class="btn" title="设置" style="position:absolute;top:16px;right:14px;width:30px;height:30px;border:none;background:transparent;cursor:pointer;padding:0;color:var(--mut2);filter:drop-shadow(0 0 7px rgba(42,69,104,.4))"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><circle cx="12" cy="12" r="3.1"/><path d="M19.3 12c0-.5-.05-.99-.15-1.46l2-1.56-1.8-3.12-2.37.95a7.4 7.4 0 0 0-2.52-1.46L14.1 2.8h-4.2l-.36 2.55a7.4 7.4 0 0 0-2.52 1.46l-2.37-.95-1.8 3.12 2 1.56c-.1.47-.15.96-.15 1.46s.05.99.15 1.46l-2 1.56 1.8 3.12 2.37-.95c.75.65 1.6 1.15 2.52 1.46l.36 2.55h4.2l.36-2.55a7.4 7.4 0 0 0 2.52-1.46l2.37.95 1.8-3.12-2-1.56c.1-.47.15-.96.15-1.46z"/></svg></button>';
-  /* 封面画架：站在标题屏就开始巡展三卷插图（与灵动岛共用 6 秒心跳与巡展池） */
-  var covIll=(function(){var amb=jpAmbList(),c=amb[(JPIL.aix||0)%amb.length]||amb[0],mI=isMobile();
-    return '<div style="position:absolute;'+(mI?'left:12px;top:14px;':'left:clamp(14px,4vw,54px);bottom:clamp(72px,11vh,116px);')+'z-index:2;pointer-events:none;transform:rotate(-1.6deg)">'
-      +'<div style="padding:clamp(4px,0.6vw,7px);background:linear-gradient(160deg,rgba(248,242,228,.94),rgba(230,216,190,.9));border:1px solid rgba(169,127,69,.55);border-radius:3px;box-shadow:0 14px 34px rgba(20,15,9,.38),inset 0 0 0 1px rgba(255,255,255,.55)">'
-      +'<img id="zjCovIllImg" src="'+esc(JP_A+c.s)+'" alt="" style="display:block;width:'+(mI?'70px':'clamp(88px,15vw,178px)')+';aspect-ratio:3/4;object-fit:cover;object-position:50% '+(c.oy||30)+'%;border:1px solid rgba(169,127,69,.4);transition:opacity .7s ease,object-position .7s ease">'
-      +'</div></div>';})();
-  return '<div class="col center" style="position:relative;text-align:center;padding-bottom:11vh">'+bgmBtn+covIll
+  return '<div class="col center" style="position:relative;text-align:center;padding-bottom:11vh">'+bgmBtn
 
     +'<div style="position:relative"><svg class="zjSeal" viewBox="0 0 772 834" style="visibility:hidden;position:relative;display:block;margin:0 auto;width:clamp(170px,min(38vh,66vw),480px);height:auto" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="zjGold" gradientUnits="userSpaceOnUse" x1="0" y1="60" x2="0" y2="800"><stop offset="0" stop-color="#ecd3a3"/><stop offset=".5" stop-color="#d4ab6e"/><stop offset="1" stop-color="#a97f45"/></linearGradient></defs><g><animateTransform attributeName="transform" type="rotate" from="0 386 417" to="360 386 417" dur="46s" repeatCount="indefinite"/><g fill="none" stroke="url(#zjGold)"><circle cx="386" cy="417" r="336" stroke-width="7" opacity=".5"/><circle cx="386" cy="417" r="312" stroke-width="2" opacity=".35" stroke-dasharray="4 14"/><circle cx="386" cy="417" r="360" stroke-width="1.5" opacity=".25"/></g><g fill="url(#zjGold)" opacity=".8"><circle cx="722.0" cy="417.0" r="9"/><circle cx="677.0" cy="585.0" r="5"/><circle cx="554.0" cy="708.0" r="5"/><circle cx="386.0" cy="753.0" r="9"/><circle cx="218.0" cy="708.0" r="5"/><circle cx="95.0" cy="585.0" r="5"/><circle cx="50.0" cy="417.0" r="9"/><circle cx="95.0" cy="249.0" r="5"/><circle cx="218.0" cy="126.0" r="5"/><circle cx="386.0" cy="81.0" r="9"/><circle cx="554.0" cy="126.0" r="5"/><circle cx="677.0" cy="249.0" r="5"/></g></g><g fill="url(#zjGold)"><circle cx="386" cy="303" r="112"/><circle cx="287" cy="472" r="112"/><circle cx="485" cy="472" r="112"/><path d="M386 520 q-14 96 -66 150 q66 -18 84 -70 q10 -34 6 -80 Z"/></g></svg></div>'
     +'<div style="position:relative;margin-top:clamp(8px,1.6vh,16px);font-size:12px;letter-spacing:.52em;color:#7e212e;font-family:Georgia,serif;text-shadow:0 1px 0 rgba(255,255,255,.75)">LIBERTÉ · ÉGALITÉ · FRATERNITÉ</div><div class="kai" style="position:relative;margin-top:clamp(4px,0.9vh,8px);font-size:min(clamp(34px,7vw,60px),6vh);letter-spacing:.18em;color:var(--gold2);text-shadow:0 1px 0 rgba(255,255,255,.7),0 0 34px rgba(58,92,140,.25)">三叶物语</div><div style="position:relative;margin-top:10px;font-size:13px;letter-spacing:.12em;color:var(--gold);font-style:italic;font-family:Georgia,serif;text-shadow:0 1px 0 rgba(255,255,255,.7)">L\'Histoire de Mitsuba 〜 La Fille Maudite et la Ronde de la Mort 〜</div>'
