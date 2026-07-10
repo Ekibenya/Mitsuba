@@ -339,7 +339,7 @@ function glInit(){
       var d=cam.position.z, vh=2*d*Math.tan(cam.fov*Math.PI/360), vw=vh*cam.aspect;
       /* 全屏出血（手机电脑一致）：旗面放大到视口 170%，深褶最猛时的横向回缩也吃不掉边——
          屏内永远是旗；深褶、透视侧倾、横向收缩全保留，凹凸靠条带分界的 S 弯与光影读出来。 */
-      var w=vw*1.7, h=vh*1.7;
+      var w=vw*1.9, h=vh*1.9; /* 出血余量再加大：连极端阵风帧也吃不到边 */
       var geo=new T.PlaneGeometry(w,h,SEG_X,SEG_Y);
       flag=new T.Mesh(geo,mat);
       flag.userData.va=vh; /* 振幅基准＝视口高（与旗面放大倍数解耦，深褶回缩吃不掉出血边） */
