@@ -298,6 +298,7 @@ function glInit(){
   try{
     var T=window.THREE;
     var rnd=new T.WebGLRenderer({canvas:cv,alpha:false,antialias:true,preserveDrawingBuffer:true});
+    rnd.shadowMap.enabled=true; rnd.shadowMap.type=T.PCFSoftShadowMap; /* 真阴影：褶皱自遮挡投影，凹处压出实打实的暗带 */
     rnd.setClearColor(0xe9dfc6,1);
     rnd.setPixelRatio(LOWFX?1:Math.min(2,window.devicePixelRatio||1));
     rnd.setSize(window.innerWidth,window.innerHeight);
@@ -305,9 +306,13 @@ function glInit(){
     var scene=new T.Scene();
     var cam=new T.PerspectiveCamera(45,window.innerWidth/window.innerHeight,.1,50);
     cam.position.set(0,0,3.1);
-    scene.add(new T.AmbientLight(0xffffff,.9));
-    var sun=new T.DirectionalLight(0xfff9f0,1.0); sun.position.set(-2.2,2.6,3.2); scene.add(sun);
-    var fill=new T.DirectionalLight(0xdce4f2,.42); fill.position.set(2.4,-1.4,2.0); scene.add(fill);
+    /* 光影是蛇形的生命线：环境光压低、主光从侧上方掠射（z 分量小＝掠角大），
+       凸起的波峰迎光发亮、背光的波谷压暗——一前一后的 S 形全靠这层明暗读出来。 */
+    scene.add(new T.AmbientLight(0xffffff,.36));
+    var sun=new T.DirectionalLight(0xfff9f0,1.62); sun.position.set(-6.5,4.4,3.4); scene.add(sun);
+    sun.castShadow=true; sun.shadow.mapSize.set(LOWFX?512:1024,LOWFX?512:1024);
+    sun.shadow.bias=-0.0002; sun.shadow.normalBias=0.05;
+    var fill=new T.DirectionalLight(0xdce4f2,.3); fill.position.set(2.6,-1.8,1.2); scene.add(fill);
     /* 做旧三色布料贴图：平滑污渍与织纹，画布绘制，无块状噪点 */
     var tex=(function(){
       var c=document.createElement('canvas');c.width=1024;c.height=640;var x=c.getContext('2d');
@@ -331,7 +336,8 @@ function glInit(){
       var t9=new T.CanvasTexture(c);try{t9.colorSpace='srgb';}catch(e9){}
       try{t9.anisotropy=rnd.capabilities.getMaxAnisotropy();}catch(e8){}
       return t9;})();
-    var mat=new T.MeshStandardMaterial({map:tex,roughness:.92,metalness:0,side:T.DoubleSide});
+    var mat=new T.MeshStandardMaterial({map:tex,roughness:.62,metalness:0,side:T.DoubleSide}); /* 降粗糙度：布面波峰带一线柔光泽，凹凸更立体 */
+    mat.shadowSide=T.BackSide; /* 双面网格投影用背面深度，避免自阴影痤疮 */
     var SEG_X=LOWFX?72:110, SEG_Y=LOWFX?48:72;
     var flag=null,BX=null,BY=null,NV=0;
     function buildFlag(){
@@ -345,6 +351,11 @@ function glInit(){
       flag.userData.va=vh; /* 振幅基准＝视口高（与旗面放大倍数解耦，深褶回缩吃不掉出血边） */
       flag.userData.hz=cam.aspect>=1; /* 蛇形行进轴：横屏沿宽、竖屏沿高（竖屏纵向才有空间伸展 S 形） */
       if(flag.userData.hz){flag.rotation.y=-0.10;flag.rotation.x=0;}else{flag.rotation.x=-0.09;flag.rotation.y=-0.05;}
+      flag.castShadow=true; flag.receiveShadow=true;
+      /* 主光沿行进轴掠射（横屏偏横、竖屏偏纵），波峰迎光、波谷背光＋自投影 */
+      if(flag.userData.hz){sun.position.set(-6.5,4.4,3.4);}else{sun.position.set(-4.4,6.5,3.4);}
+      var R=Math.sqrt(w*w+h*h)*0.62;
+      var scm=sun.shadow.camera; scm.left=-R;scm.right=R;scm.top=R;scm.bottom=-R;scm.near=0.1;scm.far=26;scm.updateProjectionMatrix();
       flag.rotation.z=-0.02; flag.position.x=0;
       scene.add(flag);
       var a=geo.attributes.position.array; NV=a.length/3; BX=new Float32Array(NV); BY=new Float32Array(NV);
