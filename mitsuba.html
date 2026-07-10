@@ -314,18 +314,23 @@ function glInit(){
     sun.shadow.bias=-0.0002; sun.shadow.normalBias=0.05;
     var fill=new T.DirectionalLight(0xdce4f2,.3); fill.position.set(2.6,-1.8,1.2); scene.add(fill);
     /* 做旧三色布料贴图：可重绘（buildFlag 按纵横比校正徽记印花），画布绘制，无块状噪点 */
-    var texC=document.createElement('canvas');texC.width=1024;texC.height=640;
+    var texC=document.createElement('canvas');texC.width=2048;texC.height=1280; /* 2×分辨率：徽记印花不再糊，绘制仍用 1024×640 逻辑坐标 */
     var tex=new T.CanvasTexture(texC);try{tex.colorSpace='srgb';}catch(e9){}
     try{tex.anisotropy=rnd.capabilities.getMaxAnisotropy();}catch(e8){}
     function drawFlagTex(w,h,va){
       var x=texC.getContext('2d');
       /* 蓝白红三带等分（各 1/3），法国国旗官方亮色版：高饱和正色，旗就是旗 */
-      x.setTransform(1,0,0,1,0,0);x.globalAlpha=1;x.globalCompositeOperation='source-over';
+      x.setTransform(2,0,0,2,0,0);x.globalAlpha=1;x.globalCompositeOperation='source-over'; /* 2×物理像素 */
       /* 三带按「可见窗口」等分：屏幕只看到旗面中间 1/OVS，若按整布三等分则白带独占画面。
          把白带压到可见宽的三分之一、蓝红各自延伸进出血区——屏上三色面积相等；
          横屏再按顺风漂移把窗口中心左移一格。 */
-      var vis=1024/OVS, cw=(w>=h)?(512-0.37/w*1024):512;
-      var b1=Math.round(cw-vis/6*3+vis/3), b2=Math.round(cw-vis/2+vis*2/3);
+      /* 白带宽度按实测补偿：褶皱把可见布面压缩，白带的收缩全在屏内发生、
+         蓝红却能从出血区滑进来补——不补偿则白带被挤到 ~23%。竖屏褶深补 1.5×，
+         横屏补 1.04× 并把窗口中心右移（透视+侧倾让红侧多吃了一格）。 */
+      var vis=1024/OVS, cw, ww;
+      if(w>=h){cw=512-0.37/w*1024+27; ww=vis/3*1.04;}
+      else{cw=505; ww=vis/3*1.3;}
+      var b1=Math.round(cw-ww/2), b2=Math.round(cw+ww/2);
       x.fillStyle='#0055A4';x.fillRect(0,0,b1,640);
       x.fillStyle='#FFFFFF';x.fillRect(b1,0,b2-b1,640);
       x.fillStyle='#EF4135';x.fillRect(b2,0,1024-b2,640);
@@ -335,10 +340,9 @@ function glInit(){
         var vwW=w/1.9; /* 视口宽（世界单位） */
         var D=(w>=h)?0.56*va:Math.min(0.38*va,0.66*vwW); /* 横屏（电脑）加大到 56% 视口高，竖屏沿用封面徽记尺寸规则 */
         var lw=D/w*1024, lh=(D*834/772)/h*640;
-        var tx=512, ty=320-(0.20*va/h)*640; /* 屏幕中上（约 30% 高度处），白带正中 */
-        /* 顺风张力与回位弹簧平衡后布整体向自由端漂 ~0.37 世界单位：印花预偏一格，飘回屏幕中线 */
-        if(w>=h){tx-=0.37/w*1024;}else{ty-=0.37/h*640;}
-        var lg=document.createElement('canvas');lg.width=Math.max(2,Math.ceil(lw));lg.height=Math.max(2,Math.ceil(lh));
+        var tx=cw, ty=320-(0.20*va/h)*640; /* 白带正中（cw 已含漂移补偿）、屏幕中上约 30% 高度处 */
+        if(!(w>=h)){ty-=0.37/h*640-28;} /* 竖屏顺风向下漂：印花预偏回屏幕中线，再下移一格防顶弧文贴屏沿 */
+        var lg=document.createElement('canvas');lg.width=Math.max(2,Math.ceil(lw*2));lg.height=Math.max(2,Math.ceil(lh*2)); /* 2×超采样与贴图分辨率对齐 */
         var g2=lg.getContext('2d'),kx=lg.width/772,ky=lg.height/834;
         g2.setTransform(kx,0,0,ky,0,0);
         /* —— 大革命时期雕版国徽：日芒·月桂花环·束带·弧形铭文·三叶草纹章 —— */
@@ -480,6 +484,16 @@ function glInit(){
       var PIN=new Uint8Array(NV), NXP=SEG_X+1;
       for(var k2=0;k2<NV;k2++){ PIN[k2]=flag.userData.hz?((k2%NXP===0)?1:0):((k2<NXP)?1:0); }
       flag.userData.P=P; flag.userData.PP=PP; flag.userData.PIN=PIN;
+      /* 视锥外硬夹持的边缘顶点表：位掩码 1左 2右 4上 8下 */
+      var EDG=[],EDT=[];
+      for(var k3=0;k3<NV;k3++){
+        var m3=0;
+        if(BX[k3]<=-w/2+1e-4)m3|=1; if(BX[k3]>=w/2-1e-4)m3|=2;
+        if(BY[k3]>=h/2-1e-4)m3|=4; if(BY[k3]<=-h/2+1e-4)m3|=8;
+        if(m3){EDG.push(k3);EDT.push(m3);}
+      }
+      flag.userData.EDG=EDG; flag.userData.EDT=EDT;
+      flag.userData.vw2=vw/2*1.18; flag.userData.vh2=vh/2*1.18; flag.userData.cd=cam.position.z;
       SIM.acc=0;
     }
     buildFlag();
@@ -553,6 +567,18 @@ function glInit(){
             for(var ix2=0;ix2<NXP;ix2++){rlx(P,PIN,r1+ix2,r2+ix2,sy,1);}}
           for(var iy3=0;iy3<SEG_Y;iy3++){var r3=iy3*NXP,r4=(iy3+1)*NXP;
             for(var ix3=0;ix3<SEG_X;ix3++){rlx(P,PIN,r3+ix3,r4+ix3+1,sd,0.32);rlx(P,PIN,r3+ix3+1,r4+ix3,sd,0.32);}} /* 低剪切刚度：允许布面折出棱线 */
+        }
+        /* 全屏硬保证：旗边缘顶点按各自深度的透视投影需求被夹在视锥之外——
+           无论风多大、褶多深，屏内永远是布，绝无露底 */
+        var EDG=flag.userData.EDG,EDT=flag.userData.EDT,vw2=flag.userData.vw2,vh2=flag.userData.vh2,cd9=flag.userData.cd;
+        for(var eb=0;eb<EDG.length;eb++){
+          var ke=EDG[eb],e3=ke*3,me=EDT[eb],sc9=(cd9-P[e3+2])/cd9;
+          if(sc9<0.2)sc9=0.2;
+          var rqx=vw2*sc9,rqy=vh2*sc9;
+          if(me&1){if(P[e3]>-rqx)P[e3]=-rqx;}
+          if(me&2){if(P[e3]<rqx)P[e3]=rqx;}
+          if(me&4){if(P[e3+1]<rqy)P[e3+1]=rqy;}
+          if(me&8){if(P[e3+1]>-rqy)P[e3+1]=-rqy;}
         }
       }
       if(stepped){a.set(P);pos.needsUpdate=true;geo.computeVertexNormals();}
