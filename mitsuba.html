@@ -377,10 +377,11 @@ function glInit(){
       var w=flag.userData.w,h=flag.userData.h;
       for(var k=0;k<NV;k++){
         var nx=BX[k]/w+0.5, ny=BY[k]/h+0.5;
-        var amp=(0.16+0.84*nx)*h*0.055;
-        var z=Math.sin(nx*6.4+tt*1.55+ny*1.6)*amp
-             +Math.sin(nx*11.3-tt*2.3+ny*3.1)*amp*0.45
-             +Math.sin(ny*5.2+tt*1.15+nx*2.2)*amp*0.5;
+        /* 飘得更猛：振幅加半、波速加快（旗杆侧仍近乎固定，越到旗尾甩得越欢） */
+        var amp=(0.16+0.84*nx)*h*0.082;
+        var z=Math.sin(nx*6.4+tt*2.1+ny*1.6)*amp
+             +Math.sin(nx*11.3-tt*3.1+ny*3.1)*amp*0.45
+             +Math.sin(ny*5.2+tt*1.55+nx*2.2)*amp*0.5;
         a[k*3+2]=z;
         a[k*3+1]=BY[k]+Math.sin(nx*3.1+tt*1.2)*amp*0.16;
       }
