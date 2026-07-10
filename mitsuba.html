@@ -159,9 +159,9 @@ textarea,input{border-radius:10px}
 </style>
 
 <style id="avant">/* 先锋层 · 液态玻璃2.0（纯附加） */
-:root{--av1:rgba(201,160,232,.85);--av2:rgba(160,42,64,.7);--avA:rgba(141,108,184,.45);--avB:rgba(160,42,64,.35)}
+:root{--av1:rgba(201,160,232,.85);--av2:rgba(160,42,64,.7);--avA:rgba(141,108,184,.34);--avB:rgba(160,42,64,.2)}
 body::before{content:'';position:fixed;inset:-18%;z-index:0;pointer-events:none;opacity:.10;
- background:radial-gradient(42% 52% at 16% 10%,var(--avA),transparent 70%),radial-gradient(52% 62% at 86% 90%,var(--avB),transparent 70%);
+ background:radial-gradient(48% 58% at 16% 10%,var(--avA),transparent 82%),radial-gradient(58% 68% at 86% 90%,var(--avB),transparent 82%);
  filter:blur(64px) saturate(.8);mix-blend-mode:screen;animation:avDrift 28s ease-in-out infinite alternate}
 body::after{content:'';position:fixed;inset:0;z-index:3;pointer-events:none;opacity:.05;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");background-size:160px}
 @keyframes avDrift{to{transform:translate3d(2.5%,-2%,0) rotate(1.6deg)}}
