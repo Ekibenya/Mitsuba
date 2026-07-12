@@ -5478,6 +5478,22 @@ document.addEventListener('click',function(e){
 },true);
 document.addEventListener('touchmove',function(e){var t=e.touches&&e.touches[0];if(t)lookAt(t.clientX,t.clientY);},{passive:true});
 document.addEventListener('touchstart',function(e){var t=e.touches&&e.touches[0];if(t){LOOK.t=0;lookAt(t.clientX,t.clientY);}},{passive:true});
+/* 手机端专属:仅当手指按在屏上 或 正在打字时,三叶才看向手指方向;松手/收起键盘→回正视前方
+   (手机一直被手指刷,若持续跟随三叶就永远低头不抬;电脑端 MOB=false 完全不走这段) */
+if(MOB){
+  var _lookRst=0;
+  function faceFront(){['m','k','s'].forEach(function(w){send(w,{act:'look',x:0,y:0});});}
+  function frontSoon(){clearTimeout(_lookRst);_lookRst=setTimeout(function(){
+    var ae=document.activeElement;
+    if(ae&&(ae.tagName==='TEXTAREA'||ae.tagName==='INPUT'))return;      /* 还在打字→保持看输入方向,不回正 */
+    faceFront();
+  },260);}
+  document.addEventListener('touchend',function(e){if(!(e.touches&&e.touches.length))frontSoon();},{passive:true});
+  document.addEventListener('touchcancel',function(){frontSoon();},{passive:true});
+  document.addEventListener('input',function(e){var t=e.target;if(t&&(t.tagName==='TEXTAREA'||t.tagName==='INPUT')){clearTimeout(_lookRst);var r=t.getBoundingClientRect();lookAt(r.left+r.width/2,r.top+r.height*0.4);}},{passive:true});
+  document.addEventListener('focusout',function(e){var t=e.target;if(t&&(t.tagName==='TEXTAREA'||t.tagName==='INPUT'))frontSoon();},{passive:true});
+  setTimeout(faceFront,700);   /* 进场先正视,别一开始就盯着某处 */
+}
 function send(who,data){
   try{var f=chr(who);
     if(f&&f.contentWindow)f.contentWindow.postMessage(Object.assign({vn:'mitsuba'},data),'*');
