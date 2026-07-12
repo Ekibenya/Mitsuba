@@ -4072,15 +4072,16 @@ function setEyes(nx,ny){
 const PX={nx:0,ny:0,tilt:0,lean:0};
 let moodBias={tilt:0,lean:0,ny:0};
 const MOODS={
-  neutral:{tilt:0,lean:0,ny:0,filter:''},
-  listless:{tilt:2.6,lean:0,ny:0.15,filter:'saturate(.82) brightness(.96) hue-rotate(6deg)'},
-  playful:{tilt:-3.2,lean:1,ny:-0.05,filter:'saturate(1.14) brightness(1.05) hue-rotate(-8deg)'},
-  intense:{tilt:0,lean:-2,ny:-0.12,filter:'saturate(1.06) contrast(1.09) brightness(.98) hue-rotate(4deg)'}
+  neutral:{tilt:0,lean:0,ny:0,spd:1,filter:''},
+  listless:{tilt:2.6,lean:0,ny:0.15,spd:1.4,filter:'saturate(.82) brightness(.96) hue-rotate(6deg)'},
+  playful:{tilt:-3.2,lean:1,ny:-0.05,spd:0.92,filter:'saturate(1.14) brightness(1.05) hue-rotate(-8deg)'},
+  intense:{tilt:0,lean:-2,ny:-0.12,spd:0.78,filter:'saturate(1.06) contrast(1.09) brightness(.98) hue-rotate(4deg)'}
 };
 function setMood(name){
   const m=MOODS[name]||MOODS.neutral;
   moodBias={tilt:m.tilt,lean:m.lean,ny:m.ny};
-  const c=$('char'); if(c){c.style.transition='filter 1.4s ease'; c.style.filter=m.filter;}
+  const c=$('char'); if(c){c.style.transition='filter 1.4s ease'; c.style.filter=m.filter; c.style.animationDuration=(4.4*m.spd).toFixed(2)+'s';}
+  const sw=document.getElementById('sway'); if(sw)sw.style.animationDuration=(5.5*m.spd).toFixed(2)+'s';
   applyPose();
 }
 function applyPose(){
