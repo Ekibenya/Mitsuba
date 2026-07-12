@@ -3645,9 +3645,11 @@ function fontPane(){
   var fname=FONTC&&FONTC.name?FONTC.name:'';
   return '<div class="grow" style="overflow-y:auto;padding:24px 28px"><div style="max-width:640px">'
    +'<div class="kai" style="font-size:19px;color:var(--gold2);letter-spacing:.15em;margin-bottom:14px">字号</div>'
-   +'<div style="display:flex;align-items:center;gap:14px"><input id="zjBlurRange" type="range" min="0" max="24" step="1" value="'+BGBLUR+'" style="flex:1;accent-color:#c9a063;border:none;background:transparent;padding:0"><div id="zjBlurVal" style="width:56px;text-align:right;font-size:15px;color:var(--gold3)">'+(BGBLUR===0?'透明':BGBLUR+'px')+'</div></div>'
-   +'<div style="font-size:12.5px;color:var(--mut);margin-top:8px;line-height:1.8">拖动即时生效：同时调节正文与档案的背景模糊与底色浓度——拉到最左＝完全透明（无模糊无底色，直接看穿到后面的水墨/三维），默认 9px 为初见效果；开低配模式时模糊被关闭。</div>'
+   +'<div style="display:flex;align-items:center;gap:14px"><input id="zjFsRange" type="range" min="85" max="160" step="5" value="'+pct+'" style="flex:1;accent-color:#c9a063;border:none;background:transparent;padding:0"><div id="zjFsVal" style="width:56px;text-align:right;font-size:15px;color:var(--gold3)">'+pct+'%</div></div>'
    +'<div style="font-size:12.5px;color:var(--mut);margin-top:8px;line-height:1.8">拖动即时生效，作用于正文、档案与典的正文。</div>'
+   +'<div class="kai" style="font-size:19px;color:var(--gold2);letter-spacing:.15em;margin:32px 0 14px">透明度</div>'
+   +'<div style="display:flex;align-items:center;gap:14px"><input id="zjBlurRange" type="range" min="0" max="24" step="1" value="'+BGBLUR+'" style="flex:1;accent-color:#c9a063;border:none;background:transparent;padding:0"><div id="zjBlurVal" style="width:56px;text-align:right;font-size:15px;color:var(--gold3)">'+(BGBLUR===0?'透明':BGBLUR+'px')+'</div></div>'
+   +'<div style="font-size:12.5px;color:var(--mut);margin-top:8px;line-height:1.8">拖动即时生效：同时调节正文与文书馆的背景模糊与底色浓度——拉到最左＝完全透明（无模糊无底色，直接看穿到后面的三色旗），默认 9 为初见效果；开低配模式时模糊被关闭。</div>'
    +'<div class="kai" style="font-size:19px;color:var(--gold2);letter-spacing:.15em;margin:32px 0 14px">字体</div>'
    +'<div style="display:flex;gap:9px;flex-wrap:wrap;margin-bottom:6px">'
    +[['huiwen','汇文明朝体 · 默认'],['wenkai','霞鹜文楷'],['kinghwa','京华老宋体'],['system','跟随系统']].map(function(fo){var on=!fname&&((ZJFONT_LIB[ZJFONT]&&ZJFONT===fo[0])||(!ZJFONT_LIB[ZJFONT]&&fo[0]==='system'));return '<div class="btn" data-zjfont="'+fo[0]+'" style="cursor:pointer;padding:8px 18px;font-size:13.5px;letter-spacing:.08em;border:1px solid '+(on?'rgba(160,42,64,.6)':'rgba(58,47,36,.28)')+';border-radius:10px;color:'+(on?'#a02a40':'var(--mut)')+';background:'+(on?'linear-gradient(135deg,rgba(160,42,64,.12),rgba(160,42,64,.03))':'rgba(255,255,255,.02)')+'">'+fo[1]+'</div>';}).join('')
