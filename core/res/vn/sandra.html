@@ -79,8 +79,12 @@ addEventListener('message',e=>{
   if(d.act==='talk')setTalking(!!d.on);
   else if(d.act==='sleep'){document.documentElement.classList.toggle('vnzz',!!d.on);}
   else if(d.act==='look'){PX.nx=+d.x||0;PX.ny=+d.y||0;applyPose();}
+  else if(d.act==='frame'){vnWin=[+d.a,+d.b];fit();}
 });
+let vnWin=null;
 function fit(){
+  if(vnWin){const sp=Math.max(1,(vnWin[1]-vnWin[0]))/100;const s=innerHeight/(939*sp);
+    $('fit').style.transform=`translateY(${(-vnWin[0]/100*939*s).toFixed(1)}px) scale(${s})`;return;}
   const s=Math.min(innerHeight/939, innerWidth/252)*0.96;
   $('fit').style.transform=`scale(${s})`;
 }
