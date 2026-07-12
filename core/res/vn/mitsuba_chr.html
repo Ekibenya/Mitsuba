@@ -21,8 +21,8 @@
   .wb3{animation:windb3 5.8s ease-in-out -2.6s infinite}
   .wb4{animation:windb4 5.2s ease-in-out -1.3s infinite}
   .wb5{animation:windb5 4.6s ease-in-out 0s infinite}
-  .armLg{transform-origin:492px 1490px;animation:armsway 6s ease-in-out infinite}
-  .armRg{transform-origin:759px 1490px;animation:armsway 6s ease-in-out infinite reverse}
+  .armLg{transform-origin:492px 1490px}
+  .armRg{transform-origin:759px 1490px}
   #irisL,#irisR{transition:transform .12s ease-out}
   @keyframes breath{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
   @keyframes windf1{0%,100%{transform:rotate(.5deg) translateX(-2px)}38%{transform:rotate(1.1deg) translateX(-4px)}60%{transform:rotate(.8deg) translateX(-3px)}80%{transform:rotate(1.3deg) translateX(-5px)}}
@@ -4434,6 +4434,21 @@ addEventListener('message',e=>{
   else if(d.act==='sleep'){document.documentElement.classList.toggle('vnzz',!!d.on);}
   else if(d.act==='look'){window.__lookT=Date.now();PX.nx=+d.x||0;PX.ny=+d.y||0;setEyes(PX.nx,PX.ny);applyPose();}
 });
+// ---- 待机手臂微动:整条臂(大臂+小臂+手)绕肩作刚体微转;持枪/开枪时归零(交给枪骨骼,否则散架) ----
+let _atgtL=0,_atgtR=0,_acurL=0,_acurR=0;
+(function armIdle(){
+  const idle = gunState===0 && !gunBusy && !seqBusy && !(typeof MB!=='undefined' && MB);  // 移动端不动(省电,同风动画)
+  _acurL += ((idle?_atgtL:0)-_acurL)*0.06;
+  _acurR += ((idle?_atgtR:0)-_acurR)*0.06;
+  const s=Date.now()/1000;
+  const gl=(idle?Math.sin(s*0.5)*0.4:0)+_acurL;      // 连续轻摆 + 缓入的偶发微转
+  const gr=(idle?-Math.sin(s*0.55)*0.4:0)+_acurR;
+  document.querySelectorAll('.armLg').forEach(e=>e.style.transform=`rotate(${gl.toFixed(2)}deg)`);
+  document.querySelectorAll('.armRg').forEach(e=>e.style.transform=`rotate(${gr.toFixed(2)}deg)`);
+  setTimeout(armIdle,55);
+})();
+setInterval(()=>{ if(gunState===0) _atgtL = Math.random()<0.4?(Math.random()<0.5?-1:1)*(0.8+Math.random()*1.4):0; },7000);
+setInterval(()=>{ if(gunState===0) _atgtR = Math.random()<0.4?(Math.random()<0.5?-1:1)*(0.8+Math.random()*1.4):0; },8500);
 function fit(){
   if(vnWin){
     const sp=Math.max(1,(vnWin[1]-vnWin[0]))/100;
