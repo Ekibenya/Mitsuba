@@ -5213,7 +5213,7 @@ root.innerHTML=
  +'<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.12),transparent 30%,transparent 72%,rgba(0,0,0,.3))"></div>'
  +'<iframe id="vnKrone" data-vnsrc="'+DIR+'krone.html?vn=1" allowtransparency="true" scrolling="no" style="position:absolute;left:1%;bottom:0;height:86%;width:30%;border:0;background:transparent;opacity:0;visibility:hidden;transition:opacity .8s ease,left .9s cubic-bezier(.3,.1,.25,1),height .9s cubic-bezier(.3,.1,.25,1),bottom .9s cubic-bezier(.3,.1,.25,1)"></iframe>'
  +'<iframe id="vnSandra" data-vnsrc="'+DIR+'sandra.html?vn=1" allowtransparency="true" scrolling="no" style="position:absolute;left:14%;bottom:0;height:86%;width:30%;border:0;background:transparent;opacity:0;visibility:hidden;transition:opacity .8s ease,left .9s cubic-bezier(.3,.1,.25,1),height .9s cubic-bezier(.3,.1,.25,1),bottom .9s cubic-bezier(.3,.1,.25,1)"></iframe>'
- +'<iframe id="vnMitsu" data-vnsrc="'+DIR+'mitsuba_chr.html?vn=1" allowtransparency="true" scrolling="no" style="position:absolute;left:30%;bottom:0;height:99%;width:40%;border:0;background:transparent;transition:left .9s cubic-bezier(.3,.1,.25,1),height .9s cubic-bezier(.3,.1,.25,1),bottom .9s cubic-bezier(.3,.1,.25,1)"></iframe>'
+ +'<iframe id="vnMitsu" data-vnsrc="'+DIR+'mitsuba_chr.html?vn=1" allowtransparency="true" scrolling="no" style="position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent"></iframe>'
  +'<div id="vnJp" style="position:absolute;inset:0;z-index:2;display:none;overflow-y:auto;padding:36px 20px 16px;font-size:13px;line-height:2.1;color:rgba(214,217,223,.62);white-space:pre-wrap;background:transparent;text-shadow:0 1px 3px rgba(10,8,6,.7),0 0 8px rgba(10,8,6,.45);pointer-events:auto;font-family:\'Hiragino Mincho ProN\',\'Yu Mincho\',serif"></div>'
  +'<div id="vnCtl" style="position:absolute;top:6px;right:10px;z-index:3;display:flex;gap:6px;pointer-events:auto"></div>';
 document.body.appendChild(root);
@@ -5300,7 +5300,7 @@ function presence(){
     }
     lazyShow(k,hasK,hasK&&hasS?'0%':'2%');
     lazyShow(s2,hasS,hasK&&hasS?'15%':'4%');
-    if(m3)m3.style.left=(hasK||hasS)?'53%':'30%';   /* 有客:三叶平移让位到右侧 */
+    send('m',{act:'pos',x:((hasK||hasS)&&VN.sizeKey!=='S')?'right':'center'});   /* 有客:三叶平移让位到右侧(小窗特写时恒居中) */
   }
   return {names:names,npcs:npcs};
 }
@@ -5363,23 +5363,22 @@ function tick(){
   var r=isle.getBoundingClientRect();
   if(r.width<60||r.height<60){root.style.display='none';return;}
   root.style.display='block';
-  if(!VN.ld){VN.ld=true;var mf0=chr('m');if(mf0&&!mf0.getAttribute('src'))mf0.setAttribute('src',vnUrl(mf0));}
+  if(!VN.ld){VN.ld=true;var mf0=chr('m');if(mf0&&!mf0.getAttribute('src')){mf0.addEventListener('load',function(){VN.sizeKey=null;});mf0.setAttribute('src',vnUrl(mf0));}}
   root.style.left=r.left+'px';root.style.top=r.top+'px';
   root.style.width=r.width+'px';root.style.height=r.height+'px';
   try{root.style.borderRadius=getComputedStyle(isle).borderRadius;}catch(e){}
   ctlRefresh();
 
-  /* galgame 取景三档:小窗=胸像特写;展开=框沿及膝(头26%~膝81%);全屏=全身落地 */
+  /* galgame 取景三档(画布高度百分比,头顶≈40/胸≈58/膝·靴口≈82/足≈99):
+     小窗=特写(头~胸,露出上身一半)、展开=框沿及膝、全屏=全身落地。
+     取景由立绘 iframe 内部按窗口缩放平移——横竖屏、任意框宽一律成立 */
   var E0=ENG();
   var vSt=E0&&E0.S?(E0.S.worldFull?'F':(E0.S.isleBig?'B':'S')):'S';
   if(VN.sizeKey!==vSt){VN.sizeKey=vSt;
-    var mz=chr('m'),kz=chr('k'),sz=chr('s');
-    /* 三叶画布头顶在~26%、足底~99%:窗口[头,底]→ height=100/跨度, bottom=-(100-底)/跨度×100 */
-    if(mz){
-      if(vSt==='F'){mz.style.height='132%';mz.style.bottom='0';}
-      else if(vSt==='B'){mz.style.height='186%';mz.style.bottom='-38%';}
-      else{mz.style.height='385%';mz.style.bottom='-185%';}
-    }
+    var W9=vSt==='F'?[36,100]:(vSt==='B'?[38,82]:[39,58]);
+    send('m',{act:'frame',a:W9[0],b:W9[1]});
+    send('m',{act:'pos',x:(VN.posKey&&vSt!=='S')?'right':'center'});
+    var kz=chr('k'),sz=chr('s');
     [kz,sz].forEach(function(f){if(!f)return;
       if(vSt==='F'){f.style.height='94%';f.style.bottom='-8%';}
       else if(vSt==='B'){f.style.height='130%';f.style.bottom='-30%';}
@@ -5436,7 +5435,7 @@ function tick(){
   }else{
     /* 尚无世界消息(刚开局):玫瑰 + 三叶居中 */
     setBg('bg_rose');
-    if(VN.posKey!==''){VN.posKey='';var m3=chr('m');if(m3)m3.style.left='30%';
+    if(VN.posKey!==''){VN.posKey='';send('m',{act:'pos',x:'center'});
       ['k','s'].forEach(function(w){var f=chr(w);if(f){f.style.opacity=0;f.style.visibility='hidden';}});}
   }
 }

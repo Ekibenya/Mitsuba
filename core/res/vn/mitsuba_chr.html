@@ -4679,6 +4679,7 @@ function vnSkyFire(){                 // 革命/战争/威慑:举枪-朝天开�
   setTimeout(()=>{lowerToDown(); gunState=3;},2700);
   setTimeout(()=>{holster(); gunState=0; seqBusy=false;},3600);
 }
+let vnWin=null;   // 取景窗:[起,止] 以画布高度百分比——由父页按 小窗/展开/全屏 档位下发,横竖屏皆准
 addEventListener('message',e=>{
   const d=e.data||{};
   if(d.vn!=='mitsuba')return;
@@ -4687,8 +4688,15 @@ addEventListener('message',e=>{
   else if(d.act==='skyFire')vnSkyFire();
   else if(d.act==='wave'){if(!seqBusy&&gunState===0)waveNow();}
   else if(d.act==='pos'){vnOff=d.x==='right'?0.19:0;fit();}
+  else if(d.act==='frame'){vnWin=[+d.a,+d.b];fit();}
 });
 function fit(){
+  if(vnWin){
+    const sp=Math.max(1,(vnWin[1]-vnWin[0]))/100;
+    const s=innerHeight/(2850.0*sp);
+    $('fit').style.transform=`translateX(${(vnOff*innerWidth).toFixed(0)}px) translateY(${(-vnWin[0]/100*2850.0*s).toFixed(1)}px) scale(${s})`;
+    return;
+  }
   const s=Math.min(innerHeight/2850.0, innerWidth/1200.0)*0.98;
   $('fit').style.transform=`translateX(${(vnOff*innerWidth).toFixed(0)}px) scale(${s})`;
 }
