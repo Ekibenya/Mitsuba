@@ -356,7 +356,8 @@ function ensureTyping(){
   },20);
 }
 
-var LOWFX=false;try{LOWFX=localStorage.getItem('mitsuba_lowfx')==='1';}catch(e){}
+var ZJMOB=false;try{ZJMOB=Math.min(screen.width||9e9,window.innerWidth||9e9)<=560;}catch(e){}
+var LOWFX=false;try{var _lf0=localStorage.getItem('mitsuba_lowfx');LOWFX=(_lf0===null)?ZJMOB:_lf0==='1';}catch(e){}
 if(LOWFX)document.documentElement.classList.add('zjLow');
 function lowApply(on){
   LOWFX=!!on;
@@ -3013,7 +3014,7 @@ function storyPane(){
   var _fgeo='position:absolute;left:'+(mob?'-8px':'-14px')+';right:'+(mob?'-8px':'-14px')+';top:-4px;bottom:-44px;z-index:0;pointer-events:none;-webkit-mask-image:'+_gMask+';mask-image:'+_gMask;
   var _frost=INPUTGLASS
     ?'<div aria-hidden="true" style="'+_fgeo+';-webkit-backdrop-filter:blur(5px) saturate(150%);backdrop-filter:blur(5px) saturate(150%)"></div>'
-    +'<div aria-hidden="true" style="'+_fgeo+';-webkit-backdrop-filter:url(#zjLiqRefract);backdrop-filter:url(#zjLiqRefract)"></div>'
+    +(ZJMOB?'':'<div aria-hidden="true" style="'+_fgeo+';-webkit-backdrop-filter:url(#zjLiqRefract);backdrop-filter:url(#zjLiqRefract)"></div>')
     +'<div aria-hidden="true" style="'+_fgeo+';background:rgba(246,240,226,.08)"></div>'
     :'';
   var _inputBox=INPUTGLASS
@@ -3063,7 +3064,7 @@ function gameView(){
   var _topBg=_lg
     /* 液态玻璃＝【通透＋折射】：基础层一次 blur+saturate；折射层只带 url() 位移（Safari 不认时自动只剩基础层）；底纹极淡 */
     ?'<div style="position:absolute;inset:0;-webkit-backdrop-filter:blur(5px) saturate(150%);backdrop-filter:blur(5px) saturate(150%);-webkit-mask-image:'+_mk+';mask-image:'+_mk+'"></div>'
-      +'<div style="position:absolute;inset:0;-webkit-backdrop-filter:url(#zjLiqRefract);backdrop-filter:url(#zjLiqRefract);-webkit-mask-image:'+_mk+';mask-image:'+_mk+'"></div>'
+      +(ZJMOB?'':'<div style="position:absolute;inset:0;-webkit-backdrop-filter:url(#zjLiqRefract);backdrop-filter:url(#zjLiqRefract);-webkit-mask-image:'+_mk+';mask-image:'+_mk+'"></div>')
       +'<div aria-hidden="true" style="position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(246,240,226,.1) 0%,rgba(240,232,212,.04) 55%,transparent 100%);-webkit-mask-image:'+_mk+';mask-image:'+_mk+'"></div>'
     :'<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(236,227,204,.84) 0%,rgba(236,227,204,.5) 58%,rgba(236,227,204,0) 100%);-webkit-mask-image:linear-gradient(180deg,#000 52%,transparent);mask-image:linear-gradient(180deg,#000 52%,transparent)"></div>';
   /* 玻璃(经典)风格顶栏背板：近实底、只在最后一段渐隐——经典头有两行内容，软渐变盖不住会透字 */
@@ -5299,7 +5300,7 @@ function setZZ(on){if(VN.zz===on)return;VN.zz=on;['m','k','s'].forEach(function(
 /* 视线跟随:鼠标/手指位置 → 以岛上人脸为锚点换算注视向量,节流 66ms 转发给三位立绘(眼珠+转头+倾身) */
 var LOOK={t:0};
 function lookAt(px,py){
-  var now=Date.now();if(now-LOOK.t<66)return;LOOK.t=now;
+  var now=Date.now();if(now-LOOK.t<(MOB?140:66))return;LOOK.t=now;
   if(!VN.on||VN.zz)return;
   var isle=$id('zjSceneIsle');if(!isle)return;
   var r=isle.getBoundingClientRect();if(!r.width)return;
