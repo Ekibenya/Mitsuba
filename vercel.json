@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/",
-      "destination": "/core/vendor/cubism/framework/runtime/dist/app.html"
+      "destination": "/core/vendor/cubism/framework/effect/motion/manager/e9ba2d3f1831.html"
     },
     {
       "source": "/deploy",

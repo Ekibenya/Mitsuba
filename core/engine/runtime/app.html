@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bundled Page</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #EAE0C9; display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+    #__bundler_loading { position: fixed; bottom: 20px; right: 20px; font: 13px/1.4 -apple-system, BlinkMacSystemFont, sans-serif; color: #666; background: #fff; padding: 8px 14px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.12); z-index: 10000; }
+    #__bundler_thumbnail { position: fixed; inset: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #EAE0C9; z-index: 9999; }
+    #__bundler_thumbnail svg { width: 100%; height: 100%; object-fit: contain; }
+    #__bundler_placeholder { color: #999; font-size: 14px; }
+  </style>
+  <noscript>
+    <style>#__bundler_loading { display: none; }</style>
+    <div style="position:fixed;bottom:12px;left:12px;font:13px/1.4 -apple-system,BlinkMacSystemFont,sans-serif;color:#999;background:rgba(255,255,255,0.9);padding:6px 12px;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,0.08);z-index:10000;">
+      This page requires JavaScript to display.
+    </div>
+  </noscript>
+</head>
+<body>
+  <div id="__bundler_thumbnail">
+<svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+<rect width="1200" height="800" fill="#EAE0C9"></rect>
+<circle cx="600" cy="360" r="150" fill="#2A4568"></circle>
+<circle cx="600" cy="360" r="105" fill="#EAE0C9"></circle>
+<circle cx="600" cy="360" r="60" fill="#7E212E"></circle>
+<circle cx="600" cy="360" r="20" fill="#8F7430"></circle>
+<rect x="300" y="560" width="600" height="6" fill="#7E212E"></rect>
+<rect x="300" y="580" width="600" height="3" fill="#7E212E"></rect>
+</svg>
+</div>
+  <div id="__bundler_loading">Unpacking...</div>
+
+  <script>
+    
+document.addEventListener('DOMContentLoaded', async function() {
+  const loading = document.getElementById('__bundler_loading');
+  function setStatus(msg) { if (loading) loading.textContent = msg; }
+
+  const FONT_MIME = /^(font[/]|application[/](x-)?font-|application[/]vnd\.ms-fontobject)/i;
+  const MIME_TOKEN = /^[\w.+-]+[/][\w.+-]+$/;
+  function toBase64(bytes) {
+    let bin = '';
+    for (let i = 0; i < bytes.length; i += 0x8000) {
+      bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    }
+    return btoa(bin);
+  }
+
+  // Error sink persists across replaceWith since it's on window, not the DOM.
+  window.addEventListener('error', function(e) {
+    // Failed resource loads (CSP-blocked links, scripts, images) fire plain
+    // events at the element — warn only; real JS errors carry message/error.
+    if (!e.message && !e.error && e.target && e.target !== window) {
+      console.warn('[bundle] resource failed to load:',
+        e.target.tagName, String(e.target.src || e.target.href || ''));
+      return;
+    }
+    var p = document.body || document.documentElement;
+    var d = document.getElementById('__bundler_err') || p.appendChild(document.createElement('div'));
+    d.id = '__bundler_err';
+    d.style.cssText = 'position:fixed;bottom:12px;left:12px;right:12px;font:12px/1.4 ui-monospace,monospace;background:#2a1215;color:#ff8a80;padding:10px 14px;border-radius:8px;border:1px solid #5c2b2e;z-index:99999;white-space:pre-wrap;max-height:40vh;overflow:auto';
+    d.textContent = (d.textContent ? d.textContent + String.fromCharCode(10) : '') +
+      '[bundle] ' + (e.message || e.type) +
+      (e.filename ? ' (' + e.filename.slice(0, 60) + ':' + e.lineno + ')' : '');
+  }, true);
+
+  try {
+    const manifestEl = document.querySelector('script[type="__bundler/manifest"]');
+    const templateEl = document.querySelector('script[type="__bundler/template"]');
+    if (!manifestEl || !templateEl) {
+      setStatus('Error: missing bundle data');
+      console.error('[bundler] Missing script tags — manifestEl:', !!manifestEl, 'templateEl:', !!templateEl);
+      return;
+    }
+
+    const manifest = JSON.parse(manifestEl.textContent);
+    let template = JSON.parse(templateEl.textContent);
+
+    const uuids = Object.keys(manifest);
+    setStatus('Unpacking ' + uuids.length + ' assets...');
+
+    const blobUrls = {};
+    const resourceBlobs = {};
+    await Promise.all(uuids.map(async (uuid) => {
+      const entry = manifest[uuid];
+      try {
+        const binaryStr = atob(entry.data);
+        const bytes = new Uint8Array(binaryStr.length);
+        for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+
+        let finalBytes = bytes;
+        if (entry.compressed) {
+          if (typeof DecompressionStream !== 'undefined') {
+            const ds = new DecompressionStream('gzip');
+            const writer = ds.writable.getWriter();
+            const reader = ds.readable.getReader();
+            writer.write(bytes);
+            writer.close();
+            const chunks = [];
+            let totalLen = 0;
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              chunks.push(value);
+              totalLen += value.length;
+            }
+            finalBytes = new Uint8Array(totalLen);
+            let offset = 0;
+            for (const chunk of chunks) { finalBytes.set(chunk, offset); offset += chunk.length; }
+          } else {
+            console.warn('DecompressionStream not available, asset ' + uuid + ' may not render');
+          }
+        }
+
+        if (FONT_MIME.test(entry.mime) && MIME_TOKEN.test(entry.mime)) {
+          // Strict artifact hosts allow font-src data: but not blob:.
+          blobUrls[uuid] = 'data:' + entry.mime + ';base64,' +
+            (entry.compressed ? toBase64(finalBytes) : entry.data);
+        } else {
+          const blob = new Blob([finalBytes], { type: entry.mime });
+          blobUrls[uuid] = URL.createObjectURL(blob);
+          resourceBlobs[blobUrls[uuid]] = blob;
+        }
+      } catch (err) {
+        console.error('Failed to decode asset ' + uuid + ':', err);
+        const blob = new Blob([], { type: entry.mime });
+        blobUrls[uuid] = URL.createObjectURL(blob);
+        resourceBlobs[blobUrls[uuid]] = blob;
+      }
+    }));
+
+    const extResEl = document.querySelector('script[type="__bundler/ext_resources"]');
+    const extResources = extResEl ? JSON.parse(extResEl.textContent) : [];
+    const resourceMap = {};
+    for (const entry of extResources) {
+      if (blobUrls[entry.uuid]) resourceMap[entry.id] = blobUrls[entry.uuid];
+    }
+
+    // Artifact-host CSP (connect-src 'self') refuses fetch() of blob: URLs —
+    // consumers read these Blobs directly. Survives the swap like the error sink.
+    window.__resourceBlobs = resourceBlobs;
+
+    setStatus('Rendering...');
+    for (const uuid of uuids) template = template.split(uuid).join(blobUrls[uuid]);
+
+    // Strip integrity + crossorigin — blob URLs from a file:// document inherit
+    // a null origin, so crossorigin forces a CORS fetch that SRI then rejects.
+    // The manifest bytes are ours; SRI protects against CDN compromise, not this.
+    template = template.replace(/\s+integrity="[^"]*"/gi, '').replace(/\s+crossorigin="[^"]*"/gi, '');
+
+    const resourceScript = '<script>window.__resources = ' +
+      JSON.stringify(resourceMap).replace(/<\//g, '<\\/') +
+      ';</' + 'script>';
+    // Inject after <head> so the DOCTYPE stays first; prepending the script
+    // would push the parser into quirks mode. DOMParser always emits a <head>
+    // (synthesizing one if the source HTML omitted it) but may carry
+    // attributes through, so match the full opening tag. slice() rather than
+    // replace() keeps us clear of $-pattern substitution in resourceScript.
+    const headOpen = template.match(/<head[^>]*>/i);
+    if (headOpen) {
+      const i = headOpen.index + headOpen[0].length;
+      template = template.slice(0, i) + resourceScript + template.slice(i);
+    }
+
+    // Parse the template and swap the root element. Scripts inserted via
+    // DOMParser/replaceWith are inert per spec — re-create each with
+    // createElement so they execute, awaiting onload for src scripts to
+    // preserve ordering (React before ReactDOM before Babel before text/babel).
+    const doc = new DOMParser().parseFromString(template, 'text/html');
+    document.documentElement.replaceWith(doc.documentElement);
+    const dead = Array.from(document.scripts);
+    for (const old of dead) {
+      const s = document.createElement('script');
+      for (const a of old.attributes) s.setAttribute(a.name, a.value);
+      s.textContent = old.textContent;
+      // text/babel scripts with a src: read and inline. transformScriptTags
+      // does XHR against the src, but blob:null/ from a file:// origin is
+      // silently dropped. Inlining makes it a plain inline babel script,
+      // which transformScriptTags handles unconditionally.
+      if ((s.type === 'text/babel' || s.type === 'text/jsx') && s.src) {
+        const pre = resourceBlobs[s.src.split('#')[0]];
+        s.textContent = pre ? await pre.text() : await (await fetch(s.src)).text();
+        s.removeAttribute('src');
+      }
+      const p = s.src ? new Promise(function(r) { s.onload = s.onerror = r; }) : null;
+      old.replaceWith(s);
+      if (p) await p;
+    }
+    // Babel standalone auto-transforms type=text/babel on DOMContentLoaded,
+    // which fired before we swapped the document. Trigger manually if present.
+    if (window.Babel && typeof window.Babel.transformScriptTags === 'function') {
+      window.Babel.transformScriptTags();
+    }
+  } catch (err) {
+    setStatus('Error unpacking: ' + err.message);
+    console.error('Bundle unpack error:', err);
+  }
+});
+
+  </script>
+
+  <script type="__bundler/manifest">
+{}
+  </script>
+
+  <script type="__bundler/ext_resources">
+[]
+  </script>
+
+  <script type="__bundler/template">
+"<!DOCTYPE html>\n<html><head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\n<style>\n:root{\n  --paper:#EAE0C9; --paper-hi:#F5EDDA; --paper-lo:#DCD0B4;\n  --ink:#2B231C; --faint:#6E5F4B;\n  --red:#7E212E; --red-lo:#5C1F2B;\n  --blue:#2A4568; --gold:#8F7430; --violet:#5C4680;\n  --line:rgba(58,47,36,.75); --line-soft:rgba(58,47,36,.35);\n}\n*{box-sizing:border-box;margin:0;padding:0}\nhtml,body{background:transparent}\nbody{\n  font-family:\"Songti SC\",\"Noto Serif CJK SC\",\"Source Han Serif SC\",\"SimSun\",Georgia,\"Times New Roman\",serif;\n  color:var(--ink); padding:6px 2px 10px;\n  -webkit-font-smoothing:antialiased;\n}\n.sheet{\n  max-width:820px;margin:0 auto;position:relative;\n  background:\n    radial-gradient(120% 60% at 50% -5%, rgba(255,251,238,.75), transparent 60%),\n    radial-gradient(140% 70% at 50% 115%, rgba(84,60,22,.20), transparent 65%),\n    linear-gradient(90deg, rgba(84,60,22,.07), transparent 8%, transparent 92%, rgba(84,60,22,.07)),\n    var(--paper);\n  border:1.5px solid var(--line);\n  box-shadow:inset 0 0 0 4px var(--paper), inset 0 0 0 5px var(--line-soft), 0 2px 14px rgba(20,12,4,.35);\n  padding:14px 18px 12px;\n}\n.mh{position:relative;text-align:center;padding:6px 52px 10px}\n.mh .over{font-size:9.5px;letter-spacing:.42em;color:var(--faint);text-transform:uppercase;font-family:Georgia,serif}\n.mh h1{font-size:clamp(24px,5vw,34px);font-weight:700;letter-spacing:.26em;margin:4px 0 2px;text-indent:.26em}\n.mh .sub{font-size:11px;letter-spacing:.3em;color:var(--red);text-indent:.3em}\n.cockade{position:absolute;top:4px;width:42px;height:56px}\n.cockade.l{left:2px}.cockade.r{right:2px}\n.dateline{\n  display:flex;flex-wrap:wrap;justify-content:center;gap:4px 0;\n  border-top:1px solid var(--line);border-bottom:1px solid var(--line);\n  box-shadow:0 2.5px 0 -1.5px var(--line), 0 -2.5px 0 -1.5px var(--line);\n  padding:5px 6px;margin:2px 0 0;font-size:12px;letter-spacing:.12em;color:var(--ink);\n}\n.dateline b{font-weight:400}\n.dateline .sep{color:var(--gold);margin:0 10px;font-size:10px}\nnav{display:flex;justify-content:center;flex-wrap:wrap;gap:2px;margin:10px 0 0}\nnav button{\n  appearance:none;border:none;background:transparent;cursor:pointer;\n  font-family:inherit;color:var(--faint);padding:5px 13px 7px;position:relative;\n  display:flex;flex-direction:column;align-items:center;gap:1px;\n}\nnav button b{font-size:13.5px;font-weight:700;letter-spacing:.28em;text-indent:.28em}\nnav button i{font-style:normal;font-size:8px;letter-spacing:.3em;font-family:Georgia,serif;text-transform:uppercase;opacity:.75}\nnav button.on{color:var(--red)}\nnav button.on::after{content:\"\";position:absolute;left:14px;right:14px;bottom:0;border-bottom:3px double var(--red)}\nmain{padding:14px 6px 4px;min-height:120px}\nsection{display:none}\nsection.on{display:block;animation:fad .28s ease}\n@keyframes fad{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}\n.notice{\n  border:1px solid var(--line-soft);background:linear-gradient(rgba(255,251,238,.5),rgba(84,60,22,.05));\n  padding:9px 13px;margin:0 0 14px;font-size:12.5px;line-height:1.9;color:#4a3e30;\n}\n.notice .nlab{font-size:9px;letter-spacing:.4em;color:var(--gold);font-family:Georgia,serif;display:block;margin-bottom:3px}\n.prose{font-size:15px;line-height:2.05;text-align:justify;text-wrap:pretty}\n.prose p{margin:0 0 .95em}\n.prose p.dlg{color:var(--red-lo)}\n.prose .flr{display:block;text-align:center;color:var(--gold);font-size:12px;margin:1.1em 0;letter-spacing:.6em;text-indent:.6em}\n.choices{margin-top:20px;border-top:1px solid var(--line-soft);padding-top:12px}\n.chead{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:11px}\n.chead span{font-size:12px;letter-spacing:.5em;text-indent:.5em;color:var(--faint)}\n.chead::before,.chead::after{content:\"\";flex:0 0 46px;border-top:1px solid var(--line-soft)}\n.choice{\n  display:flex;align-items:center;gap:12px;width:100%;text-align:left;cursor:pointer;\n  font-family:inherit;color:var(--ink);background:linear-gradient(rgba(255,251,238,.35),rgba(84,60,22,.04));\n  border:1px solid var(--line-soft);padding:9px 13px;margin-bottom:7px;font-size:13.5px;line-height:1.7;\n  transition:border-color .15s, background .15s;\n}\n.choice:hover{border-color:var(--red);background:rgba(126,33,46,.06)}\n.choice .num{\n  flex:0 0 26px;height:26px;border:1px solid var(--gold);border-radius:50%;\n  display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--gold);font-family:Georgia,serif;\n}\n.choice.sel{border-color:var(--gold);background:rgba(143,116,48,.08)}\n.cnote{font-size:10.5px;color:var(--faint);text-align:center;letter-spacing:.2em;margin-top:2px}\n.quill{margin-top:14px;border:1px solid var(--line-soft);background:rgba(255,251,238,.4);padding:10px 12px}\n.quill .qlab{font-size:9px;letter-spacing:.4em;color:var(--gold);font-family:Georgia,serif;display:block;margin-bottom:6px}\n.quill textarea{\n  width:100%;min-height:56px;resize:vertical;border:1px solid var(--line-soft);background:rgba(255,251,238,.6);\n  font-family:inherit;font-size:14px;line-height:1.8;color:var(--ink);padding:8px 10px;outline:none;\n}\n.quill textarea:focus{border-color:var(--gold)}\n.qbtns{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}\n.qbtn{\n  flex:1;min-width:130px;appearance:none;cursor:pointer;font-family:inherit;\n  border:1px solid var(--line);background:linear-gradient(rgba(255,251,238,.5),rgba(84,60,22,.06));\n  color:var(--ink);padding:8px 10px;font-size:12.5px;letter-spacing:.24em;text-indent:.24em;\n}\n.qbtn:hover{border-color:var(--red);color:var(--red)}\n.qbtn.primary{background:var(--red);border-color:var(--red-lo);color:var(--paper-hi)}\n.qbtn.primary:hover{background:var(--red-lo);color:var(--paper-hi)}\n.qhint{font-size:10px;color:var(--faint);letter-spacing:.12em;margin-top:6px;text-align:center;min-height:1.2em}\n.slab{font-size:9px;letter-spacing:.38em;color:var(--gold);font-family:Georgia,serif;text-transform:uppercase}\n.rule-h{display:flex;align-items:center;gap:10px;margin:0 0 12px}\n.rule-h span{font-size:13px;letter-spacing:.4em;text-indent:.4em;white-space:nowrap;color:var(--ink)}\n.rule-h::before,.rule-h::after{content:\"\";flex:1;border-top:1px solid var(--line-soft)}\n.bar{height:7px;background:rgba(58,47,36,.14);border:1px solid var(--line-soft);position:relative;flex:1}\n.bar>span{position:absolute;top:0;bottom:0;left:0}\n.grow{display:flex;align-items:center;gap:8px;margin:5px 0}\n.grow .gl{flex:0 0 58px;font-size:11px;letter-spacing:.1em;color:var(--faint)}\n.grow .gv{flex:0 0 30px;font-size:11px;text-align:right;font-family:Georgia,serif;color:var(--ink)}\n.self{display:grid;grid-template-columns:150px 1fr;gap:18px}\n@media(max-width:560px){.self{grid-template-columns:1fr}.portrait{margin:0 auto}}\n.portrait{\n  width:150px;height:186px;position:relative;\n  border:1px solid var(--line);box-shadow:inset 0 0 0 3px var(--paper), inset 0 0 0 4px var(--line-soft);\n  background:\n    radial-gradient(90% 75% at 50% 40%, rgba(92,70,128,.16), transparent 70%),\n    linear-gradient(rgba(255,251,238,.4),rgba(84,60,22,.12));\n  background-size:cover;background-position:center top;\n  display:flex;align-items:flex-end;justify-content:center;\n}\n.portrait .pl{font-size:9px;letter-spacing:.5em;text-indent:.5em;color:var(--faint);padding:6px 0;background:linear-gradient(transparent,rgba(234,224,201,.9) 45%);width:100%;text-align:center}\n.kv{margin-bottom:9px}\n.kv .slab{display:block;margin-bottom:2px}\n.kv .v{font-size:13.5px;line-height:1.75}\n.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:3px}\n.chip{font-size:12px;border:1px solid var(--line-soft);padding:2px 10px 3px;background:rgba(255,251,238,.45);border-radius:2px}\n.voice{\n  margin:12px 0 2px;padding:9px 13px 9px 15px;border-left:3px double var(--violet);\n  color:var(--violet);font-size:13.5px;line-height:1.85;font-style:italic;background:rgba(92,70,128,.05);\n}\n.voice::before{content:\"心声 · \";font-style:normal;font-size:10px;letter-spacing:.3em;opacity:.8}\n.tri{margin:14px 0 4px}\n.tribar{display:flex;height:13px;border:1px solid var(--line);overflow:hidden}\n.tribar span{display:block;height:100%}\n.tribar .a{background:var(--blue)}.tribar .b{background:var(--gold)}.tribar .c{background:var(--red)}\n.trileg{display:flex;justify-content:space-between;margin-top:4px;font-size:10.5px;color:var(--faint);letter-spacing:.08em}\n.trileg em{font-style:normal;font-family:Georgia,serif}\n.trileg .la{color:var(--blue)}.trileg .lb{color:var(--gold)}.trileg .lc{color:var(--red)}\n.rep{margin-top:14px}\n.reprow{display:flex;align-items:center;gap:8px;margin:5px 0}\n.reprow .gl{flex:0 0 92px;font-size:11.5px;color:var(--faint);letter-spacing:.06em;text-align:right}\n.repbar{flex:1;height:7px;background:rgba(58,47,36,.14);border:1px solid var(--line-soft);position:relative}\n.repbar::before{content:\"\";position:absolute;left:50%;top:-2px;bottom:-2px;border-left:1px solid var(--line)}\n.repbar span{position:absolute;top:0;bottom:0}\n.reprow .gv{flex:0 0 34px;font-size:11px;font-family:Georgia,serif}\n.cast{display:grid;grid-template-columns:repeat(auto-fill,minmax(236px,1fr));gap:12px}\n.npc{border:1px solid var(--line-soft);background:linear-gradient(rgba(255,251,238,.4),rgba(84,60,22,.05));padding:11px 13px 9px;position:relative}\n.npc::before{content:\"\";position:absolute;inset:3px;border:1px solid rgba(58,47,36,.18);pointer-events:none}\n.npc-h{display:flex;align-items:baseline;gap:8px;border-bottom:1px solid var(--line-soft);padding-bottom:6px;margin-bottom:7px}\n.npc-h b{font-size:15px;letter-spacing:.12em}\n.npc-h span{font-size:10.5px;color:var(--faint);letter-spacing:.05em}\n.npc-s{font-size:12.5px;line-height:1.8;color:#42382b;margin-bottom:7px;min-height:1em}\n.npc details{margin-top:7px;border-top:1px dashed var(--line-soft);padding-top:6px}\n.npc summary{cursor:pointer;font-size:10px;letter-spacing:.4em;color:var(--violet);list-style:none;display:flex;align-items:center;gap:6px}\n.npc summary::-webkit-details-marker{display:none}\n.npc summary::before{content:\"✦\";font-size:9px}\n.npc details p{margin-top:6px;font-size:12.5px;line-height:1.8;font-style:italic;color:var(--violet)}\n.chron-date{text-align:center;margin-bottom:16px}\n.chron-date .big{font-size:21px;letter-spacing:.2em;margin:2px 0}\n.chron-date .sm{font-size:11.5px;color:var(--faint);letter-spacing:.25em}\n.tl{list-style:none;position:relative;margin:0 4px;padding-left:22px}\n.tl::before{content:\"\";position:absolute;left:5px;top:4px;bottom:4px;border-left:1px solid var(--line-soft)}\n.tl li{position:relative;margin-bottom:13px;font-size:13px;line-height:1.8}\n.tl li::before{content:\"\";position:absolute;left:-21.5px;top:7px;width:9px;height:9px;transform:rotate(45deg);border:1px solid var(--ink);background:var(--ink)}\n.tl li .tw{font-size:11px;color:var(--faint);letter-spacing:.08em;display:block}\n.tl li.now::before{background:var(--red);border-color:var(--red);box-shadow:0 0 0 3px rgba(126,33,46,.18)}\n.tl li.now .tw{color:var(--red)}\n.tl li.fut{color:var(--violet);opacity:.85}\n.tl li.fut::before{background:transparent;border-color:var(--violet)}\n.tl li.fut .tw{color:var(--violet)}\n.tl li.fut .te{filter:blur(.4px)}\n.heads{margin-bottom:16px}\n.head1{font-size:16.5px;line-height:1.75;letter-spacing:.04em;border-bottom:1px solid var(--line-soft);padding-bottom:8px;margin-bottom:8px}\n.headn{font-size:13px;line-height:1.8;color:#42382b;padding-left:16px;position:relative;margin-bottom:5px}\n.headn::before{content:\"◆\";position:absolute;left:0;top:1px;font-size:8px;color:var(--gold)}\n.nations{width:100%;border-collapse:collapse;margin-top:4px}\n.nations td{border-top:1px solid var(--line-soft);padding:7px 6px;font-size:12.5px;line-height:1.75;vertical-align:top}\n.nations td:first-child{width:112px;letter-spacing:.06em;font-weight:700;font-size:12.5px}\n.nations tr:last-child td{border-bottom:1px solid var(--line-soft)}\nfooter{margin-top:14px;border-top:1px solid var(--line);padding-top:7px;display:flex;justify-content:center;gap:14px;align-items:baseline}\nfooter .fr{font-size:8.5px;letter-spacing:.4em;color:var(--faint);font-family:Georgia,serif;text-transform:uppercase}\nfooter .zh{font-size:10.5px;letter-spacing:.32em;color:var(--gold)}\n.err{font-size:12px;color:var(--faint);text-align:center;padding:20px 0;letter-spacing:.2em}\n<\u002Fstyle>\n<\u002Fhead>\n<body>\n<div class=\"sheet\">\n  <header class=\"mh\">\n    <svg class=\"cockade l\" viewBox=\"0 0 42 56\"><path d=\"M15 30 L11 54 L17 47 L21 55 Z\" fill=\"#7E212E\"><\u002Fpath><path d=\"M27 30 L31 54 L25 47 L21 55 Z\" fill=\"#2A4568\"><\u002Fpath><circle cx=\"21\" cy=\"20\" r=\"15\" fill=\"#2A4568\"><\u002Fcircle><circle cx=\"21\" cy=\"20\" r=\"10.5\" fill=\"#EAE0C9\"><\u002Fcircle><circle cx=\"21\" cy=\"20\" r=\"6\" fill=\"#7E212E\"><\u002Fcircle><circle cx=\"21\" cy=\"20\" r=\"2\" fill=\"#8F7430\"><\u002Fcircle><\u002Fsvg>\n    <svg class=\"cockade r\" viewBox=\"0 0 42 56\"><path d=\"M15 30 L11 54 L17 47 L21 55 Z\" fill=\"#2A4568\"><\u002Fpath><path d=\"M27 30 L31 54 L25 47 L21 55 Z\" fill=\"#7E212E\"><\u002Fpath><circle cx=\"21\" cy=\"20\" r=\"15\" fill=\"#7E212E\"><\u002Fcircle><circle cx=\"21\" cy=\"20\" r=\"10.5\" fill=\"#EAE0C9\"><\u002Fcircle><circle cx=\"21\" cy=\"20\" r=\"6\" fill=\"#2A4568\"><\u002Fcircle><circle cx=\"21\" cy=\"20\" r=\"2\" fill=\"#8F7430\"><\u002Fcircle><\u002Fsvg>\n    <div class=\"over\">Gazette Nationale de Rosélia · Édition Théâtrale<\u002Fdiv>\n    <h1>三葉物語<\u002Fh1>\n    <div class=\"sub\">诅咒的少女与死之轮舞<\u002Fdiv>\n  <\u002Fheader>\n  <div class=\"dateline\" id=\"dateline\">───<\u002Fdiv>\n  <nav id=\"tabs\"><\u002Fnav>\n  <main id=\"main\"><section class=\"on\"><p class=\"err\">档案装帧中——若长时间空白，请将酒馆助手更新至最新版<\u002Fp><\u002Fsection><\u002Fmain>\n  <footer><span class=\"fr\">Liberté · Égalité · Pâtisserie<\u002Fspan><span class=\"zh\">自由 · 平等 · 甜食<\u002Fspan><\u002Ffooter>\n<\u002Fdiv>\n<textarea id=\"__nr\" style=\"display:none\">【时间点】大轮历587年盛夏／第3卷·EPISODE2「ローゼリア独裁宣言」\n【地点】首都贝尔·宫殿·广场侧的大厅\n【{{user}}扮演】三叶・克劳伯（13岁，罗泽利亚共和国·国家代表——自称总统）\n【局势】王冠已经到手。你废止王政、宣布罗泽利亚共和国成立，刚刚在宫殿广场上发表了「二十年限定」的独裁宣言——任期至大轮历六〇七年。广场上不是王都、而是首都的各位，陷入了狂热。\n\n「三叶大人万岁！！」「共和国万岁！！」「总统阁下万岁——！！」\n\n　欢呼的声浪隔着宫殿的石墙涌进来，震得吊灯上的水晶叮叮作响。狂热得简直像某种祭典。或者某种宗教。\n\n　大厅里，桑德拉抱着一摞文件，用看某种不可理喻之物的眼神盯着广场的方向，太阳穴一跳一跳的。「二十年限定的独裁……亏你想得出这种词。正常的共和主义者会气死的。」她小声嘟哝着，笔尖已经开始在文件上飞快地列条目——内阁名单、全权委任法、货币改革，要做的事情堆成了山。\n\n　克萝内靠在窗边，红发被广场的风吹得乱七八糟，咧着嘴笑：「喂，小不点。听说你打算把空缺的职位分一分？我可先说好，名字太长的官职我念不顺。」\n\n　角落里，尼可所长优雅地啜着不知从哪里弄来的红茶，笑得像只偷到奶油的猫。「啊哈哈哈，真是精彩的演讲！尤其是结婚那段，我笑得差点从椅子上掉下去。接下来呢？我们伟大的总统阁下，第一道政令打算颁布什么？」\n\n　广场上，「三叶大人万岁」的声浪还在一波一波地拍打着宫殿。\n\n<\u002Ftextarea>\n<textarea id=\"__sb\" style=\"display:none\">{\"时间\":{\"卷\":\"第3卷·EP2\",\"日期\":\"大轮历587年·盛夏\",\"时刻\":\"午后\",\"天气\":\"晴\",\"地点\":\"首都贝尔·宫殿·广场侧大厅\"},\"主角\":{\"名\":\"三叶·克劳伯\",\"身份\":\"罗泽利亚共和国总统（13岁）\",\"状态\":\"心情极好。演讲喊得喉咙有点干\",\"服装\":\"宣言用的黑色正装（缎带有点痒）\",\"持有\":[\"王冠（刚到手）\",\"炸点心（半袋）\"],\"心声\":\"二十年之后的事，就交给二十年之后的我考虑吧。现在——点心。\",\"无聊\":5,\"诅咒\":20,\"人格\":{\"稳健\":45,\"享乐\":40,\"激进\":15}},\"声望\":{\"首都市民\":95,\"旧贵族\":-90,\"军队\":40,\"议会\":20},\"在场\":[{\"名\":\"桑德拉\",\"身份\":\"国民议会议长\",\"状态\":\"抱着一摞文件，太阳穴一跳一跳\",\"好感\":85,\"畏惧\":10,\"心声\":\"内阁名单、全权委任法、货币改革……在她闯祸之前全部铺好。\"},{\"名\":\"克萝内\",\"身份\":\"军团长候补·红发\",\"状态\":\"靠在窗边咧嘴笑，红发被广场的风吹乱\",\"好感\":90,\"畏惧\":0,\"心声\":\"这家伙当了总统也还是小不点。挺好。\"},{\"名\":\"尼可所长\",\"身份\":\"魔术研究所所长\",\"状态\":\"啜着红茶，笑得像偷到奶油的猫\",\"好感\":60,\"畏惧\":0,\"心声\":\"接下来会变成怎样呢？啊哈哈，真令人期待。\"}],\"编年史\":[{\"时\":\"585年春\",\"事\":\"沉睡十年的公爵遗孤苏醒\",\"态\":\"已\"},{\"时\":\"586年\",\"事\":\"贝里埃要塞防卫战·战败\",\"态\":\"已\"},{\"时\":\"587年6月6日\",\"事\":\"政变。王冠易手\",\"态\":\"已\"},{\"时\":\"587年盛夏\",\"事\":\"共和国成立·二十年限定独裁宣言\",\"态\":\"今\"},{\"时\":\"不久之后\",\"事\":\"宫廷深处，有旧时代的影子在磨牙\",\"态\":\"将\"}],\"列国\":[{\"国\":\"罗泽利亚共和国\",\"况\":\"废止王政。狂热与断头台并行，粮价渐稳\"},{\"国\":\"普尔梅尼亚帝国\",\"况\":\"东境宿敌。战和未定，边境陈兵\"},{\"国\":\"莉莉亚王国\",\"况\":\"西方殖民强国。安静得可疑\"}],\"要闻\":[\"号外——二十年限定独裁宣言！广场三万人齐呼万岁，水晶吊灯受灾\",\"《赞颂三叶大人之歌》乐谱加印第七版，作者阿尔斯托罗谢绝一切采访\",\"旧贵族街连夜有马车出城，车辙很深\"],\"抉择\":[\"宣布第一道政令\",\"给克萝内分一个名字最长的官职\",\"比起这些，先吃点心\"]}<\u002Ftextarea>\n<script>\n(function(){\n\"use strict\";\nfunction showFatal(msg){\n  try{\n    var m=document.getElementById(\"main\");\n    if(m)m.innerHTML='<section class=\"on\"><p class=\"err\">档案装帧失败：'+String(msg).replace(/<\u002Fg,\"＜\")+'<br>请截图此信息反馈<\u002Fp><\u002Fsection>';\n  }catch(e2){}\n}\nwindow.addEventListener(\"error\",function(ev){\n  console.info(\"[三叶剧场] 页面错误:\",ev&&ev.message);\n  showFatal(ev&&ev.message?ev.message:\"未知错误\");\n});\nfunction boot(){\ntry{\nconsole.info(\"[三叶剧场] 界面脚本启动 readyState=\"+document.readyState);\nfunction esc(s){return String(s==null?\"\":s).replace(/&/g,\"&amp;\").replace(/<\u002Fg,\"&lt;\").replace(/>/g,\"&gt;\").replace(/\"/g,\"&quot;\")}\nfunction num(v,lo,hi){v=Number(v);if(isNaN(v))v=0;return Math.max(lo,Math.min(hi,v))}\nfunction rtrim(s){var i=s.length;while(i>0&&\" \\t\\r\\n\".indexOf(s.charAt(i-1))>=0)i--;return s.slice(0,i)}\nfunction isFleuron(s){var t=s.trim();return t.length>0&&t.replace(/[◆❖✦・\\s　]/g,\"\").length===0}\n\n/* ---- parse data ---- */\nvar raw=(document.getElementById(\"__sb\").value||\"\").trim();\nwhile(raw.length&&raw.charAt(0)===\"\\u0060\"){raw=raw.slice(1)}\nwhile(raw.length&&raw.charAt(raw.length-1)===\"\\u0060\"){raw=raw.slice(0,-1)}\nraw=raw.trim();\nif(raw.slice(0,4).toLowerCase()===\"json\")raw=raw.slice(4).trim();\nvar D=null;\ntry{D=JSON.parse(raw)}catch(e){\n  try{D=JSON.parse(raw.replace(/,\\s*([}\\]])/g,function(m,g){return g}))}catch(e2){D=null}\n}\nD=D||{};\nvar T=D[\"时间\"]||{}, PC=D[\"主角\"]||{}, REP=D[\"声望\"]||null,\n    CAST=Array.isArray(D[\"在场\"])?D[\"在场\"]:[],\n    TL=Array.isArray(D[\"编年史\"])?D[\"编年史\"]:[],\n    NAT=Array.isArray(D[\"列国\"])?D[\"列国\"]:[],\n    NEWS=Array.isArray(D[\"要闻\"])?D[\"要闻\"]:[],\n    OPT=Array.isArray(D[\"抉择\"])?D[\"抉择\"]:[];\n\n/* ---- dateline ---- */\nvar dparts=[];\nif(T[\"卷\"])dparts.push(T[\"卷\"]);\nif(T[\"日期\"])dparts.push(T[\"日期\"]);\nif(T[\"时刻\"])dparts.push(T[\"时刻\"]);\nif(T[\"天气\"])dparts.push(\"天候·\"+T[\"天气\"]);\nif(T[\"地点\"])dparts.push(T[\"地点\"]);\nif(!dparts.length)dparts=[\"———\"];\ndocument.getElementById(\"dateline\").innerHTML=dparts.map(function(p){return \"<b>\"+esc(p)+\"<\u002Fb>\"}).join('<span class=\"sep\">❖<\u002Fspan>');\n\n/* ---- narrative ---- */\nvar nr=(document.getElementById(\"__nr\").value||\"\").trim();\nfunction prose(t){\n  var out=\"\",lines=t.split(/\\n/),buf=[];\n  function flush(){\n    if(!buf.length)return;\n    var para=buf.join(\"\\n\").trim();buf=[];\n    if(!para)return;\n    if(isFleuron(para)){out+='<span class=\"flr\">❖ ❖ ❖<\u002Fspan>';return}\n    var plines=para.split(\"\\n\");\n    var allNotice=true,k;\n    for(k=0;k<plines.length;k++){if(plines[k].trim()&&!/^【/.test(plines[k].trim()))allNotice=false}\n    if(/^【[^】]+】/.test(para)&&allNotice){\n      out+='<div class=\"notice\"><span class=\"nlab\">Proclamation · 布告<\u002Fspan>'+plines.map(function(l){return esc(l.trim())}).join(\"<br>\")+'<\u002Fdiv>';return;\n    }\n    plines.forEach(function(l){\n      l=rtrim(l);if(!l.trim())return;\n      if(isFleuron(l)){out+='<span class=\"flr\">❖ ❖ ❖<\u002Fspan>';return}\n      var cls=/^[\\s　]*[「『]/.test(l)?' class=\"dlg\"':'';\n      out+=\"<p\"+cls+\">\"+esc(l)+\"<\u002Fp>\";\n    });\n  }\n  lines.forEach(function(l){if(l.trim()===\"\"){flush()}else{buf.push(l)}});\n  flush();\n  return out||'<p class=\"err\">— 幕布尚未升起 —<\u002Fp>';\n}\n\n/* ---- gauges ---- */\nfunction grow(label,val,color){\n  val=num(val,0,100);\n  return '<div class=\"grow\"><span class=\"gl\">'+esc(label)+'<\u002Fspan><span class=\"bar\"><span style=\"width:'+val+'%;background:'+color+'\"><\u002Fspan><\u002Fspan><span class=\"gv\">'+val+'<\u002Fspan><\u002Fdiv>';\n}\nfunction reprow(label,val){\n  val=num(val,-100,100);\n  var w=Math.abs(val)/2, css=val>=0?'left:50%;width:'+w+'%;background:var(--blue)':'right:50%;width:'+w+'%;background:var(--red)';\n  return '<div class=\"reprow\"><span class=\"gl\">'+esc(label)+'<\u002Fspan><span class=\"repbar\"><span style=\"'+css+'\"><\u002Fspan><\u002Fspan><span class=\"gv\">'+(val>0?\"+\":\"\")+val+'<\u002Fspan><\u002Fdiv>';\n}\n\n/* ---- self tab ---- */\nfunction selfTab(){\n  var h='<div class=\"self\"><div class=\"portrait char_avatar char-avatar\"><span class=\"pl\">肖 像<\u002Fspan><\u002Fdiv><div>';\n  h+='<div class=\"kv\"><span class=\"slab\">Nom · 姓名<\u002Fspan><span class=\"v\">'+esc(PC[\"名\"]||\"？\")+(PC[\"身份\"]?'　<span style=\"font-size:11.5px;color:var(--faint)\">'+esc(PC[\"身份\"])+'<\u002Fspan>':'')+'<\u002Fspan><\u002Fdiv>';\n  if(PC[\"状态\"])h+='<div class=\"kv\"><span class=\"slab\">État · 状态<\u002Fspan><span class=\"v\">'+esc(PC[\"状态\"])+'<\u002Fspan><\u002Fdiv>';\n  if(PC[\"服装\"])h+='<div class=\"kv\"><span class=\"slab\">Tenue · 服装<\u002Fspan><span class=\"v\">'+esc(PC[\"服装\"])+'<\u002Fspan><\u002Fdiv>';\n  var items=Array.isArray(PC[\"持有\"])?PC[\"持有\"]:[];\n  if(items.length)h+='<div class=\"kv\"><span class=\"slab\">Effets · 持有<\u002Fspan><span class=\"chips\">'+items.map(function(i){return '<span class=\"chip\">'+esc(i)+'<\u002Fspan>'}).join(\"\")+'<\u002Fspan><\u002Fdiv>';\n  h+='<\u002Fdiv><\u002Fdiv>';\n  if(PC[\"心声\"])h+='<div class=\"voice\">'+esc(PC[\"心声\"])+'<\u002Fdiv>';\n  var P=PC[\"人格\"];\n  if(P&&typeof P===\"object\"){\n    var a=num(P[\"稳健\"],0,100),b=num(P[\"享乐\"],0,100),c=num(P[\"激进\"],0,100),s=(a+b+c)||1;\n    h+='<div class=\"tri\"><span class=\"slab\">Triumvirat · 三头制议席<\u002Fspan>'\n      +'<div class=\"tribar\" style=\"margin-top:5px\"><span class=\"a\" style=\"width:'+(a/s*100)+'%\"><\u002Fspan><span class=\"b\" style=\"width:'+(b/s*100)+'%\"><\u002Fspan><span class=\"c\" style=\"width:'+(c/s*100)+'%\"><\u002Fspan><\u002Fdiv>'\n      +'<div class=\"trileg\"><span class=\"la\">稳健派 <em>'+a+'<\u002Fem><\u002Fspan><span class=\"lb\">享乐派 <em>'+b+'<\u002Fem><\u002Fspan><span class=\"lc\">激进派 <em>'+c+'<\u002Fem><\u002Fspan><\u002Fdiv><\u002Fdiv>';\n  }\n  var g=\"\";\n  if(PC[\"无聊\"]!=null)g+=grow(\"退屈度\",PC[\"无聊\"],\"var(--gold)\");\n  if(PC[\"诅咒\"]!=null)g+=grow(\"诅咒活性\",PC[\"诅咒\"],\"var(--violet)\");\n  if(g)h+='<div style=\"margin-top:12px\"><span class=\"slab\">Mesures · 计器<\u002Fspan><div style=\"margin-top:4px\">'+g+'<\u002Fdiv><\u002Fdiv>';\n  if(REP&&typeof REP===\"object\"){\n    var rows=Object.keys(REP).map(function(k){return reprow(k,REP[k])}).join(\"\");\n    if(rows)h+='<div class=\"rep\"><span class=\"slab\">Réputation · 声望<\u002Fspan><div style=\"margin-top:4px\">'+rows+'<\u002Fdiv><\u002Fdiv>';\n  }\n  return h;\n}\n\n/* ---- cast tab ---- */\nfunction castTab(){\n  if(!CAST.length)return '<p class=\"err\">— 此刻无人在场 —<\u002Fp>';\n  return '<div class=\"cast\">'+CAST.map(function(n){\n    var h='<div class=\"npc\"><div class=\"npc-h\"><b>'+esc(n[\"名\"]||\"？\")+'<\u002Fb><span>'+esc(n[\"身份\"]||\"\")+'<\u002Fspan><\u002Fdiv>';\n    if(n[\"状态\"])h+='<div class=\"npc-s\">'+esc(n[\"状态\"])+'<\u002Fdiv>';\n    if(n[\"好感\"]!=null)h+=grow(\"好感\",n[\"好感\"],\"var(--red)\");\n    if(n[\"畏惧\"]!=null)h+=grow(\"畏惧\",n[\"畏惧\"],\"var(--violet)\");\n    if(n[\"心声\"])h+='<details><summary>启封 · 窃听心声<\u002Fsummary><p>'+esc(n[\"心声\"])+'<\u002Fp><\u002Fdetails>';\n    return h+'<\u002Fdiv>';\n  }).join(\"\")+'<\u002Fdiv>';\n}\n\n/* ---- chronicle tab ---- */\nfunction chronTab(){\n  var h='<div class=\"chron-date\"><div class=\"sm\">Chronique de la Grande Roue<\u002Fdiv><div class=\"big\">'+esc(T[\"日期\"]||\"———\")+'<\u002Fdiv><div class=\"sm\">'+esc((T[\"时刻\"]||\"\")+(T[\"天气\"]?\"　天候·\"+T[\"天气\"]:\"\"))+'<\u002Fdiv><\u002Fdiv>';\n  if(TL.length){\n    h+='<ol class=\"tl\">'+TL.map(function(e){\n      var st=e[\"态\"]||\"已\", cls=st===\"今\"?\"now\":(st===\"将\"?\"fut\":\"\");\n      return '<li class=\"'+cls+'\"><span class=\"tw\">'+esc(e[\"时\"]||\"\")+(st===\"今\"?\"　─ 现在\":(st===\"将\"?\"　─ 预兆\":\"\"))+'<\u002Fspan><span class=\"te\">'+esc(e[\"事\"]||\"\")+'<\u002Fspan><\u002Fli>';\n    }).join(\"\")+'<\u002Fol>';\n  }else h+='<p class=\"err\">— 史册空白 —<\u002Fp>';\n  return h;\n}\n\n/* ---- gazette tab ---- */\nfunction gazTab(){\n  var h=\"\";\n  if(NEWS.length){\n    h+='<div class=\"rule-h\"><span>邸报要闻<\u002Fspan><\u002Fdiv><div class=\"heads\">';\n    NEWS.forEach(function(n,i){h+=i===0?'<div class=\"head1\">'+esc(n)+'<\u002Fdiv>':'<div class=\"headn\">'+esc(n)+'<\u002Fdiv>'});\n    h+='<\u002Fdiv>';\n  }\n  if(NAT.length){\n    h+='<div class=\"rule-h\"><span>列国志<\u002Fspan><\u002Fdiv><table class=\"nations\">'+NAT.map(function(n){\n      return '<tr><td>'+esc(n[\"国\"]||\"\")+'<\u002Ftd><td>'+esc(n[\"况\"]||\"\")+'<\u002Ftd><\u002Ftr>';\n    }).join(\"\")+'<\u002Ftable>';\n  }\n  if(!h)h='<p class=\"err\">— 今日无报 —<\u002Fp>';\n  return h;\n}\n\n/* ---- stage tab ---- */\nfunction stageTab(){\n  var h='<div class=\"prose\">'+prose(nr)+'<\u002Fdiv>';\n  var R=[\"Ⅰ\",\"Ⅱ\",\"Ⅲ\",\"Ⅳ\",\"Ⅴ\",\"Ⅵ\"];\n  h+='<div class=\"choices\">';\n  if(OPT.length){\n    h+='<div class=\"chead\"><span>抉择<\u002Fspan><\u002Fdiv>';\n    OPT.slice(0,6).forEach(function(o,i){\n      h+='<button class=\"choice\" data-c=\"'+esc(o)+'\"><span class=\"num\">'+R[i]+'<\u002Fspan><span>'+esc(o)+'<\u002Fspan><\u002Fbutton>';\n    });\n    h+='<div class=\"cnote\">─ 点选后可在下方修改，亦可全然无视，自行书写 ─<\u002Fdiv>';\n  }\n  h+='<div class=\"quill\"><span class=\"qlab\">Votre Action · 你的行动<\u002Fspan>'\n    +'<textarea id=\"act\" placeholder=\"写下你的行动、台词或心声……\"><\u002Ftextarea>'\n    +'<div class=\"qbtns\"><button class=\"qbtn\" id=\"b-copy\">誊入输入栏<\u002Fbutton><button class=\"qbtn primary\" id=\"b-send\">直接上演 ▸<\u002Fbutton><\u002Fdiv>'\n    +'<div class=\"qhint\" id=\"qhint\"><\u002Fdiv><\u002Fdiv>';\n  h+='<\u002Fdiv>';\n  return h;\n}\n\n/* ---- assemble tabs ---- */\nvar tabs=[[\"stage\",\"剧幕\",\"Acte\",stageTab]];\ntabs.push([\"self\",\"人偶\",\"La Poupée\",selfTab]);\nif(CAST.length)tabs.push([\"cast\",\"在场\",\"Personae\",castTab]);\nif(TL.length||T[\"日期\"])tabs.push([\"chron\",\"编年史\",\"Chronique\",chronTab]);\nif(NEWS.length||NAT.length)tabs.push([\"gaz\",\"邸报\",\"Gazette\",gazTab]);\n\nvar nav=document.getElementById(\"tabs\"),main=document.getElementById(\"main\");\nmain.innerHTML=\"\";\ntabs.forEach(function(t){\n  var b=document.createElement(\"button\");\n  b.innerHTML=\"<b>\"+t[1]+\"<\u002Fb><i>\"+t[2]+\"<\u002Fi>\";\n  b.onclick=function(){show(t[0])};b.dataset.t=t[0];\n  nav.appendChild(b);\n  var s=document.createElement(\"section\");\n  s.id=\"p-\"+t[0];s.innerHTML=t[3]();\n  main.appendChild(s);\n});\nfunction show(id){\n  var bs=nav.querySelectorAll(\"button\"),ss=main.querySelectorAll(\"section\"),i;\n  for(i=0;i<bs.length;i++)bs[i].classList.toggle(\"on\",bs[i].dataset.t===id);\n  for(i=0;i<ss.length;i++)ss[i].classList.toggle(\"on\",ss[i].id===\"p-\"+id);\n}\nshow(\"stage\");\n\n/* ---- interactions ---- */\nfunction slashSafe(t){return t.replace(/\\|/g,\"\\\\|\").replace(/\\n+/g,\" \")}\nfunction hint(t){var q=document.getElementById(\"qhint\");if(q){q.textContent=t;setTimeout(function(){q.textContent=\"\"},4000)}}\nmain.addEventListener(\"click\",function(ev){\n  var btn=ev.target.closest?ev.target.closest(\".choice\"):null;\n  if(btn){\n    var t=btn.getAttribute(\"data-c\")||\"\";\n    var bs=main.querySelectorAll(\".choice\"),i;\n    for(i=0;i<bs.length;i++)bs[i].classList.remove(\"sel\");\n    btn.classList.add(\"sel\");\n    var ta=document.getElementById(\"act\");\n    if(ta){ta.value=t;ta.focus()}\n    return;\n  }\n  var id=ev.target&&ev.target.id;\n  if(id===\"b-copy\"||id===\"b-send\"){\n    var ta2=document.getElementById(\"act\");\n    var v=ta2?ta2.value.trim():\"\";\n    if(!v){hint(\"先写点什么，或点选上方的抉择。\");return}\n    try{\n      if(typeof triggerSlash!==\"function\"){hint(\"未检测到酒馆助手接口——请手动复制到输入栏。\");return}\n      if(id===\"b-copy\"){\n        triggerSlash(\"/setinput \"+slashSafe(v));\n        hint(\"已誊入下方输入栏，按发送键上演。\");\n      }else{\n        var p=triggerSlash(\"/send \"+slashSafe(v));\n        if(p&&p.then){p.then(function(){return triggerSlash(\"/trigger\")}).catch(function(){hint(\"递交失败——请改用『誊入输入栏』。\")})}\n        else{triggerSlash(\"/trigger\")}\n        hint(\"已递交，好戏开演……\");\n        if(ta2)ta2.value=\"\";\n      }\n    }catch(e){hint(\"递交失败——请改用『誊入输入栏』。\")}\n  }\n});\n}catch(e){\n  console.info(\"[三叶剧场] 脚本错误:\",e);\n  showFatal(e&&e.message?e.message:e);\n}\n}\nif(document.readyState===\"loading\"){document.addEventListener(\"DOMContentLoaded\",boot)}else{boot()}\n})();\n<\u002Fscript>\n\n\n<\u002Fbody><\u002Fhtml>"
+  </script>
+</body>
+</html>
