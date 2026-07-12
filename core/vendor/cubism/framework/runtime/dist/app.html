@@ -4103,6 +4103,8 @@ var _scrPrev;
 function render(){
   window.__ZJSCR=S.screen;
   zjBgSync();
+  /* 弹窗与剧场层同帧让位:剧场层挂在 body(z5),弹窗关在游戏根容器(z1)里,若等 250ms 轮询会先被压在立绘后面再"穿"出来 */
+  try{if(S.overlay){var _vr=document.getElementById('vnRoot');if(_vr)_vr.style.display='none';var _vp=document.getElementById('vnPill');if(_vp)_vp.style.display='none';}}catch(e){}
   try{if(S.screen==='game')memSync();}catch(e){}
   var focused=document.activeElement&&document.activeElement.id==='zjInput';
   var selStart=focused?document.activeElement.selectionStart:null;
@@ -4792,7 +4794,7 @@ root.addEventListener('click',function(e){
         }
         return;}
       if(t.getAttribute('data-jpact')){var jk9=t.getAttribute('data-jpact');readJpForm();JPCFG[jk9]=!JPCFG[jk9];jpcfgSave();renderOverlay();return;}
-      if(t.getAttribute('data-ov')){if(morphBusy)return;var ovK=t.getAttribute('data-ov');var ovWas=S.overlay;S.overlay=ovK;S.movePending=null;S.apiMsg=null;S.jpMsg=null;S.wipeArm=false;
+      if(t.getAttribute('data-ov')){if(morphBusy)return;var ovK=t.getAttribute('data-ov');var ovWas=S.overlay;S.overlay=ovK;S.movePending=null;S.apiMsg=null;S.jpMsg=null;S.wipeArm=false;try{var _vr9=document.getElementById('vnRoot');if(_vr9)_vr9.style.display='none';var _vp9=document.getElementById('vnPill');if(_vp9)_vp9.style.display='none';}catch(e9){}
         if(ovWas){renderOverlay();codexPills();setPills();return;}
         var ovTmp=document.createElement('div');ovTmp.innerHTML=overlayView();
         if(ovTmp.firstChild)root.appendChild(ovTmp.firstChild);
