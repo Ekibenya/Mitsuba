@@ -3047,7 +3047,7 @@ function storyPane(){
         +'<div style="display:flex;gap:8px;justify-content:flex-end;margin:7px 0 12px"><div class="btn obtn" data-act="mCancel" style="font-size:12px;padding:5px 14px">取消</div><div class="btn gbtn" data-act="mSave" style="font-size:12px;letter-spacing:.15em;padding:5px 16px">保存</div></div></div>';
       illu='';cotHtml='';retry='';
     }
-    MSGBUF.push({h:h,html:'<div class="fade" data-msg="'+i+'" style="margin-bottom:24px;position:relative">'+chap+illu+cotHtml+paras+retry+'</div>'});
+    MSGBUF.push({h:h,html:'<div class="fade" data-msg="'+i+'" style="margin-bottom:24px;position:relative">'+chap+cotHtml+paras+illu+retry+'</div>'});
   });
   var items='<div id="zjItems"></div>';
   var thinking='';
