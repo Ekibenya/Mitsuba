@@ -1564,7 +1564,7 @@ function buildSystem(history,userInput){
     (function(){var mn=parseInt(API.gen&&API.gen.mintok,10);return (isFinite(mn)&&mn>0&&!S.chatOnly)?('【篇幅下限】本幕正文（不含状态栏）不得少于 '+mn+' 字：以更细的场面、对话与人物反应把内容写足，不许灌水凑数，也不许为凑字数拖慢剧情节奏。'):'';})(),
     '【世界书·激活条目】\n'+lore.map(function(e){return '『'+e.title+'』'+e.content;}).join('\n'),
     SPD?'':('【对话示例】\n'+fill(G.mes_example)),
-    '【输出格式·铁则】正文严格模仿原作文风的现代白话轻小说笔法('+(SPD?'2-3段，简洁明快':'2-6段')+')：短句、冷面幽默、惨剧与吐槽零时差并置，敬体对话+常体心声，停在需要玩家角色表态处。末尾必须输出<mvu_panel>状态栏：<sec_char>含◆衣装/持物/观瞻/无聊(0-100)/诅咒(0-100)/人格(稳健□｜享乐□｜激进□合计100)/声望(各方阵营±100，｜分隔，如：市民+40｜旧贵族-35)/心念(观念名·心声注脚，1-2条)/歧路(幕末一行：未走之路的一瞥，≤20字)/记录（非三叶主角：省略无聊诅咒人格改◆处境）；<sec_npc>每在场NPC一行◈名字|状态|好感(0-100)|心声；<sec_world>含◇纪年/时地/天气/安稳(0-100)/大势/将临。禁止<UpdateVariable>。若且仅若本轮叙事中世界有实际变动——玩家下令兴建并落成、屋舍焚毁坍塌、人物来到或离去——则在<sec_world>之后增写<sec_deed>，每类一行：▣兴作|名目×数、▣毁损|名目×数、▣来者|人物、▣去者|人物；多项以、分隔。兴作与毁损名目仅限：马厩、酒馆、旅店、咖啡馆、书店、药房、裁缝店、铁匠铺、武器铺、金匠铺、珠宝行、陶瓷坊、铸造厂、肉铺、杂货铺、面包房、货栈、官仓、市政厅、教堂、民居、宫殿、凉亭、草棚、剧场、钟楼、石桥、凯旋门、雕像、断头台、街垒、常青树、橡树、梧桐、苍松、灌木丛、花圃、路灯、芦苇、露岩、喷泉、池塘、石板道、林荫大道、碎石官道；人物仅限：学者、农民、工匠、商人、官员、将军、魔术师、乐手、书记官、神父、绿化教徒、佣兵、学生、革命党人、记者、军医、占卜师、渔夫、樵夫、士兵、贵族、市民。每轮兴作至多3件、毁损至多2件；只记实际发生者，无变动则不得输出<sec_deed>。',
+    '【输出格式·铁则】正文严格模仿原作文风的现代白话轻小说笔法('+(SPD?'2-3段，简洁明快':'2-6段')+')：短句、冷面幽默、惨剧与吐槽零时差并置，敬体对话+常体心声，停在需要玩家角色表态处。末尾必须输出<mvu_panel>状态栏：<sec_char>含◆衣装/持物/观瞻/无聊(0-100)/诅咒(0-100)/人格(稳健□｜享乐□｜激进□合计100)/声望(各方阵营±100，｜分隔，如：市民+40｜旧贵族-35)/心念(观念名·心声注脚，1-2条)/歧路(幕末一行：未走之路的一瞥，≤20字)/记录（非三叶主角：省略无聊诅咒人格改◆处境）；<sec_npc>每在场NPC一行◈名字|状态|好感(0-100)|心声；<sec_world>含◇纪年/时地/天气/安稳(0-100)/大势/新闻/将临。其中◇新闻是「罗塞利亚公报」当期头条：紧扣当前时局与本幕新近发生之事，写１~３条以｜分隔，每条格式「标题·一句正文」，口吻为近世报章、消息滞后于真相、可含市井传闻与官方口径的落差；平静无事则写「今日无事·付印在即」。禁止<UpdateVariable>。若且仅若本轮叙事中世界有实际变动——玩家下令兴建并落成、屋舍焚毁坍塌、人物来到或离去——则在<sec_world>之后增写<sec_deed>，每类一行：▣兴作|名目×数、▣毁损|名目×数、▣来者|人物、▣去者|人物；多项以、分隔。兴作与毁损名目仅限：马厩、酒馆、旅店、咖啡馆、书店、药房、裁缝店、铁匠铺、武器铺、金匠铺、珠宝行、陶瓷坊、铸造厂、肉铺、杂货铺、面包房、货栈、官仓、市政厅、教堂、民居、宫殿、凉亭、草棚、剧场、钟楼、石桥、凯旋门、雕像、断头台、街垒、常青树、橡树、梧桐、苍松、灌木丛、花圃、路灯、芦苇、露岩、喷泉、池塘、石板道、林荫大道、碎石官道；人物仅限：学者、农民、工匠、商人、官员、将军、魔术师、乐手、书记官、神父、绿化教徒、佣兵、学生、革命党人、记者、军医、占卜师、渔夫、樵夫、士兵、贵族、市民。每轮兴作至多3件、毁损至多2件；只记实际发生者，无变动则不得输出<sec_deed>。',
     (JPSB&&!S.chatOnly)?jprule():'',
     S.chatOnly?'【聊天模式·最高优先级·覆盖一切输出格式要求】玩家要的是即时通讯般的快聊：只输出对话本身，格式严格为「名字：「台词」」，每句独立一行。台词须口语、简短，每句不超过30字，一回合至多3行，严禁长篇大论，严禁旁白、场景、动作、心理描写。本回合不要输出<mvu_panel>状态栏，不要<sec_deed>，不要思维链。玩家的输入就是其原话，像回消息一样直接回应。':'',
     S.dice?'【命运之骰】玩家言行末尾若附〔命运之骰 X／100 · 等级〕，此为本回合行动成效的既定天数，严格按等级裁定叙事，不得逆天改命：大凶(≤5)灾难性失败且有恶果；不利(≤35)事与愿违；平平(≤65)成败参半进展有限；顺遂(≤94)如愿达成；大吉(≥95)超乎所求另有意外之喜。骰记本身不是玩家说出的话，不要复述。':'',
@@ -2110,7 +2110,7 @@ var pref = loadPref();
 var S = {
   screen: 'title', device: pref.device||'auto', openingId: pref.openingId||null,
   history: [], input:'', mode:'say', thinking:false, aiLive:null, muted:pref.muted||false, dice:!!pref.dice, sugg:pref.sugg!==0, chatOnly:!!pref.chat, micOn:(pref.mic===0?false:(pref.mic===1?true:null)),
-  overlay:null, tab:'story', secC:true, secN:true, secW:true, secG:true, secA:false,
+  overlay:null, tab:'story', secC:true, secN:true, secP:true, secW:true, secG:true, secA:true,
   codexCat:'核心', codexIdx:0, saves:pref.saves||[], connected:TH.available,
   mem:pref.mem||[], memOn:pref.memOn!==false, memN:pref.memN||0,
   customOp:pref.customOp||null, customRole:pref.customRole||null, wiz:null, setTab:'font'
@@ -2399,7 +2399,7 @@ function rerollPanel(idx){
   var base=S.history.slice(0,uIsPrev?idx-1:idx);
   var sys=buildSystem(base,text),msgs=buildMessages(base,text);
   var narr=stripMvu(h.text).replace(/\s+$/,'');
-  var ask='（请仅据这一幕正文，重新输出【完整准确】的结尾状态栏 <mvu_panel>：<sec_char>含◆衣装/持物/观瞻/无聊(0-100)/诅咒(0-100)/人格(稳健□｜享乐□｜激进□合计100)/记录（非三叶主角：省略无聊诅咒人格改◆处境）；<sec_npc>每在场者一行◈名字|状态|好感(0-100)|心声；<sec_world>含◇纪年/时地/天气/安稳(0-100)/大势/将临。只输出 <mvu_panel>…</mvu_panel> 本身，不要正文、不要解释、不要复述正文。）';
+  var ask='（请仅据这一幕正文，重新输出【完整准确】的结尾状态栏 <mvu_panel>：<sec_char>含◆衣装/持物/观瞻/无聊(0-100)/诅咒(0-100)/人格(稳健□｜享乐□｜激进□合计100)/记录（非三叶主角：省略无聊诅咒人格改◆处境）；<sec_npc>每在场者一行◈名字|状态|好感(0-100)|心声；<sec_world>含◇纪年/时地/天气/安稳(0-100)/大势/新闻(罗塞利亚公报头条,｜分隔,「标题·正文」)/将临。只输出 <mvu_panel>…</mvu_panel> 本身，不要正文、不要解释、不要复述正文。）';
   var cont=msgs.concat([{role:'assistant',content:h.text},{role:'user',content:ask}]);
   S.fixing=true;S.fixingIdx=idx;S._noFade=true;S._keepScroll=true;S._anchorMsg=idx;render();
   callCustomAI(sys,cont).then(function(t2){
@@ -2622,14 +2622,14 @@ function wizRoleDesc(w){
   var c=w.role.c;return '自定义角色：'+(c.g||'')+'，'+(c.id||'')+(c.age?('，'+c.age+'岁'):'')+(c.look?('。外貌：'+c.look):'')+(c.bg?('。背景：'+c.bg):'');
 }
 function wizPanelSkeleton(npcs,era,place,isTianzi,wy){
-  return '<mvu_panel>\n<sec_char>\n◆衣装|（角色衣着）\n◆持物|（手边之物）\n◆观瞻|（旁人眼中的你）\n'+(isTianzi?'◆无聊|40\n◆诅咒|20\n◆人格|稳健40｜享乐35｜激进25\n':'◆处境|50\n')+'◆记录|（书记官一句记事）\n</sec_char>\n<sec_npc>\n'+npcs.map(function(n){return '◈'+n+'|（状态）|50|（心声）';}).join('\n')+'\n</sec_npc>\n<sec_world>\n◇纪年|（朝代年号 · '+wizYearStr(wy!=null?wy:era.year)+' · 季节）\n◇时地|（时辰 · '+place+'）\n◇天气|（天气）\n◇安稳|80\n◇大势|（当前时局大势一句）\n◇将临|（一句悬而未发的暗流）\n</sec_world>\n</mvu_panel>';
+  return '<mvu_panel>\n<sec_char>\n◆衣装|（角色衣着）\n◆持物|（手边之物）\n◆观瞻|（旁人眼中的你）\n'+(isTianzi?'◆无聊|40\n◆诅咒|20\n◆人格|稳健40｜享乐35｜激进25\n':'◆处境|50\n')+'◆记录|（书记官一句记事）\n</sec_char>\n<sec_npc>\n'+npcs.map(function(n){return '◈'+n+'|（状态）|50|（心声）';}).join('\n')+'\n</sec_npc>\n<sec_world>\n◇纪年|（朝代年号 · '+wizYearStr(wy!=null?wy:era.year)+' · 季节）\n◇时地|（时辰 · '+place+'）\n◇天气|（天气）\n◇安稳|80\n◇大势|（当前时局大势一句）\n◇新闻|（罗塞利亚公报头条 · 紧扣时局的一句）\n◇将临|（一句悬而未发的暗流）\n</sec_world>\n</mvu_panel>';
 }
 function wizTemplate(w){
   var era=WIZ_ERAS[w.era];var role=wizRoleDesc(w);var isT=!role;var wy=wizYearOf(w);
   var who=isT?'你——三叶・克劳伯，苏醒的诅咒人偶——':'你——'+(w.role.mode==='figure'?w.role.fig:(w.role.c.id||'无名之人'))+'——';
   var panel='<mvu_panel>\n<sec_char>\n◆衣装|依时代与身份\n◆持物|——\n◆观瞻|'+(isT?'苏醒的诅咒人偶':'——')+'\n'+(isT?'◆无聊|55\n◆诅咒|25\n◆人格|稳健45｜享乐35｜激进20\n':'◆处境|50\n')+'◆记录|开局于'+w.place+'。\n</sec_char>\n<sec_npc>\n'
     +w.npcs.map(function(n){return '◈'+n+'|在场|50|静观';}).join('\n')
-    +'\n</sec_npc>\n<sec_world>\n◇纪年|'+era.label+' · '+wizYearStr(wy)+' · 春\n◇时地|日中 · '+w.place+'\n◇天气|晴\n◇安稳|80\n◇大势|'+era.blurb.split('：')[0]+'\n◇将临|未卜\n</sec_world>\n</mvu_panel>';
+    +'\n</sec_npc>\n<sec_world>\n◇纪年|'+era.label+' · '+wizYearStr(wy)+' · 春\n◇时地|日中 · '+w.place+'\n◇天气|晴\n◇安稳|80\n◇大势|'+era.blurb.split('：')[0]+'\n◇新闻|付印在即·公报静候后文\n◇将临|未卜\n</sec_world>\n</mvu_panel>';
   return '【开局零·'+era.label+'（'+wizYearStr(wy)+'），'+w.place+'：自定义开局】\n\n'
     +era.blurb+'\n\n此刻，'+who+'正在'+w.place+'。'+(w.npcs.length?('在场的还有：'+w.npcs.join('、')+'。'):'')
     +'\n\n（这是未接入 AI 时的简易开场。故事从你的第一句话开始——开口吧，书记官已经蘸好了墨。）\n\n'+panel;
@@ -2831,6 +2831,28 @@ function psW(w,cc,cw){
 }
 
 
+function newsBox(cw){
+  var raw=String((cw&&cw['\u65b0\u95fb'])||'').trim();
+  var date=String((cw&&cw['\u7eaa\u5e74'])||'').split('\u00b7')[0].trim();
+  var items=raw?raw.split(/[\uFF5C|]/).map(function(t){return t.trim();}).filter(Boolean).slice(0,4):[];
+  var body;
+  if(!items.length){
+    body='<div style="text-align:center;font-size:12px;color:#8a7d66;padding:10px 0;letter-spacing:.1em">\u4eca\u65e5\u65e0\u4e8b\u53d1\u751f\u3002<br>\u2014\u2014\u4ed8\u5370\u5728\u5373\uff0c\u9759\u5019\u540e\u6587\u3002</div>';
+  }else{
+    body=items.map(function(t,i){
+      var parts=t.split(/[\u00b7\u30fb\uff1a:]/);var hd=parts.length>1?parts[0].trim():'';var txt=parts.length>1?parts.slice(1).join('\uff1a').trim():t;
+      return '<div style="padding:'+(i?'9px 0 0':'2px 0 0')+';'+(i?'border-top:1px solid rgba(74,64,50,.16);margin-top:9px':'')+'">'
+        +(hd?'<div class="kai" style="font-size:14px;line-height:1.35;color:#3a3024;letter-spacing:.02em">'+esc(hd)+'</div>':'')
+        +'<div style="font-size:12px;line-height:1.7;color:#5a4e3c;text-align:justify;margin-top:'+(hd?'3px':'0')+'">'+esc(txt)+'</div></div>';
+    }).join('');
+  }
+  return '<div style="border:1px solid rgba(74,64,50,.3);border-radius:6px;background:linear-gradient(180deg,#f3ecd9,#e9e0c8);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 2px 8px rgba(58,47,36,.2);padding:12px 14px 13px;position:relative;overflow:hidden">'
+    +'<div style="text-align:center;border-bottom:2px double rgba(74,64,50,.5);padding-bottom:7px;margin-bottom:9px">'
+      +'<div style="font-family:var(--kai),serif;font-size:17px;letter-spacing:.18em;color:#2b2318;font-weight:700">\u7f57 \u585e \u5229 \u4e9a \u516c \u62a5</div>'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;font-size:8.5px;letter-spacing:.12em;color:#7a6d58"><span>LA GAZETTE</span>'+(date?'<span>'+esc(date)+'</span>':'<span></span>')+'<span>\u53f7 \u5916</span></div>'
+    +'</div>'+body
+    +'</div>';
+}
 function sidebar(){
   var p=currentPanel();var cc=p?p.char:{};var cw=p?p.world:{};
   var PS=(G&&G.panelSpec)||null;
@@ -2858,6 +2880,7 @@ function sidebar(){
     +'<div style="text-align:center;font-size:9.5px;letter-spacing:.28em;color:var(--mut);margin:12px 0 2px">LIBERTÉ · ÉGALITÉ · PÂTISSERIE　自由 · 平等 · 甜食</div>'
         +'</div>':'')+'</div>'
     +'<div class="glass" style="margin:11px 12px 0;border-radius:14px">'+head(S.secN,'tgN','var(--grn)','在 场 之 人',S.secN)+(S.secN?'<div class="fade" style="padding:0 15px 12px">'+npcs+'</div>':'')+'</div>'
+    +'<div class="glass" style="margin:11px 12px 0;border-radius:14px">'+head(S.secP,'tgP','#7a6a52','公 报 · 新 闻',S.secP)+(S.secP?'<div class="fade" style="padding:0 15px 14px">'+newsBox(cw)+'</div>':'')+'</div>'
     +'<div class="glass" style="margin:11px 12px 0;border-radius:14px">'+head(S.secW,'tgW','var(--gold)','时 局 · 列 国',S.secW)
       +(S.secW?'<div class="fade" style="padding:0 15px 22px">'+worldRows
         +'<div style="margin:8px 0 6px">'+gaugeBar('安稳',anwen,'#2e4a72,#3c6494,#6f93c0','var(--grn2)')+'</div>'
@@ -4927,6 +4950,7 @@ root.addEventListener('click',function(e){
       else if(a==='tgN'){S.secN=!S.secN;S._noFade=true;S._panelKeep=true;render();}
       else if(a==='tgW'){S.secW=!S.secW;S._noFade=true;S._panelKeep=true;render();}
       else if(a==='tgG'){S.secG=!S.secG;S._noFade=true;S._panelKeep=true;render();}
+      else if(a==='tgP'){S.secP=!S.secP;S._noFade=true;S._panelKeep=true;render();}
       else if(a==='tgA'){S.secA=!S.secA;render();}
       else if(a==='savenow'){saveNow();}
       else if(a==='editlore'){S.setTab='lore';S.overlay='set';renderOverlay();}
