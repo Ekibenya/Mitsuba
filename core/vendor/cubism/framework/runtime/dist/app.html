@@ -273,7 +273,7 @@ f.addEventListener('load',function(){
   t(function(){var bb=document.getElementById('bootBlack');if(bb)bb.style.opacity='1';},2450);
   t(function(){end(false);},3050);
 });
-f.src='core/res/vn/mitsuba_chr.html?vn=1&v=10'+(MB2?'&m=1':'');
+f.src='core/res/vn/mitsuba_chr.html?vn=1&v=11'+(MB2?'&m=1':'');
 /* 兜底:立绘迟迟未载入(弱网)也不挡路 */
 t(function(){end(false);},8000);
 }
@@ -5393,7 +5393,7 @@ try{if(!localStorage.getItem('mb_vn_v3')){
   if(localStorage.getItem('mb3d_hide')==='1'){localStorage.removeItem('mb3d_hide');VN.unhide=true;}
 }}catch(e){}
 var MOB=false;try{MOB=Math.min(screen.width||9e9,window.innerWidth||9e9)<=560;}catch(e){}
-var VNV='10';
+var VNV='11';
 function vnUrl(f){return f.getAttribute('data-vnsrc')+'&v='+VNV+(MOB?'&m=1':'');}
 var DIR='core/res/vn/';
 function ENG(){try{return window.__VNB?window.__VNB():null;}catch(e){return null;}}
@@ -5456,6 +5456,45 @@ document.addEventListener('touchstart',function(e){var t=e.touches&&e.touches[0]
 function send(who,data){
   try{var f=chr(who);
     if(f&&f.contentWindow)f.contentWindow.postMessage(Object.assign({vn:'mitsuba'},data),'*');
+  }catch(e){}
+}
+
+/* ---------------- 口型驱动:说话时每帧算「张嘴度0~1」发给三叶 ----------------
+   TTS→实时音量;纯文字(流式/打字机)→吐字节奏。角色端把 0~1 映射到 闭/微张/张。 */
+VN.mo={timer:0,actx:null,ana:null,src:null,buf:null,srcEl:null,lastPos:-1,open:0};
+function mouthStop(){var M=VN.mo;if(M.timer){clearInterval(M.timer);M.timer=0;}send('m',{act:'mouth',v:0});}
+function ttsRms(E){
+  try{
+    var M=VN.mo, a=E.TTSP&&E.TTSP.audio; if(!a)return null;
+    if(!M.actx){var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return null;
+      M.actx=new AC();M.ana=M.actx.createAnalyser();M.ana.fftSize=256;
+      M.buf=new Uint8Array(M.ana.frequencyBinCount);M.ana.connect(M.actx.destination);}
+    if(M.actx.state==='suspended'){M.actx.resume();return null;}  /* 未激活先别接线,免得TTS静音 */
+    if(M.srcEl!==a){try{M.src=M.actx.createMediaElementSource(a);M.src.connect(M.ana);}catch(e){}M.srcEl=a;}
+    M.ana.getByteTimeDomainData(M.buf);
+    var sm=0;for(var i=0;i<M.buf.length;i++){var d=(M.buf[i]-128)/128;sm+=d*d;}
+    return Math.min(1,Math.sqrt(sm/M.buf.length)*3.4);
+  }catch(e){return null;}
+}
+function mouthTick(){                        /* setInterval 33ms 驱动:rAF在后台/预览会被冻结,定时器更稳 */
+  var M=VN.mo;
+  if(!VN.talk){mouthStop();return;}
+  try{
+    var E=ENG(), target=null;
+    if(E&&E.TTSP&&E.TTSP.playing)target=ttsRms(E);   /* TTS 有真实音频,优先 */
+    if(target==null){                                 /* 纯文字:吐字节奏 */
+      var box=$id('zjTypeBox'), T=E&&E.TYPE;
+      if(box&&T){
+        var pos=T.pos|0; if(M.lastPos<0)M.lastPos=pos;
+        if(pos>M.lastPos){
+          var seg=(T.full||'').slice(M.lastPos,pos); M.lastPos=pos;
+          if(/[^\s，。、！？!?.,;:；：…—「」『』（）()【】\-]/.test(seg))M.open=Math.min(1,0.58+Math.random()*0.4);
+          else M.open*=0.25;                            /* 标点/空格→顿一下 */
+        }
+        target=M.open; M.open*=0.7;                     /* 帧间向闭合衰减→字与字自然开合 */
+      }
+    }
+    if(target!=null)send('m',{act:'mouth',v:+target.toFixed(2)});
   }catch(e){}
 }
 
@@ -5625,7 +5664,9 @@ function tick(){
   var E=ENG();
   var tts=!!(E&&E.TTSP&&E.TTSP.playing);
   var talk=typing||tts;
-  if(talk!==VN.talk){VN.talk=talk;send('m',{act:'talk',on:talk});}
+  if(talk!==VN.talk){VN.talk=talk;send('m',{act:'talk',on:talk});
+    if(talk){VN.mo.lastPos=-1;VN.mo.open=0;if(!VN.mo.timer)VN.mo.timer=setInterval(mouthTick,33);}
+    else mouthStop();}
 
   /* 和文原稿直播:镜像岛底下的 jpIslePane 叠在剧场上。
      展开/全屏=有稿就常显(可回读);小窗=仅生成中直播,不挡平时的立绘 */

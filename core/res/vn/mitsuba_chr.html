@@ -4108,7 +4108,7 @@ setInterval(()=>{                    // 待机偶尔侧倾一下身体
   setTimeout(()=>{PX.lean=0;applyPose();},2000);
 },16000);
 setInterval(()=>{ if(document.documentElement.classList.contains('vnzz'))return; if(Date.now()-(window.__lookT||0)<6000)return; if(Math.random()<0.5) setEyes((Math.random()-0.5)*0.9,(Math.random()-0.5)*0.6) },2700);
-let talking=false, mouth='base', talkT=null;
+let talking=false, mouth='base', talkT=null, extMouth=0;
 function applyFace(){
   show('faceBase', true);
   show('faceHalf', mouth==='half');
@@ -4120,17 +4120,25 @@ function blink(){
   setTimeout(blink, 2300+Math.random()*3200);
 }
 setTimeout(blink,1500);
+function setMouth(v){            // 0..1 张嘴度 → 三档口型(父页面按音量/吐字驱动)
+  if(!talking)return;
+  extMouth=Date.now();
+  const m = v<0.16?'base' : v<0.6?'half' : 'open';
+  if(m!==mouth){mouth=m;applyFace();}
+}
 function setTalking(on){
   if(on===talking)return;
   talking=on;
   $('talkBtn').textContent=talking?'停止说话':'开始说话';
-  if(talking){(function cyc(){
+  clearTimeout(talkT);
+  if(talking){(function cyc(){          // 兜底:父页面没送口型(音频分析失败等)才自己随机翻嘴
     if(!talking){mouth='base';applyFace();return}
+    if(Date.now()-extMouth<220){talkT=setTimeout(cyc,140);return}
     const r=Math.random();
-    mouth=r<0.45?'base':'half';        // 说话只微张,不大张
+    mouth=r<0.45?'base':'half';
     applyFace();
     talkT=setTimeout(cyc,90+Math.random()*130);
-  })()} else {clearTimeout(talkT);mouth='base';applyFace();}
+  })()} else {mouth='base';applyFace();}
 }
 $('talkBtn').onclick=()=>setTalking(!talking);
 // ---- gun: 拼装件肩肘旋转甩臂(过程) + 用户定位原画帧(定格) ----
@@ -4685,6 +4693,7 @@ addEventListener('message',e=>{
   const d=e.data||{};
   if(d.vn!=='mitsuba')return;
   if(d.act==='talk')setTalking(!!d.on);
+  else if(d.act==='mouth')setMouth(+d.v||0);
   else if(d.act==='gunKill')vnGunKill();
   else if(d.act==='skyFire')vnSkyFire();
   else if(d.act==='wave'){if(!seqBusy&&gunState===0)waveNow();}
