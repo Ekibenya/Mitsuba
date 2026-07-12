@@ -273,7 +273,7 @@ f.addEventListener('load',function(){
   t(function(){var bb=document.getElementById('bootBlack');if(bb)bb.style.opacity='1';},2450);
   t(function(){end(false);},3050);
 });
-f.src='core/res/vn/mitsuba_chr.html?vn=1&v=13'+(MB2?'&m=1':'');
+f.src='core/res/vn/mitsuba_chr.html?vn=1&v=14'+(MB2?'&m=1':'');
 /* 兜底:立绘迟迟未载入(弱网)也不挡路 */
 t(function(){end(false);},8000);
 }
@@ -5414,7 +5414,7 @@ try{if(!localStorage.getItem('mb_vn_v3')){
   if(localStorage.getItem('mb3d_hide')==='1'){localStorage.removeItem('mb3d_hide');VN.unhide=true;}
 }}catch(e){}
 var MOB=false;try{MOB=Math.min(screen.width||9e9,window.innerWidth||9e9)<=560;}catch(e){}
-var VNV='13';
+var VNV='14';
 function vnUrl(f){return f.getAttribute('data-vnsrc')+'&v='+VNV+(MOB?'&m=1':'');}
 var DIR='core/res/vn/';
 function ENG(){try{return window.__VNB?window.__VNB():null;}catch(e){return null;}}
@@ -5497,25 +5497,30 @@ function ttsRms(E){
     return Math.min(1,Math.sqrt(sm/M.buf.length)*3.4);
   }catch(e){return null;}
 }
-function mouthTick(){                        /* setInterval 33ms 驱动:rAF在后台/预览会被冻结,定时器更稳 */
+function mouthTick(){                        /* setInterval 33ms 驱动 */
   var M=VN.mo;
   if(!VN.talk){mouthStop();return;}
   try{
-    var E=ENG(), target=null;
-    if(E&&E.TTSP&&E.TTSP.playing)target=ttsRms(E);   /* TTS 有真实音频,优先 */
-    if(target==null){                                 /* 纯文字:吐字节奏 */
-      var box=$id('zjTypeBox'), T=E&&E.TYPE;
-      if(box&&T){
-        var pos=T.pos|0; if(M.lastPos<0)M.lastPos=pos;
-        if(pos>M.lastPos){
-          var seg=(T.full||'').slice(M.lastPos,pos); M.lastPos=pos;
-          if(/[^\s，。、！？!?.,;:；：…—「」『』（）()【】\-]/.test(seg))M.open=Math.min(1,0.58+Math.random()*0.4);
-          else M.open*=0.25;                            /* 标点/空格→顿一下 */
+    var E=ENG(), now=performance.now();
+    /* TTS:真实音量驱动(大张频率由角色端限制) */
+    if(E&&E.TTSP&&E.TTSP.playing){ var r=ttsRms(E); if(r!=null)send('m',{act:'mouth',v:+r.toFixed(2)}); return; }
+    /* 纯文字:按语速一开一合翻嘴(不是每个字都张),每4-6次微张才请求一次大张 */
+    var box=$id('zjTypeBox'), T=E&&E.TYPE;
+    if(box&&T){
+      var pos=T.pos|0;
+      if(pos!==M.lastPos){ M.lastPos=pos; M.lastAdv=now; }
+      if(now-(M.lastAdv||0)>=260){ M.cur=0; send('m',{act:'mouth',v:0}); return; }  /* 停顿/说完→闭嘴 */
+      if(now>=(M.nextFlap||0)){
+        M.nextFlap=now+120+Math.random()*80;             /* ~120-200ms 一开一合=语速 */
+        if(M.cur>0.1){ M.cur=0; }                        /* 收:闭一下(制造独立的一次微张) */
+        else {
+          M.flapN=(M.flapN||0)+1;
+          if(M.flapN>=(M.need||5)){ M.flapN=0; M.need=4+((Math.random()*3)|0); M.cur=0.9; } /* 攒够→请求大张(角色端做成快速) */
+          else M.cur=0.42;                                /* 微张 */
         }
-        target=M.open; M.open*=0.7;                     /* 帧间向闭合衰减→字与字自然开合 */
       }
+      send('m',{act:'mouth',v:M.cur});
     }
-    if(target!=null)send('m',{act:'mouth',v:+target.toFixed(2)});
   }catch(e){}
 }
 
@@ -5697,7 +5702,7 @@ function tick(){
   var tts=!!(E&&E.TTSP&&E.TTSP.playing);
   var talk=typing||tts;
   if(talk!==VN.talk){VN.talk=talk;send('m',{act:'talk',on:talk});
-    if(talk){VN.mo.lastPos=-1;VN.mo.open=0;if(!VN.mo.timer)VN.mo.timer=setInterval(mouthTick,33);}
+    if(talk){VN.mo.lastPos=-1;VN.mo.cur=0;VN.mo.flapN=0;VN.mo.nextFlap=0;if(!VN.mo.timer)VN.mo.timer=setInterval(mouthTick,33);}
     else mouthStop();}
 
   /* 和文原稿直播:镜像岛底下的 jpIslePane 叠在剧场上。

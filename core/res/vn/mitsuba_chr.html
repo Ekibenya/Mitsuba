@@ -4134,10 +4134,17 @@ function blink(){
   setTimeout(blink, 2300+Math.random()*3200);
 }
 setTimeout(blink,1500);
-function setMouth(v){            // 0..1 张嘴度 → 三档口型(父页面按音量/吐字驱动)
+let mBigUntil=0, mBigLock=0;
+function setMouth(v){            // 0..1 张嘴度 → 口型。规则:平时只微张,攒够4-6次微张才放行一次大张,且大张只一瞬
   if(!talking)return;
   extMouth=Date.now();
-  const m = v<0.16?'base' : v<0.6?'half' : 'open';
+  const now=Date.now();
+  let m;
+  if(now<mBigUntil) m='open';                                      // 大张:只持续~80ms,迅速结束
+  else if(v>=0.7 && now>=mBigLock){                                // 冷却已过(期间已微张若干次)才允许一次大张
+    m='open'; mBigUntil=now+80; mBigLock=now+80+560+Math.random()*260; // 之后560-820ms内只能微张(≈4-6次)
+  } else if(v>=0.16) m='half';                                     // 绝大多数时间=微张
+  else m='base';
   if(m!==mouth){mouth=m;applyFace();}
 }
 function setTalking(on){
