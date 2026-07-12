@@ -5240,6 +5240,22 @@ function lookAt(px,py){
   ['m','k','s'].forEach(function(w){send(w,{act:'look',x:nx,y:ny});});
 }
 document.addEventListener('pointermove',function(e){lookAt(e.clientX,e.clientY);},{passive:true});
+/* 点到三叶身上:随机 开枪一整套(举枪-瞄准-怼脸开火-收枪) 或 挥手打招呼 */
+document.addEventListener('click',function(e){
+  if(!VN.on||VN.zz)return;
+  var t=e.target;
+  if(t&&t.closest&&t.closest('#vnCtl,#vnPill,[data-act],[data-ov],[data-vnact],button,input,textarea'))return;
+  if(!(t&&t.closest&&t.closest('#zjSceneIsle')))return;
+  var isle=$id('zjSceneIsle');if(!isle)return;
+  var r=isle.getBoundingClientRect();if(!r.width)return;
+  var st=VN.sizeKey||'S';
+  var sp=st==='F'?0.64:(st==='B'?0.44:0.19);          /* 当前取景窗跨度(画布高度占比) */
+  var cx=r.left+r.width/2+((VN.posKey&&st!=='S')?0.19*r.width:0);  /* 有客让位时人物中心右移 */
+  var bw=560*(r.height/(2850*sp));                     /* 躯干显示宽度≈画布560px×当前缩放 */
+  if(Math.abs(e.clientX-cx)>Math.max(56,bw/2))return;
+  var now=Date.now();if(now-(VN.pokeT||0)<1800)return;VN.pokeT=now;
+  send('m',{act:Math.random()<0.5?'gunKill':'wave'});
+},true);
 document.addEventListener('touchmove',function(e){var t=e.touches&&e.touches[0];if(t)lookAt(t.clientX,t.clientY);},{passive:true});
 document.addEventListener('touchstart',function(e){var t=e.touches&&e.touches[0];if(t){LOOK.t=0;lookAt(t.clientX,t.clientY);}},{passive:true});
 function send(who,data){
