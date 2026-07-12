@@ -3187,7 +3187,15 @@ var ZJ_LOCS=[
   {name:'赫泽兰',ch:'赫',kind:'cap',x:600,y:192,note:'东北联合王国 · 十王之国',alias:['海泽兰德','赫泽兰德','海泽兰']},
   {name:'普尔梅尼亚',ch:'普',kind:'cap',x:452,y:390,note:'宿敌帝国 · 帝都梅尔加尔多',alias:['梅尔加尔多','普美利亚','普梅尼亚']},
   {name:'库洛卡斯',ch:'库',kind:'cap',x:770,y:280,note:'东方大帝国 · 野心昭彰',alias:['库罗卡斯']},
-  {name:'大轮教会领',ch:'教',kind:'cap',x:694,y:464,note:'大轮教圣地 · 教皇领'}
+  {name:'大轮教会领',ch:'教',kind:'cap',x:694,y:464,note:'大轮教圣地 · 教皇领'},
+  {name:'莉莉亚领地',ch:'领',kind:'city',x:746,y:562,note:'莉莉安娜的海外领地 · 离岛与飞地'},
+  {name:'海德拉西亚',ch:'海',kind:'cap',x:204,y:650,note:'南方小国 · 海德拉西亚王国'},
+  {name:'弗利吉亚',ch:'弗',kind:'cap',x:284,y:622,note:'南方小国 · 弗利吉亚王国'},
+  {name:'加贝拉',ch:'加',kind:'cap',x:388,y:592,note:'帝国南邻 · 加贝拉帝国'},
+  {name:'赛菲洛斯',ch:'赛',kind:'cap',x:476,y:612,note:'帝国南邻 · 赛菲洛斯帝国'},
+  {name:'萨尔比亚',ch:'萨',kind:'cap',x:530,y:562,note:'帝国南邻 · 萨尔比亚王国'},
+  {name:'达利亚',ch:'达',kind:'cap',x:608,y:566,note:'帝国南邻 · 达利亚王国'},
+  {name:'阿尔卡迪亚',ch:'由',kind:'sea',x:52,y:248,note:'新大陆的自由之国 · 需扬帆渡洋',alias:['阿卡迪亚','阿卡迪纳']}
 ];
 function locByName(n){for(var i=0;i<ZJ_LOCS.length;i++)if(ZJ_LOCS[i].name===n)return ZJ_LOCS[i];return null;}
 var ZJ_KEYS=(function(){var a=[];ZJ_LOCS.forEach(function(L){a.push({L:L,k:L.name});(L.alias||[]).forEach(function(x){a.push({L:L,k:x});});});a.sort(function(p,q){return q.k.length-p.k.length;});return a;})();
@@ -3305,21 +3313,17 @@ function mapSvg(){
     +TX(120,104,'莉莉安娜王国',11,2)
     +TX(478,152,'赫泽兰',16,10)
     +TX(748,208,'库洛卡斯',17,9)
-    +TX(204,646,'海德拉西亚',10,1)+TX(284,616,'弗利吉亚',10,1)+TX(388,588,'加贝拉',10,1)+TX(476,608,'赛菲洛斯',10,1)+TX(530,558,'萨尔比亚',10,1)+TX(608,562,'达利亚',10,1)
-    +'<text x="204" y="660" text-anchor="middle" font-size="8" fill="#6b5c44">★</text><text x="284" y="630" text-anchor="middle" font-size="8" fill="#6b5c44">★</text><text x="388" y="602" text-anchor="middle" font-size="8" fill="#6b5c44">★</text><text x="476" y="622" text-anchor="middle" font-size="8" fill="#6b5c44">★</text><text x="530" y="572" text-anchor="middle" font-size="8" fill="#6b5c44">★</text><text x="608" y="576" text-anchor="middle" font-size="8" fill="#6b5c44">★</text>';
+    ;
   /* 州名（小） */
   var ST='rgba(107,92,68,.9)';
   s+=TX(145,317,'伊尔洛兹',8.5,0,ST)+TX(228,280,'绿玫瑰',8.5,0,ST)+TX(184,382,'黑玫瑰',8.5,0,ST)+TX(290,412,'白玫瑰',8.5,0,ST)+TX(222,420,'粉红玫瑰',8.5,0,ST);
-  /* 莉莉亚领地：引线标注（仿原图） */
-  s+='<path d="M770 590L688 516L672 505" fill="none" stroke="rgba(74,64,50,.7)" stroke-width=".8"></path>'
-    +'<path d="M788 591L762 574" fill="none" stroke="rgba(74,64,50,.7)" stroke-width=".8"></path>'
-    +TX(800,596,'莉莉亚领地',10,1);
   /* 图例 */
-  s+='<rect x="40" y="318" width="82" height="88" fill="rgba(244,236,214,.88)" stroke="'+INK+'" stroke-width="1"></rect>'
-    +'<rect x="44" y="322" width="74" height="80" fill="none" stroke="rgba(74,64,50,.35)"></rect>'
+  s+='<rect x="40" y="318" width="82" height="112" fill="rgba(244,236,214,.88)" stroke="'+INK+'" stroke-width="1"></rect>'
+    +'<rect x="44" y="322" width="74" height="104" fill="none" stroke="rgba(74,64,50,.35)"></rect>'
     +'<text x="54" y="345" text-anchor="middle" font-size="11" fill="#7a5f28">★</text><text x="64" y="345" font-size="10" fill="#3a3024" style="font-family:var(--kai),serif">首都</text>'
     +'<circle cx="54" cy="366" r="4" fill="#fbf6ea" stroke="'+INK+'" stroke-width="1.4"></circle><text x="64" y="370" font-size="10" fill="#3a3024" style="font-family:var(--kai),serif">城邑</text>'
-    +'<path d="M49 386l10 10M59 386l-10 10" stroke="#96323f" stroke-width="1.6"></path><text x="64" y="395" font-size="10" fill="#3a3024" style="font-family:var(--kai),serif">要冲</text>';
+    +'<path d="M49 386l10 10M59 386l-10 10" stroke="#96323f" stroke-width="1.6"></path><text x="64" y="395" font-size="10" fill="#3a3024" style="font-family:var(--kai),serif">要冲</text>'
+    +'<text x="54" y="420" text-anchor="middle" font-size="13" font-weight="700" fill="#2a4568">≈</text><text x="64" y="419" font-size="10" fill="#3a3024" style="font-family:var(--kai),serif">海路</text>';
   /* 罗盘 */
   s+='<g opacity=".8"><path d="M915 611L920 630L939 635L920 640L915 659L910 640L891 635L910 630Z" fill="rgba(42,69,104,.5)" stroke="'+INK+'" stroke-width=".8"></path>'
     +'<path transform="rotate(45 915 635)" d="M915 622L918 632L928 635L918 638L915 648L912 638L902 635L912 632Z" fill="rgba(42,69,104,.3)"></path>'
@@ -3351,6 +3355,7 @@ function mapBody(){
     var here=L.name===cur.name;
     var sym;
     if(L.kind==='cap')sym='<span style="font-size:15px;line-height:1;color:#7a5f28;text-shadow:0 0 3px #f8f2df,0 1px 1px rgba(58,47,36,.4)">★</span>';
+    else if(L.kind==='sea')sym='<span style="font-size:14px;line-height:1;color:#2a4568;font-weight:700;text-shadow:0 0 3px #f2e8cf">≈</span>';
     else if(L.kind==='pass')sym='<span style="position:relative;display:inline-block;width:11px;height:11px"><span style="position:absolute;inset:0;color:#96323f;font-size:11px;line-height:11px;font-weight:700">✕</span></span>';
     else sym='<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#fbf6ea;border:1.5px solid #4a4032;box-shadow:0 1px 2px rgba(58,47,36,.4)"></span>';
     var lbl='<div style="font-size:9.5px;letter-spacing:.06em;line-height:1.15;color:'+(here?'#274468':'#3a3024')+';font-weight:'+(here?'700':'400')+';text-shadow:0 0 3px #f2e8cf,0 0 3px #f2e8cf,0 0 4px #f2e8cf;white-space:nowrap">'+esc(L.name)+'</div>';
