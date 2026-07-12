@@ -1073,8 +1073,13 @@ function illuHtml(h,i){
       illu+='</div>';
     }
   }
-  if(!h.img&&h.role==='world'&&imgReady()&&!S.thinking){
-    illu+='<div style="text-align:center;margin:2px 0 16px">'+(S.imgBusy===i?'<span style="font-size:12px;letter-spacing:.15em;color:var(--gold)">✦ 绘制中<span style="animation:blink 1.2s infinite">…</span></span>':'<div class="btn obtn" data-drawidx="'+i+'" title="为这一幕生成插画" style="display:inline-block;font-size:12px;letter-spacing:.18em;padding:5px 14px;color:var(--gold3)">✦ 绘此幕</div>')+'</div>';
+  if(!h.img&&h.role==='world'&&!S.thinking){
+    var _drawInner;
+    if(S.imgBusy===i){_drawInner='<span style="font-size:12px;letter-spacing:.15em;color:var(--gold)">✦ 绘制中<span style="animation:blink 1.2s infinite">…</span></span>';}
+    else if(imgReady()){_drawInner='<div class="btn obtn" data-drawidx="'+i+'" title="为这一幕生成插画" style="display:inline-block;font-size:12px;letter-spacing:.18em;padding:5px 14px;color:var(--gold3)">✦ 绘此幕</div>';}
+    else if(i===S.history.length-1){_drawInner='<div class="btn obtn" data-act="openImgSet" title="生图尚未配置——点此设置绘图接口" style="display:inline-block;font-size:12px;letter-spacing:.16em;padding:5px 14px;color:var(--mut)">✦ 生图 · 点此设置</div>';}
+    else{_drawInner='';}
+    if(_drawInner)illu+='<div style="text-align:center;margin:2px 0 16px">'+_drawInner+'</div>';
   }
   return illu;
 }
