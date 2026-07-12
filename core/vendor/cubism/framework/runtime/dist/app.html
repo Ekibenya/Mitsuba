@@ -5368,7 +5368,8 @@ function ctlRefresh(){
   if(key===VN.ctlKey)return; VN.ctlKey=key;
   function b(act,txt){return '<div data-vnact="'+act+'" style="'+PILLCSS+'">'+txt+'</div>';}
   var h='';
-  if(!s.worldFull) h+= s.isleBig ? b('worldFull','全屏')+b('isleSmall','收起') : b('isleBig','展开');
+  if(s.worldFull){ h+= b('worldFull','退出全屏'); }
+  else h+= s.isleBig ? b('worldFull','全屏')+b('isleSmall','收起') : b('isleBig','展开');
   h+=b('jpsb','设置')+b('vnoff','剧场');
   if(!s.worldFull) h+=b('isleHide','✕');
   var c=$id('vnCtl'); if(c)c.innerHTML=h;
@@ -5378,7 +5379,8 @@ root.addEventListener('click',function(e){
   if(!t)return;
   if(t==='vnoff'){VN.on=false;try{localStorage.setItem('mb_vn','0');}catch(e2){}return;}
   if(t==='jpsb'){var ov=document.querySelector('#zjSceneIsle [data-ov="jpsb"]');if(ov)ov.click();return;}
-  var el=document.querySelector('#zjSceneIsle [data-act="'+t+'"]');
+  /* 优先岛内按钮;全屏等场景岛内无对应键时,退回全文档查找(如底部「退出全屏」data-act=worldFull) */
+  var el=document.querySelector('#zjSceneIsle [data-act="'+t+'"]')||document.querySelector('[data-act="'+t+'"]');
   if(el)el.click();
 });
 
