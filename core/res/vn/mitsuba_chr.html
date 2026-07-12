@@ -4107,7 +4107,7 @@ setInterval(()=>{                    // 待机偶尔侧倾一下身体
   applyPose();
   setTimeout(()=>{PX.lean=0;applyPose();},2000);
 },16000);
-setInterval(()=>{ if(document.documentElement.classList.contains('vnzz'))return; if(Math.random()<0.5) setEyes((Math.random()-0.5)*0.9,(Math.random()-0.5)*0.6) },2700);
+setInterval(()=>{ if(document.documentElement.classList.contains('vnzz'))return; if(Date.now()-(window.__lookT||0)<6000)return; if(Math.random()<0.5) setEyes((Math.random()-0.5)*0.9,(Math.random()-0.5)*0.6) },2700);
 let talking=false, mouth='base', talkT=null;
 function applyFace(){
   show('faceBase', true);
@@ -4691,6 +4691,7 @@ addEventListener('message',e=>{
   else if(d.act==='pos'){vnOff=d.x==='right'?0.19:0;fit();}
   else if(d.act==='frame'){vnWin=[+d.a,+d.b];fit();}
   else if(d.act==='sleep'){document.documentElement.classList.toggle('vnzz',!!d.on);}
+  else if(d.act==='look'){window.__lookT=Date.now();PX.nx=+d.x||0;PX.ny=+d.y||0;setEyes(PX.nx,PX.ny);applyPose();}
 });
 function fit(){
   if(vnWin){

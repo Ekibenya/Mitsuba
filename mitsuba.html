@@ -5228,6 +5228,20 @@ pill.addEventListener('click',function(){VN.on=true;try{localStorage.setItem('mb
 function $id(x){return document.getElementById(x);}
 function chr(who){return $id(who==='m'?'vnMitsu':who==='k'?'vnKrone':'vnSandra');}
 function setZZ(on){if(VN.zz===on)return;VN.zz=on;['m','k','s'].forEach(function(w){send(w,{act:'sleep',on:!!on});});}
+/* 视线跟随:鼠标/手指位置 → 以岛上人脸为锚点换算注视向量,节流 66ms 转发给三位立绘(眼珠+转头+倾身) */
+var LOOK={t:0};
+function lookAt(px,py){
+  var now=Date.now();if(now-LOOK.t<66)return;LOOK.t=now;
+  if(!VN.on||VN.zz)return;
+  var isle=$id('zjSceneIsle');if(!isle)return;
+  var r=isle.getBoundingClientRect();if(!r.width)return;
+  var nx=Math.max(-0.5,Math.min(0.5,(px-(r.left+r.width/2))/(Math.max(320,window.innerWidth)*0.6)));
+  var ny=Math.max(-0.5,Math.min(0.5,(py-(r.top+r.height*0.35))/(Math.max(320,window.innerHeight)*0.6)));
+  ['m','k','s'].forEach(function(w){send(w,{act:'look',x:nx,y:ny});});
+}
+document.addEventListener('pointermove',function(e){lookAt(e.clientX,e.clientY);},{passive:true});
+document.addEventListener('touchmove',function(e){var t=e.touches&&e.touches[0];if(t)lookAt(t.clientX,t.clientY);},{passive:true});
+document.addEventListener('touchstart',function(e){var t=e.touches&&e.touches[0];if(t){LOOK.t=0;lookAt(t.clientX,t.clientY);}},{passive:true});
 function send(who,data){
   try{var f=chr(who);
     if(f&&f.contentWindow)f.contentWindow.postMessage(Object.assign({vn:'mitsuba'},data),'*');

@@ -78,6 +78,7 @@ addEventListener('message',e=>{
   if(d.vn!=='mitsuba')return;
   if(d.act==='talk')setTalking(!!d.on);
   else if(d.act==='sleep'){document.documentElement.classList.toggle('vnzz',!!d.on);}
+  else if(d.act==='look'){PX.nx=+d.x||0;PX.ny=+d.y||0;applyPose();}
 });
 function fit(){
   const s=Math.min(innerHeight/939, innerWidth/252)*0.96;
