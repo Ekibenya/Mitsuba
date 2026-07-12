@@ -2952,7 +2952,7 @@ function storyPane(){
     else if(typing){ if(TYPE.msg!==h){TYPE.msg=h;TYPE.pos=0;TYPE.chase=false;TYPE.wait=false;} TYPE.full=text; /* 每次渲染同步最新文本，根治旧实现里 TYPE.full 停在首块流文本的隐患 */ paras='<div id="zjTypeBox">'+worldParas(text,TYPE.pos)+'<span class="tcursor">▍</span></div>'; }
     else{ if(_mc.paras==null)_mc.paras='<div>'+worldParas(text)+'</div>'; paras=_mc.paras; }
     /* 正文下方一排操作：重演／重出状态栏／诵读／(旧幕)回到此处／修——不套框，只留柔光字，居中一排。 */
-    var _glow='0 0 12px rgba(42,69,104,.45),0 1px 0 rgba(255,255,255,.6)';
+    var _glow='0 0 6px rgba(255,255,255,.9),0 0 15px rgba(255,255,255,.68),0 0 32px rgba(255,255,255,.4),0 1px 0 rgba(255,255,255,.7)';
     var _rb='flex:0 0 auto;font-size:12.5px;letter-spacing:.05em;padding:4px 2px;white-space:nowrap;cursor:pointer;color:var(--gold2);text-shadow:'+_glow;
     var _ti=function(s){return '<span style="font-size:.78em;opacity:.9;margin-right:2px">'+s+'</span>';};
     var sw='';
@@ -3026,7 +3026,7 @@ function storyPane(){
   var _cpad=isMobile()?'3px 7px':'6px 10px',_cfs=isMobile()?'12px':'13px',_cls=isMobile()?'.05em':'.14em';
   var gchip=function(label,on,ac,gl,attrs,dis,noBall){
     var c=dis?'var(--mut)':(on?ac:'var(--mut)');
-    var ts=on&&!dis?('0 0 11px '+gl+',0 1px 0 rgba(255,255,255,.6)'):'0 1px 0 rgba(255,255,255,.5)';
+    var ts=on&&!dis?('0 0 6px rgba(255,255,255,.95),0 0 15px rgba(255,255,255,.72),0 0 32px rgba(255,255,255,.45),0 1px 0 rgba(255,255,255,.7)'):'0 0 5px rgba(255,255,255,.5),0 1px 0 rgba(255,255,255,.5)';
     /* 每个选项前一颗发光小球（前导光点）：开关类(聊天/骰/灵)各自的球随开启亮起、点选时嗖地爆散一下；
        模式类(台词/行动/自由/控制游戏)不放固定球，改由一颗共用的「飞行小球」zjModeBall 嗖地滑过去再爆散融字——
        与「叙事/太史简」灵动岛完全同款。noBall 的选项此处只留同宽占位槽 .zjModeSlot 供飞行球停靠对齐。 */
