@@ -495,7 +495,7 @@ function glInit(){
     var mat=new T.MeshStandardMaterial({map:tex,roughness:.62,metalness:0,side:T.DoubleSide}); /* 降粗糙度：布面波峰带一线柔光泽，凹凸更立体 */
     mat.shadowSide=T.BackSide; /* 双面网格投影用背面深度，避免自阴影痤疮 */
     var OVS=2.05; /* 旗面出血倍数（贴图分带与几何共用，务必同步） */
-    var SEG_X=LOWFX?64:96, SEG_Y=LOWFX?42:64;
+    var SEGX0=LOWFX?64:96, SEGY0=LOWFX?42:64, SEG_X=SEGX0, SEG_Y=SEGY0;
     var flag=null,BX=null,BY=null,NV=0,SIM={acc:0};
     /* 布料约束投影：把一对质点距离拉回静止长度（st=刚度，斜向半刚度抗剪）；
        固定点不动，全部修正量给自由端 */
@@ -571,9 +571,13 @@ function glInit(){
       var _ae9=document.activeElement,_typ9=!!(_ae9&&(_ae9.tagName==='TEXTAREA'||_ae9.tagName==='INPUT'));
       if(LOWFX){ if(document.hidden)return; if(nw9-glLast<(_typ9?125:33))return; }
       var _low9=(scr!=='title'&&scr!=='select');
-      if(!LOWFX){var _gp9=_typ9?125:(_low9?40:0);if(_gp9&&nw9-glLast<_gp9)return;}
+      if(!LOWFX){var _gp9=_typ9?125:(_low9?66:0);if(_gp9&&nw9-glLast<_gp9)return;}
       glLast=nw9;
-      if(_low9!==GL.lowScr){GL.lowScr=_low9;try{rnd.setPixelRatio(_low9?1:(LOWFX?1:Math.min(2,window.devicePixelRatio||1)));rnd.setSize(window.innerWidth,window.innerHeight);}catch(e9){}}
+      if(_low9!==GL.lowScr){GL.lowScr=_low9;try{
+        rnd.setPixelRatio(_low9?1:(LOWFX?1:Math.min(2,window.devicePixelRatio||1)));rnd.setSize(window.innerWidth,window.innerHeight);
+        sun.castShadow=!_low9;rnd.shadowMap.autoUpdate=!_low9;if(!_low9)rnd.shadowMap.needsUpdate=true;
+        SEG_X=_low9?40:SEGX0;SEG_Y=_low9?26:SEGY0;buildFlag();
+      }catch(e9){}}
       var tt=(Date.now()-t0)/1000;
       var geo=flag.geometry,pos=geo.attributes.position,a=pos.array;
       var w=flag.userData.w,h=flag.userData.h,va=flag.userData.va||h;
