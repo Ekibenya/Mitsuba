@@ -75,6 +75,9 @@ textarea:focus,button:focus,input:focus{outline:none}
 .btn{cursor:pointer;transition:filter .2s,transform .2s,border-color .2s,color .2s,background .2s}
 #zjOvBox.wglBox{position:relative;z-index:2;background:linear-gradient(140deg,rgba(255,253,248,.62),rgba(244,237,223,.6))!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 #zjOvBox.wglBox::after,#zjOvBox.wglBox::before{display:none!important}
+/* 液态玻璃场内的输入件一律无内框：凹面玻璃质感（透白填充+内凹光影），聚焦浮柔光圈 */
+#zjOvBox input[type=text],#zjOvBox input[type=password],#zjOvBox input[type=number],#zjOvBox input:not([type]),#zjOvBox textarea,#zjOvBox select{border:none!important;background:rgba(255,255,255,.36)!important;border-radius:11px!important;box-shadow:inset 0 1.5px 4px rgba(52,84,140,.15),inset 0 -1px 0 rgba(255,255,255,.55)!important;outline:none}
+#zjOvBox input[type=text]:focus,#zjOvBox input[type=password]:focus,#zjOvBox input[type=number]:focus,#zjOvBox input:not([type]):focus,#zjOvBox textarea:focus,#zjOvBox select:focus{box-shadow:inset 0 1.5px 4px rgba(52,84,140,.2),0 0 0 2.5px rgba(58,92,140,.26)!important}
 .gbtn{cursor:pointer;background:linear-gradient(180deg,#a63048,#7e212e);border:1px solid rgba(240,214,222,.55);color:#faf3f0;font-family:var(--kai)}
 .gbtn:hover{filter:brightness(1.14)}
 .obtn{cursor:pointer;background:transparent;border:1px solid rgba(42,69,104,.3);color:var(--gold);transition:all .2s}
