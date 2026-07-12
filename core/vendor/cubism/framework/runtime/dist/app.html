@@ -267,7 +267,7 @@ f.addEventListener('load',function(){
   t(function(){var bb=document.getElementById('bootBlack');if(bb)bb.style.opacity='1';},2450);
   t(function(){end(false);},3050);
 });
-f.src='core/res/vn/mitsuba_chr.html?vn=1&v=9'+(MB2?'&m=1':'');
+f.src='core/res/vn/mitsuba_chr.html?vn=1&v=10'+(MB2?'&m=1':'');
 /* 兜底:立绘迟迟未载入(弱网)也不挡路 */
 t(function(){end(false);},8000);
 }
@@ -5323,7 +5323,7 @@ try{if(!localStorage.getItem('mb_vn_v3')){
   if(localStorage.getItem('mb3d_hide')==='1'){localStorage.removeItem('mb3d_hide');VN.unhide=true;}
 }}catch(e){}
 var MOB=false;try{MOB=Math.min(screen.width||9e9,window.innerWidth||9e9)<=560;}catch(e){}
-var VNV='9';
+var VNV='10';
 function vnUrl(f){return f.getAttribute('data-vnsrc')+'&v='+VNV+(MOB?'&m=1':'');}
 var DIR='core/res/vn/';
 function ENG(){try{return window.__VNB?window.__VNB():null;}catch(e){return null;}}
