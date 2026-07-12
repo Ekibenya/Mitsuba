@@ -24,7 +24,7 @@
   .armLg{transform-origin:492px 1490px;animation:armsway 6s ease-in-out infinite}
   .armRg{transform-origin:759px 1490px;animation:armsway 6s ease-in-out infinite reverse}
   #irisL,#irisR{transition:transform .12s ease-out}
-  @keyframes breath{0%,100%{margin-top:0}50%{margin-top:8px}}
+  @keyframes breath{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
   @keyframes windf1{0%,100%{transform:rotate(.5deg) translateX(-2px)}38%{transform:rotate(1.1deg) translateX(-4px)}60%{transform:rotate(.8deg) translateX(-3px)}80%{transform:rotate(1.3deg) translateX(-5px)}}
   @keyframes windf2{0%,100%{transform:rotate(.9deg) translateX(-3px)}38%{transform:rotate(1.9deg) translateX(-6px)}60%{transform:rotate(1.3deg) translateX(-4px)}80%{transform:rotate(2.2deg) translateX(-7px)}}
   @keyframes windf3{0%,100%{transform:rotate(1.2deg) translateX(-4px)}38%{transform:rotate(2.6deg) translateX(-8px)}60%{transform:rotate(1.8deg) translateX(-5px)}80%{transform:rotate(3deg) translateX(-10px)}}
@@ -4107,7 +4107,7 @@ setInterval(()=>{                    // 待机偶尔侧倾一下身体
   applyPose();
   setTimeout(()=>{PX.lean=0;applyPose();},2000);
 },16000);
-setInterval(()=>{ if(Math.random()<0.5) setEyes((Math.random()-0.5)*0.9,(Math.random()-0.5)*0.6) },2700);
+setInterval(()=>{ if(document.documentElement.classList.contains('vnzz'))return; if(Math.random()<0.5) setEyes((Math.random()-0.5)*0.9,(Math.random()-0.5)*0.6) },2700);
 let talking=false, mouth='base', talkT=null;
 function applyFace(){
   show('faceBase', true);
@@ -4656,7 +4656,7 @@ $('handBtn').onclick=()=>{
 };
 // ---- 剧场模式:被三叶物语引擎经 postMessage 驱动 ----
 const MB=/[?&]m=1/.test(location.search);
-if(MB){const st=document.createElement('style');st.textContent='.wf1,.wf2,.wf3,.ws1,.ws2,.wb3,.wb4,.wb5,.armLg,.armRg{animation:none!important}#char{animation:none!important}';document.head.appendChild(st);}
+if(MB){const st=document.createElement('style');st.textContent='.wf1,.wf2,.wf3,.ws1,.ws2,.wb3,.wb4,.wb5,.armLg,.armRg{animation:none!important}';document.head.appendChild(st);}
 const VN=/[?&]vn=1/.test(location.search);
 let vnOff=0, seqBusy=false;
 if(VN){
@@ -4679,6 +4679,7 @@ function vnSkyFire(){                 // 革命/战争/威慑:举枪-朝天开�
   setTimeout(()=>{lowerToDown(); gunState=3;},2700);
   setTimeout(()=>{holster(); gunState=0; seqBusy=false;},3600);
 }
+(function(){var st=document.createElement('style');st.textContent='.vnzz *{animation-play-state:paused!important}';document.head.appendChild(st);})();
 let vnWin=null;   // 取景窗:[起,止] 以画布高度百分比——由父页按 小窗/展开/全屏 档位下发,横竖屏皆准
 addEventListener('message',e=>{
   const d=e.data||{};
@@ -4689,6 +4690,7 @@ addEventListener('message',e=>{
   else if(d.act==='wave'){if(!seqBusy&&gunState===0)waveNow();}
   else if(d.act==='pos'){vnOff=d.x==='right'?0.19:0;fit();}
   else if(d.act==='frame'){vnWin=[+d.a,+d.b];fit();}
+  else if(d.act==='sleep'){document.documentElement.classList.toggle('vnzz',!!d.on);}
 });
 function fit(){
   if(vnWin){

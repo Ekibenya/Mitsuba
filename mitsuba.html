@@ -5227,6 +5227,7 @@ pill.addEventListener('click',function(){VN.on=true;try{localStorage.setItem('mb
 
 function $id(x){return document.getElementById(x);}
 function chr(who){return $id(who==='m'?'vnMitsu':who==='k'?'vnKrone':'vnSandra');}
+function setZZ(on){if(VN.zz===on)return;VN.zz=on;['m','k','s'].forEach(function(w){send(w,{act:'sleep',on:!!on});});}
 function send(who,data){
   try{var f=chr(who);
     if(f&&f.contentWindow)f.contentWindow.postMessage(Object.assign({vn:'mitsuba'},data),'*');
@@ -5359,10 +5360,11 @@ function tick(){
     pill.style.display='block';
     pill.style.left=(r0.left+10)+'px'; pill.style.top=(r0.top+6)+'px';
   }else pill.style.display='none';
-  if(!VN.on||!isle){root.style.display='none';return;}
+  if(!VN.on||!isle){root.style.display='none';setZZ(true);return;}
   var r=isle.getBoundingClientRect();
-  if(r.width<60||r.height<60){root.style.display='none';return;}
+  if(r.width<60||r.height<60){root.style.display='none';setZZ(true);return;}
   root.style.display='block';
+  setZZ(!!document.hidden);
   if(!VN.ld){VN.ld=true;var mf0=chr('m');if(mf0&&!mf0.getAttribute('src')){mf0.addEventListener('load',function(){VN.sizeKey=null;});mf0.setAttribute('src',vnUrl(mf0));}}
   root.style.left=r.left+'px';root.style.top=r.top+'px';
   root.style.width=r.width+'px';root.style.height=r.height+'px';

@@ -13,7 +13,7 @@
   #sway{position:absolute;inset:0;transform-origin:136px 1145px;animation:bodysway 5.8s ease-in-out infinite}
   #headG{position:absolute;inset:0;transition:transform .35s ease-out;
     transform-origin:136px 184px}
-  @keyframes breath{0%,100%{margin-top:0}50%{margin-top:3px}}
+  @keyframes breath{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}
   @keyframes bodysway{0%,100%{transform:rotate(.6deg) translateX(2px)}50%{transform:rotate(-.6deg) translateX(-2px)}}
   #ui{position:fixed;left:16px;bottom:16px;z-index:9}
   button{background:#ffffff18;color:#dde;border:1px solid #ffffff40;border-radius:10px;padding:9px 18px;
@@ -72,10 +72,12 @@ if(VN){
   document.documentElement.style.background='transparent';
   document.body.style.background='transparent';
 }
+(function(){var st=document.createElement('style');st.textContent='.vnzz *{animation-play-state:paused!important}';document.head.appendChild(st);})();
 addEventListener('message',e=>{
   const d=e.data||{};
   if(d.vn!=='mitsuba')return;
   if(d.act==='talk')setTalking(!!d.on);
+  else if(d.act==='sleep'){document.documentElement.classList.toggle('vnzz',!!d.on);}
 });
 function fit(){
   const s=Math.min(innerHeight/1153, innerWidth/273)*0.96;
