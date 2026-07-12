@@ -4252,7 +4252,7 @@ function initB3D(){
   if(b3d) return b3d;
   const canvas=$('fx3d');
   const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});
-  renderer.setPixelRatio(MB?1:(window.devicePixelRatio||1));
+  renderer.setPixelRatio((function(){var q=(location.search.match(/[?&]vq=([0-9.]+)/)||[])[1];return q?parseFloat(q):(MB?0.8:(window.devicePixelRatio||1));})());
   renderer.outputEncoding=THREE.sRGBEncoding;
   const scene=new THREE.Scene();
   const cam=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,.1,200);

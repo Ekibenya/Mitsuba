@@ -366,6 +366,9 @@ function ensureTyping(){
 
 var ZJMOB=false;try{ZJMOB=Math.min(screen.width||9e9,window.innerWidth||9e9)<=560;}catch(e){}
 var LOWFX=false;try{var _lf0=localStorage.getItem('mitsuba_lowfx');LOWFX=(_lf0===null)?ZJMOB:_lf0==='1';}catch(e){}
+var SAFEM=false;try{SAFEM=localStorage.getItem('mitsuba_safe')==='1';}catch(e){}
+try{if(sessionStorage.getItem('mb_settling')==='1'){var _cn=(parseInt(sessionStorage.getItem('mb_crashN'),10)||0)+1;sessionStorage.setItem('mb_crashN',String(_cn));SAFEM=true;window.__mbAutoSafe=true;}sessionStorage.setItem('mb_settling','1');window.addEventListener('load',function(){setTimeout(function(){try{sessionStorage.setItem('mb_settling','0');}catch(e){}},6000);});}catch(e){}
+if(SAFEM){LOWFX=true;}
 if(LOWFX)document.documentElement.classList.add('zjLow');
 function lowApply(on){
   LOWFX=!!on;
@@ -2870,13 +2873,13 @@ function newsBox(cw,newsImg){
     var _s=String(id),_h=0,_i;for(_i=0;_i<_s.length;_i++)_h=((_h*31+_s.charCodeAt(_i))>>>0);
     var mode=_h%2,w=70;
     var ov=function(css){return '<div style="position:absolute;inset:0;pointer-events:none;'+css+'"></div>';};
-    var film=ov('background:rgba(20,74,82,.30);mix-blend-mode:screen')
+    var film=SAFEM?(ov('background:rgba(90,60,26,.14);mix-blend-mode:multiply')+ov('background:radial-gradient(120% 96% at 50% 44%,transparent 44%,rgba(28,16,8,.6) 100%)')):(ov('background:rgba(20,74,82,.30);mix-blend-mode:screen')
       +ov('background:radial-gradient(120% 90% at 50% 30%,rgba(214,150,86,.22),transparent 60%);mix-blend-mode:screen')
       +ov('background:rgba(150,54,96,.16);mix-blend-mode:soft-light')
       +ov('background:radial-gradient(circle at 88% 8%,rgba(232,150,70,.5),transparent 42%);mix-blend-mode:screen')
       +ov('background:radial-gradient(120% 96% at 50% 44%,transparent 40%,rgba(28,16,8,.7) 100%)')
       +ov('background:url('+GAZ_GRAIN+');background-size:64px 64px;opacity:.24;mix-blend-mode:overlay')
-      +ov('box-shadow:inset 0 0 20px rgba(24,14,6,.55)');
+      +ov('box-shadow:inset 0 0 20px rgba(24,14,6,.55)'));
     var ph='<div style="position:relative;width:'+w+'px;overflow:hidden;filter:sepia(.30) contrast(1.24) brightness(1.05) saturate(.62)"><div data-img="'+esc(id)+'" style="width:'+w+'px;aspect-ratio:2/3;display:block"></div>'+film+'</div>';
     var frame='<div style="border:1px solid rgba(74,64,50,.5);padding:3px 3px 6px;background:#f3ecd9;box-shadow:2px 4px 8px rgba(40,30,20,.4)">'+ph+'<div style="font-size:6px;letter-spacing:.1em;color:#8a7c62;text-align:center;margin-top:2px">现场速写</div></div>';
     var es='<div style="position:absolute;top:-2px;left:50%;margin-left:-7px;width:14px;height:6px;border-radius:50%;background:radial-gradient(circle,rgba(28,16,8,.5),rgba(28,16,8,0));z-index:2"></div>';
@@ -3885,6 +3888,8 @@ function fontPane(){
    +'<div class="kai" style="font-size:19px;color:var(--gold2);letter-spacing:.15em;margin:34px 0 10px">性能</div>'
    +'<label style="display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink2);cursor:pointer;margin:6px 0"><input id="zjOptLow" type="checkbox" style="accent-color:#3c5a86"'+(LOWFX?' checked':'')+'>低配模式：手机防发热防卡顿（降特效模糊与渲染分辨率、背景光斑歇屏）</label>'
    +'<div style="font-size:11.5px;color:var(--mut);line-height:1.7;margin-top:4px">封面右上角的「低」是同一开关。默认关闭，画质无任何妥协。</div>'
+   +'<label style="display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink2);cursor:pointer;margin:12px 0 6px"><input id="zjOptSafe" type="checkbox" style="accent-color:#7e212e"'+(SAFEM?' checked':'')+'>安全模式：省内存·防闪退（皮套降清晰度·关毛玻璃·简化报纸滤镜；皮套永不隐藏）</label>'
+   +'<div style="font-size:11.5px;color:'+(window.__mbAutoSafe?'#a04a30':'var(--mut)')+';line-height:1.7;margin-top:4px">'+(window.__mbAutoSafe?'⚠ 检测到上次因内存不足闪退，本次已自动开启；不需要可手动关闭。':'手机反复闪退（“A problem repeatedly occurred”）时打开。切换后自动重载。')+'</div>'
    +'<label style="display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink2);cursor:pointer;margin:12px 0 6px"><input id="zjOptFlag" type="checkbox" style="accent-color:#3c5a86"'+(GAMEFLAG?' checked':'')+'>正文国旗背景：进入游戏后仍实时渲染三色旗背景（性能要求高，手机易发热耗电）</label>'
    +'<div style="font-size:11.5px;color:var(--mut);line-height:1.7;margin-top:4px">默认关闭：正文使用蓝蔷薇静态背景，国旗渲染在封面与选开局画面之外彻底停机，省性能。</div>'
    +'<div class="kai" style="font-size:19px;color:var(--gold2);letter-spacing:.15em;margin:34px 0 10px">输入栏功能</div>'
@@ -4591,6 +4596,7 @@ root.addEventListener('change',function(e){
   if(e.target&&e.target.id==='zjTtsAuto'){TTS.auto=!!e.target.checked;ttsSave();return;}
   if(e.target&&e.target.id==='zjDlgPick'){var pD2=DLGC;DLGC=e.target.value||'#274468';dlgApply(pD2);return;}
   if(e.target&&e.target.id==='zjOptLow'){lowApply(!!e.target.checked);render();return;}
+  if(e.target&&e.target.id==='zjOptSafe'){try{localStorage.setItem('mitsuba_safe',e.target.checked?'1':'0');sessionStorage.removeItem('mb_crashN');sessionStorage.removeItem('mb_settling');}catch(er){}location.reload();return;}
   if(e.target&&e.target.id==='zjOptFlag'){GAMEFLAG=!!e.target.checked;try{localStorage.setItem('mb_gameflag',GAMEFLAG?'1':'0');}catch(err){}zjBgSync();return;}
   if(e.target&&e.target.id==='zjOptMic'){S.micOn=!!e.target.checked;savePref();render();return;}
   if(e.target&&e.target.id==='zjOptSugg'){S.sugg=!!e.target.checked;if(S.sugg===false)S.suggList=null;savePref();render();return;}
@@ -5409,7 +5415,7 @@ try{if(!localStorage.getItem('mb_vn_v3')){
 }}catch(e){}
 var MOB=false;try{MOB=Math.min(screen.width||9e9,window.innerWidth||9e9)<=560;}catch(e){}
 var VNV='13';
-function vnUrl(f){return f.getAttribute('data-vnsrc')+'&v='+VNV+(MOB?'&m=1':'');}
+function vnUrl(f){var _sf=false;try{_sf=(localStorage.getItem('mitsuba_safe')==='1')||(window.__mbAutoSafe===true);}catch(e){}return f.getAttribute('data-vnsrc')+'&v='+VNV+(MOB?'&m=1':'')+(MOB?'&vq='+(_sf?'0.55':'0.8'):'');}
 var DIR='core/res/vn/';
 function ENG(){try{return window.__VNB?window.__VNB():null;}catch(e){return null;}}
 
