@@ -2117,7 +2117,7 @@ var S = {
 };
 /* 剧场桥:只读导出引擎内部状态给剧场模块(惰性求值,不改任何行为) */
 window.__VNB=function(){return {S:S,TYPE:TYPE,TTSP:TTSP,typedSet:typedSet,
-  currentPanel:currentPanel,stripMvu:stripMvu};};
+  currentPanel:currentPanel,stripMvu:stripMvu,render:render};};
 // restore local history (standalone only)
 if(!TH.available && pref.history && pref.history.length){
   S.history = pref.history.map(function(h){h=Object.assign({},h);if(h.role==='world')h.panel=parseMvu(h.text);return h;});
@@ -5309,7 +5309,7 @@ if(window.__VN__)return;
 var VN=window.__VN__={on:true,bg:'',prevNames:null,favorSeen:{},rev:false,
   lastFire:0,scanLen:0,scanMsg:null,firedTurn:false,doneFor:null,first:true,
   talk:false,ctlKey:null,posKey:''};
-try{VN.on=localStorage.getItem('mb_vn')!=='0';}catch(e){}
+VN.on=true;try{localStorage.setItem('mb_vn','1');}catch(e){}
 try{VN.rev=localStorage.getItem('mb_vn_rev')==='1';}catch(e){}
 /* v2 一次性迁移:老存量状态(旧✕藏岛/旧沙盒关剧场)自动复位,之后用户的选择照常持久 */
 try{if(!localStorage.getItem('mb_vn_v3')){
@@ -5394,18 +5394,21 @@ function ctlRefresh(){
   var h='';
   if(s.worldFull){ h+= b('worldFull','退出全屏'); }
   else h+= s.isleBig ? b('worldFull','全屏')+b('isleSmall','收起') : b('isleBig','展开');
-  h+=b('jpsb','设置')+b('vnoff','剧场');
+  h+=b('jpsb','设置');
   if(!s.worldFull) h+=b('isleHide','✕');
   var c=$id('vnCtl'); if(c)c.innerHTML=h;
 }
 root.addEventListener('click',function(e){
   var t=e.target&&e.target.getAttribute?e.target.getAttribute('data-vnact'):null;
   if(!t)return;
-  if(t==='vnoff'){VN.on=false;try{localStorage.setItem('mb_vn','0');}catch(e2){}return;}
   if(t==='jpsb'){var ov=document.querySelector('#zjSceneIsle [data-ov="jpsb"]');if(ov)ov.click();return;}
-  /* 优先岛内按钮;全屏等场景岛内无对应键时,退回全文档查找(如底部「退出全屏」data-act=worldFull) */
-  var el=document.querySelector('#zjSceneIsle [data-act="'+t+'"]')||document.querySelector('[data-act="'+t+'"]');
-  if(el)el.click();
+  /* 阶段操作直接驱动引擎状态并重渲染——最稳,不依赖被立绘层遮住/不存在的 DOM 按钮 */
+  var E=ENG();if(E&&E.S&&E.render){var S=E.S;
+    if(t==='worldFull'){S.worldFull=!S.worldFull;if(!S.worldFull)S.isleBig=true;S._noFade=true;E.render();return;}
+    if(t==='isleBig'){S.isleBig=true;S._noFade=true;E.render();return;}
+    if(t==='isleSmall'){S.isleBig=false;S.worldFull=false;S._noFade=true;E.render();return;}
+    if(t==='isleHide'){try{localStorage.setItem('mb3d_hide','1');}catch(e2){}S.isleBig=false;S.worldFull=false;S._noFade=true;E.render();return;}
+  }
 });
 
 /* ---------------- 场景状态机 ---------------- */
@@ -5507,7 +5510,7 @@ function tick(){
     else{var mi=$id('zjMiniIsle');if(mi&&mi.getAttribute('data-act')==='show3d')mi.click();}
   }
   /* 迷你入口:VN 关着且岛在 → 显示「剧场」药丸 */
-  if(isle&&!VN.on){
+  if(false&&isle&&!VN.on){
     var r0=isle.getBoundingClientRect();
     pill.style.display='block';
     pill.style.left=(r0.left+10)+'px'; pill.style.top=(r0.top+6)+'px';
