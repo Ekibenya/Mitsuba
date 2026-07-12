@@ -2837,26 +2837,88 @@ function psW(w,cc,cw){
 
 
 function newsBox(cw){
-  var raw=String((cw&&cw['\u65b0\u95fb'])||'').trim();
-  var date=String((cw&&cw['\u7eaa\u5e74'])||'').split('\u00b7')[0].trim();
-  var items=raw?raw.split(/[\uFF5C|]/).map(function(t){return t.trim();}).filter(Boolean).slice(0,4):[];
-  var body;
-  if(!items.length){
-    body='<div style="text-align:center;font-size:12px;color:#8a7d66;padding:10px 0;letter-spacing:.1em">\u4eca\u65e5\u65e0\u4e8b\u53d1\u751f\u3002<br>\u2014\u2014\u4ed8\u5370\u5728\u5373\uff0c\u9759\u5019\u540e\u6587\u3002</div>';
-  }else{
-    body=items.map(function(t,i){
-      var parts=t.split(/[\u00b7\u30fb\uff1a:]/);var hd=parts.length>1?parts[0].trim():'';var txt=parts.length>1?parts.slice(1).join('\uff1a').trim():t;
-      return '<div style="padding:'+(i?'9px 0 0':'2px 0 0')+';'+(i?'border-top:1px solid rgba(74,64,50,.16);margin-top:9px':'')+'">'
-        +(hd?'<div class="kai" style="font-size:14px;line-height:1.35;color:#3a3024;letter-spacing:.02em">'+esc(hd)+'</div>':'')
-        +'<div style="font-size:12px;line-height:1.7;color:#5a4e3c;text-align:justify;margin-top:'+(hd?'3px':'0')+'">'+esc(txt)+'</div></div>';
-    }).join('');
+  cw=cw||{};
+  function g(k){return String(cw[k]||'').trim();}
+  var raw=g('新闻');
+  var date=g('纪年').split(/[·・]/)[0].trim();
+  var placeParts=g('时地').replace(/\s+/g,'').split(/[·・]/).filter(Boolean);
+  var place=placeParts.slice(0,2).join(' · ');
+  var weather=g('天气');
+  var wxHead=weather.split(/[·・]/)[0].trim();
+  var wxMood=weather.split(/[·・]/).slice(1).join('·').trim();
+  var anwen=parseInt(g('安稳'),10); if(isNaN(anwen))anwen=null;
+  var items=raw?raw.split(/[｜|]/).map(function(t){return t.trim();}).filter(Boolean).slice(0,5):[];
+  var dashi=g('大势').split(/[｜|]/).map(function(t){return t.trim();}).filter(Boolean);
+  var jiang=g('将临');
+  function parseItem(t){var m=t.split(/[·・：:]/);var hd=m.length>1?m[0].trim():'';var tx=m.length>1?m.slice(1).join('：').trim():t;return {hd:hd,tx:tx};}
+  function dispatch(t){
+    var i=t.search(/[，、：·]/);var hd='',tx=t;
+    if(i>0&&i<=13){hd=t.slice(0,i).trim();tx=t.slice(i+1).trim();}
+    if(tx&&'。！？…」』.'.indexOf(tx.slice(-1))<0)tx+='。';
+    return (hd?'<b style="color:#2b2318;font-weight:700">'+esc(hd)+'</b>——':'')+esc(tx);
   }
-  return '<div style="border:1px solid rgba(74,64,50,.3);border-radius:6px;background:linear-gradient(180deg,#f3ecd9,#e9e0c8);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 2px 8px rgba(58,47,36,.2);padding:12px 14px 13px;position:relative;overflow:hidden">'
-    +'<div style="text-align:center;border-bottom:2px double rgba(74,64,50,.5);padding-bottom:7px;margin-bottom:9px">'
-      +'<div style="font-family:var(--kai),serif;font-size:17px;letter-spacing:.18em;color:#2b2318;font-weight:700">\u7f57 \u585e \u5229 \u4e9a \u516c \u62a5</div>'
-      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;font-size:8.5px;letter-spacing:.12em;color:#7a6d58"><span>LA GAZETTE</span>'+(date?'<span>'+esc(date)+'</span>':'<span></span>')+'<span>\u53f7 \u5916</span></div>'
-    +'</div>'+body
+  function secHd(t,sub){return '<div style="margin:13px 0 6px"><div style="display:flex;align-items:center;gap:9px"><span style="flex:1;height:1px;background:rgba(74,64,50,.4)"></span><span class="kai" style="font-size:12.5px;letter-spacing:.3em;color:#3a3024;white-space:nowrap;font-weight:700">'+t+'</span><span style="flex:1;height:1px;background:rgba(74,64,50,.4)"></span></div>'+(sub?'<div style="text-align:center;font-size:7.5px;letter-spacing:.3em;color:#9a8d72;font-family:Amarante,Georgia,serif;margin-top:2px">'+sub+'</div>':'')+'</div>';}
+
+  var mast='<div style="text-align:center;padding:1px 0 6px">'
+    +'<div style="font-size:8px;letter-spacing:.32em;color:#8a7c62;font-family:Amarante,Georgia,serif">❦ LIBERTÉ · ÉGALITÉ · PÂTISSERIE ❧</div>'
+    +'<div class="kai" style="font-size:21px;letter-spacing:.14em;color:#241d12;font-weight:700;margin:3px 0 1px;text-shadow:0 1px 0 rgba(255,255,255,.5)">罗塞利亚公报</div>'
+    +'<div style="font-size:8.5px;letter-spacing:.28em;color:#6f6250;font-family:Amarante,Georgia,serif">LA GAZETTE DE ROSÉLIA</div>'
+    +'</div>'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;font-size:8.5px;letter-spacing:.05em;color:#7a6d58;padding:5px 1px;border-top:2px solid rgba(74,64,50,.55);border-bottom:1px solid rgba(74,64,50,.5)">'
+      +'<span>'+(date?esc(date):'大轮历')+'</span>'
+      +'<span style="letter-spacing:.22em;color:#5a4e3c">号　外</span>'
+      +'<span>'+(wxHead?esc(wxHead):'王都贝尔')+' · 一苏</span>'
     +'</div>';
+  var subline=(place||wxMood)?'<div style="text-align:center;font-size:9px;letter-spacing:.1em;color:#8a7c62;padding:5px 4px 1px">'+esc([place,wxMood].filter(Boolean).join('　｜　'))+'</div>':'';
+
+  var newsBlock='';
+  if(items.length){
+    var lead=parseItem(items[0]);
+    var tx=lead.tx,dc='',rest=tx; if(tx){dc=tx.slice(0,1);rest=tx.slice(1);}
+    newsBlock+='<div style="margin-top:8px">'
+      +'<div style="text-align:center;font-size:8px;letter-spacing:.42em;color:#9a2a2c;font-family:Amarante,Georgia,serif;margin-bottom:3px">À LA UNE</div>'
+      +(lead.hd?'<div class="kai" style="font-size:16px;line-height:1.3;text-align:center;color:#2b2318;font-weight:700;letter-spacing:.02em;margin-bottom:5px">'+esc(lead.hd)+'</div>':'')
+      +'<div style="font-size:12px;line-height:1.78;color:#453b2c;text-align:justify">'
+        +(dc?'<span class="kai" style="float:left;font-size:2.6em;line-height:.8;font-weight:700;color:#7e212e;margin:3px 5px -2px 0">'+esc(dc)+'</span>':'')
+        +esc(rest)+'</div></div>';
+    if(items.length>1){
+      newsBlock+='<div style="border-top:1px solid rgba(74,64,50,.42);padding-top:9px;margin-top:10px;column-count:2;column-gap:13px;column-rule:1px solid rgba(74,64,50,.24)">'
+        +items.slice(1).map(function(t){var it=parseItem(t);
+          return '<div style="break-inside:avoid;margin-bottom:9px">'
+            +(it.hd?'<div class="kai" style="font-size:12.5px;line-height:1.3;color:#2b2318;font-weight:700;margin-bottom:3px">'+esc(it.hd)+'</div>':'')
+            +'<div style="font-size:10.5px;line-height:1.68;color:#574b39;text-align:justify">'+esc(it.tx)+'</div></div>';
+        }).join('')+'</div>';
+    }
+  }else{
+    newsBlock='<div style="text-align:center;color:#8a7d66;padding:14px 0 4px"><div class="kai" style="font-size:15px;letter-spacing:.14em;color:#4a4030">今 日 无 事</div><div style="font-size:11px;letter-spacing:.12em;margin-top:5px">付印在即 · 静候后文</div></div>';
+  }
+
+  var worldBlock='';
+  if(dashi.length){
+    worldBlock=secHd('列 国 要 闻','DÉPÊCHES DES NATIONS')
+      +'<div style="text-align:center;font-size:8px;letter-spacing:.2em;color:#9a8d72;margin:-2px 0 7px">〔 本 报 综 合 · 外 邮 专 递 〕</div>'
+      +'<div style="'+(dashi.length>2?'column-count:2;column-gap:14px;column-rule:1px solid rgba(74,64,50,.22);':'')+'font-size:10.5px;line-height:1.72;color:#493d2d;text-align:justify">'
+      +dashi.map(function(t){return '<p style="break-inside:avoid;margin:0 0 7px">'+dispatch(t)+'</p>';}).join('')
+      +'</div>';
+  }
+  var meter='';
+  if(anwen!=null){
+    var pct=Math.max(0,Math.min(100,anwen));var fl=Math.round(pct/10);var sq='';
+    for(var s2=0;s2<10;s2++)sq+='<span style="color:'+(s2<fl?'#7e212e':'#cbbb9c')+'">'+(s2<fl?'■':'□')+'</span>';
+    meter='<div style="display:flex;align-items:center;gap:8px;margin-top:9px;padding-top:8px;border-top:1px solid rgba(74,64,50,.28);font-size:10px;color:#5a4e3c"><span style="letter-spacing:.16em;color:#7a6d58;flex:none">时局晴雨</span><span style="letter-spacing:1.5px;font-size:9px;flex:1">'+sq+'</span><span style="flex:none">安稳 '+pct+'</span></div>';
+  }
+
+  var jiangBlock='';
+  if(jiang){
+    jiangBlock='<div style="margin-top:11px;border:1px solid rgba(126,33,46,.4);border-radius:3px;background:linear-gradient(135deg,rgba(126,33,46,.1),rgba(126,33,46,.03));padding:8px 11px 9px">'
+      +'<div style="font-size:9px;letter-spacing:.24em;color:#9a2a2c;margin-bottom:4px">将 临 · 只说与观众听</div>'
+      +'<div style="font-size:11.5px;line-height:1.75;color:#6a3a3a;text-align:justify">'+esc(jiang)+'</div></div>';
+  }
+
+  var foot='<div style="text-align:center;font-size:8.5px;letter-spacing:.2em;color:#9a8d72;margin-top:11px;padding-top:7px;border-top:1px solid rgba(74,64,50,.3)">— 付梓于王都贝尔 · 国家文书馆 —</div>';
+
+  return '<div style="border:1px solid rgba(74,64,50,.42);border-radius:5px;background:linear-gradient(180deg,#f4eddb,#e7ddc4);box-shadow:inset 0 0 26px rgba(120,100,60,.15),inset 0 1px 0 rgba(255,255,255,.55),0 3px 10px rgba(58,47,36,.24);padding:12px 13px;position:relative;overflow:hidden">'
+    +mast+subline+newsBlock+worldBlock+meter+jiangBlock+foot+'</div>';
 }
 function sidebar(){
   var p=currentPanel();var cc=p?p.char:{};var cw=p?p.world:{};
@@ -2885,13 +2947,7 @@ function sidebar(){
     +'<div style="text-align:center;font-size:9.5px;letter-spacing:.28em;color:var(--mut);margin:12px 0 2px">LIBERTÉ · ÉGALITÉ · PÂTISSERIE　自由 · 平等 · 甜食</div>'
         +'</div>':'')+'</div>'
     +'<div class="glass" style="margin:11px 12px 0;border-radius:14px">'+head(S.secN,'tgN','var(--grn)','在 场 之 人',S.secN)+(S.secN?'<div class="fade" style="padding:0 15px 12px">'+npcs+'</div>':'')+'</div>'
-    +'<div class="glass" style="margin:11px 12px 0;border-radius:14px">'+head(S.secP,'tgP','#7a6a52','公 报 · 新 闻',S.secP)+(S.secP?'<div class="fade" style="padding:0 15px 14px">'+newsBox(cw)+'</div>':'')+'</div>'
-    +'<div class="glass" style="margin:11px 12px 0;border-radius:14px">'+head(S.secW,'tgW','var(--gold)','时 局 · 列 国',S.secW)
-      +(S.secW?'<div class="fade" style="padding:0 15px 22px">'+worldRows
-        +'<div style="margin:8px 0 6px">'+gaugeBar('安稳',anwen,'#2e4a72,#3c6494,#6f93c0','var(--grn2)')+'</div>'
-        +(dashi?'<div style="margin-top:6px"><div style="font-size:10px;letter-spacing:.32em;color:var(--mut);margin-bottom:4px">大 势</div>'+dashi+'</div>':'')
-        +'<div style="border:1px solid rgba(46,74,114,.35);border-radius:10px;background:linear-gradient(135deg,rgba(46,74,114,.14),rgba(46,74,114,.05));box-shadow:inset 0 1px 0 rgba(222,232,246,.12);padding:9px 13px;margin-top:8px"><div style="font-size:10px;letter-spacing:.3em;color:var(--grn);margin-bottom:4px">将 临 · 只说与观众听</div><div style="font-size:12.5px;line-height:1.8;color:var(--grn2)">'+esc(cw['将临']||'……')+'</div></div>'
-        +'</div>':'')+'</div>'
+    +'<div class="glass" style="margin:11px 12px 0;border-radius:14px">'+head(S.secP,'tgP','#7a6a52','公 报 · 时 局',S.secP)+(S.secP?'<div class="fade" style="padding:0 15px 14px">'+newsBox(cw)+'</div>':'')+'</div>'
     +'<div class="glass" style="margin:11px 12px 0;border-radius:14px">'+head(S.secG,'tgG','#3e7256','人 物 图 谱',S.secG)+(S.secG?'<div class="fade" style="padding:0 15px 16px">'+graphInner()+'</div>':'')+'</div>'
     +'<div class="glass" style="margin:11px 12px 14px;border-radius:14px">'+head(S.secA,'tgA','#7a5ca8','编 年 史',S.secA)+(S.secA?'<div class="fade" style="padding:0 15px 16px">'+axisInner()+'</div>':'')+'</div>'
     +'</div>';
