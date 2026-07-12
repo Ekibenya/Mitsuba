@@ -5415,7 +5415,7 @@ try{if(!localStorage.getItem('mb_vn_v3')){
 }}catch(e){}
 var MOB=false;try{MOB=Math.min(screen.width||9e9,window.innerWidth||9e9)<=560;}catch(e){}
 var VNV='13';
-function vnUrl(f){var _sf=false;try{_sf=(localStorage.getItem('mitsuba_safe')==='1')||(window.__mbAutoSafe===true);}catch(e){}return f.getAttribute('data-vnsrc')+'&v='+VNV+(MOB?'&m=1':'')+(MOB?'&vq='+(_sf?'0.55':'0.8'):'');}
+function vnUrl(f){return f.getAttribute('data-vnsrc')+'&v='+VNV+(MOB?'&m=1':'');}
 var DIR='core/res/vn/';
 function ENG(){try{return window.__VNB?window.__VNB():null;}catch(e){return null;}}
 
