@@ -273,7 +273,7 @@ f.addEventListener('load',function(){
   t(function(){var bb=document.getElementById('bootBlack');if(bb)bb.style.opacity='1';},2450);
   t(function(){end(false);},3050);
 });
-f.src='core/res/vn/mitsuba_chr.html?vn=1&v=14'+(MB2?'&m=1':'');
+f.src='core/res/vn/mitsuba_chr.html?vn=1&v=15'+(MB2?'&m=1':'');
 /* 兜底:立绘迟迟未载入(弱网)也不挡路 */
 t(function(){end(false);},8000);
 }
@@ -5417,7 +5417,7 @@ try{if(!localStorage.getItem('mb_vn_v3')){
   if(localStorage.getItem('mb3d_hide')==='1'){localStorage.removeItem('mb3d_hide');VN.unhide=true;}
 }}catch(e){}
 var MOB=false;try{MOB=Math.min(screen.width||9e9,window.innerWidth||9e9)<=560;}catch(e){}
-var VNV='14';
+var VNV='15';
 function vnUrl(f){return f.getAttribute('data-vnsrc')+'&v='+VNV+(MOB?'&m=1':'');}
 var DIR='core/res/vn/';
 function ENG(){try{return window.__VNB?window.__VNB():null;}catch(e){return null;}}
@@ -5519,7 +5519,7 @@ function mouthTick(){                        /* setInterval 33ms 驱动 */
         else {
           M.flapN=(M.flapN||0)+1;
           if(M.flapN>=(M.need||5)){ M.flapN=0; M.need=4+((Math.random()*3)|0); M.cur=0.9; } /* 攒够→请求大张(角色端做成快速) */
-          else M.cur=0.42;                                /* 微张 */
+          else M.cur=0.28+Math.random()*0.28;                                /* 微张 */
         }
       }
       send('m',{act:'mouth',v:M.cur});
