@@ -265,7 +265,7 @@ f.addEventListener('load',function(){
   t(function(){var bb=document.getElementById('bootBlack');if(bb)bb.style.opacity='1';},2450);
   t(function(){end(false);},3050);
 });
-f.src='core/res/vn/mitsuba_chr.html?vn=1'+(MB2?'&m=1':'');
+f.src='core/res/vn/mitsuba_chr.html?vn=1&v=7'+(MB2?'&m=1':'');
 /* 兜底:立绘迟迟未载入(弱网)也不挡路 */
 t(function(){end(false);},8000);
 }
@@ -3115,7 +3115,7 @@ function gameView(){
       +logo
       +'<div class="kai" style="font-size:16px;letter-spacing:.12em;color:var(--gold2);white-space:nowrap">三叶物语·死之轮舞</div>'
       /* 沙盒折叠时，灵动岛（滚动纪年·地点胶囊）住进顶栏中间留白；中位容器固定 id 供手术式开合换装 */
-      +(function(){var _h3=false;try{_h3=HIDE3D;}catch(e){}
+      +(function(){var _h3=false;try{_h3=localStorage.getItem('mb3d_hide')==='1';}catch(e){}
         return '<div id="zjTopMid" class="grow" style="display:flex;justify-content:center;min-width:0;pointer-events:none;padding:0 10px">'+(_h3?window.__zjTopIsleHtml():'')+'</div>';})()
       +devSeg+topBtns+'</div></div>';
   }
@@ -4488,6 +4488,7 @@ window.__zjTopIsleHtml=function(){
   var _er=[_w['纪年'],_w['时地']].filter(Boolean).join(' · ')||(currentOpening()?currentOpening().era:'')||'展开日文沙盒';
   return '<div id="zjMiniIsle" data-act="show3d" class="btn zjHl" title="展开日文沙盒" style="pointer-events:auto;flex:1;max-width:300px;min-width:0;height:27px;cursor:pointer;border-radius:99px;background:rgba(10,8,6,.62);border:1px solid rgba(224,190,130,.4);box-shadow:inset 0 1px 0 rgba(255,242,214,.2),0 4px 14px rgba(0,0,0,.4);display:flex;align-items:center;gap:8px;padding:0 14px;overflow:hidden">'
     +'<span style="flex:none;width:8px;height:8px;border-radius:50%;background:radial-gradient(circle,#ffdf9e,#c9a063);animation:zjIsleGlow 2.2s ease-in-out infinite"></span>'
+    +'<span style="flex:none;font-size:11px;letter-spacing:.22em;color:var(--gold2);font-family:var(--kai)">沙盒</span>'
     +'<div style="flex:1;min-width:0;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)"><div class="zjMarq" style="font-size:11px;letter-spacing:.16em;color:var(--gold2);font-family:var(--kai)"><span>'+esc(_er)+'</span><span aria-hidden="true">'+esc(_er)+'</span></div></div></div>';
 };
 /* 开局后的界面风格选择：两张演示图（电脑给电脑版、手机给手机版）+介绍，二选一；设置·显可随时更换 */
@@ -5264,7 +5265,8 @@ try{if(!localStorage.getItem('mb_vn_v3')){
   if(localStorage.getItem('mb3d_hide')==='1'){localStorage.removeItem('mb3d_hide');VN.unhide=true;}
 }}catch(e){}
 var MOB=false;try{MOB=Math.min(screen.width||9e9,window.innerWidth||9e9)<=560;}catch(e){}
-function vnUrl(f){return f.getAttribute('data-vnsrc')+(MOB?'&m=1':'');}
+var VNV='7';
+function vnUrl(f){return f.getAttribute('data-vnsrc')+'&v='+VNV+(MOB?'&m=1':'');}
 var DIR='core/res/vn/';
 function ENG(){try{return window.__VNB?window.__VNB():null;}catch(e){return null;}}
 
@@ -5471,7 +5473,8 @@ function tick(){
      取景由立绘 iframe 内部按窗口缩放平移——横竖屏、任意框宽一律成立 */
   var E0=ENG();
   var vSt=E0&&E0.S?(E0.S.worldFull?'F':(E0.S.isleBig?'B':'S')):'S';
-  if(VN.sizeKey!==vSt){VN.sizeKey=vSt;
+  VN.tk=(VN.tk||0)+1;
+  if(VN.sizeKey!==vSt||VN.tk%8===0){VN.sizeKey=vSt;
     var W9=vSt==='F'?[36,100]:(vSt==='B'?[38,82]:[39,58]);
     send('m',{act:'frame',a:W9[0],b:W9[1]});
     send('m',{act:'pos',x:(VN.posKey&&vSt!=='S')?'right':'center'});
