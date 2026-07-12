@@ -4130,7 +4130,7 @@ function render(){
   window.__ZJSCR=S.screen;
   zjBgSync();
   /* 弹窗与剧场层同帧让位:剧场层挂在 body(z5),弹窗关在游戏根容器(z1)里,若等 250ms 轮询会先被压在立绘后面再"穿"出来 */
-  try{if(S.overlay){var _vr=document.getElementById('vnRoot');if(_vr)_vr.style.display='none';var _vp=document.getElementById('vnPill');if(_vp)_vp.style.display='none';}}catch(e){}
+  try{if(S.overlay||S.bgmOpen){var _vr=document.getElementById('vnRoot');if(_vr)_vr.style.display='none';var _vp=document.getElementById('vnPill');if(_vp)_vp.style.display='none';}}catch(e){}
   try{if(S.screen==='game')memSync();}catch(e){}
   var focused=document.activeElement&&document.activeElement.id==='zjInput';
   var selStart=focused?document.activeElement.selectionStart:null;
@@ -5516,7 +5516,7 @@ function tick(){
     pill.style.left=(r0.left+10)+'px'; pill.style.top=(r0.top+6)+'px';
   }else pill.style.display='none';
   var E9=ENG();
-  if(E9&&E9.S&&E9.S.overlay){root.style.display='none';pill.style.display='none';setZZ(true);return;}  /* 弹窗(世界书/设置/地图…)打开:剧场层让位 */
+  if(E9&&E9.S&&(E9.S.overlay||E9.S.bgmOpen)){root.style.display='none';pill.style.display='none';setZZ(true);return;}  /* 弹窗(世界书/设置/地图/音乐…)打开:剧场层让位 */
   if(!VN.on||!isle){root.style.display='none';setZZ(true);return;}
   var r=isle.getBoundingClientRect();
   if(r.width<60||r.height<60){root.style.display='none';setZZ(true);return;}
