@@ -8,6 +8,8 @@
 
 一款纯前端、单页面的 AI 文字角色扮演游戏
 
+**中文** · [English](docs/README_EN.md)
+
 </div>
 
 ---
