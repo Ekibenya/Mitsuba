@@ -2179,7 +2179,7 @@ function worldCommand(raw){
       S.input='';movePlayerTo(L.name);return;
     }
   }
-  S.cmdHint='未能辨识指令：此模式支持「前往／移驾＋地名」在棋盘地图上移动';render();return;
+  S.cmdHint='未能辨识指令：此模式支持「前往／移驾＋地名」在大陆舆图上移动';render();return;
 }
 function sendText(text){
   if(S.thinking||!S.history.length)return;
@@ -2766,7 +2766,7 @@ function sidebar(){
     +'<div class="glass" style="margin:11px 12px 14px;border-radius:14px">'+head(S.secA,'tgA','#7a5ca8','编 年 史',S.secA)+(S.secA?'<div class="fade" style="padding:0 15px 16px">'+axisInner()+'</div>':'')+'</div>'
     +'</div>';
 }
-var MODE_PH={say:'以三叶（或你的角色）之口开口说话……（自动加「」）',do:'写下我的行动……',free:'自由书写这一幕：言语、行动、内心……',world:'控制游戏：前往贝尔 ／ 移驾里特贝尔……（在棋盘地图上移动）'};
+var MODE_PH={say:'以三叶（或你的角色）之口开口说话……（自动加「」）',do:'写下我的行动……',free:'自由书写这一幕：言语、行动、内心……',world:'控制游戏：前往贝尔 ／ 移驾里特贝尔……（在大陆舆图上移动）'};
 var SVGF=false;try{SVGF=localStorage.getItem('mb_svgfold')==='1';}catch(e){}
 function storyPane(){
   var m=mood();var mob=isMobile();
@@ -2999,7 +2999,7 @@ function gameView(){
     +'<button data-ov="mem" class="obtn btn kai" title="长程记忆" style="width:34px;height:34px;font-size:16px;color:'+((S.memOn!==false&&S.mem&&S.mem.length)?'var(--gold2)':'var(--mut)')+'">忆</button>'
     +'<button data-ov="preset" class="obtn btn kai" title="自定义预设" style="width:34px;height:34px;font-size:16px;color:'+(PRESET&&PRESET.on?'var(--gold2)':'var(--mut)')+'">预</button>'
     +'<button data-ov="codex" class="obtn btn kai" title="世界书图鉴" style="width:34px;height:34px;font-size:16px">书</button>'
-    +'<button data-ov="map" class="obtn btn kai" title="罗泽利亚地图" style="width:34px;height:34px;font-size:16px">图</button>'
+    +'<button data-ov="map" class="obtn btn kai" title="埃乌罗佩舆图" style="width:34px;height:34px;font-size:16px">图</button>'
     +'<button data-ov="saves" class="obtn btn kai" title="存档" style="width:34px;height:34px;font-size:16px">档</button>'
     +'<button data-act="toselect" class="obtn btn kai" title="另择开局" style="width:34px;height:34px;font-size:16px;border-color:rgba(126,33,46,.5);color:#96323f">返</button>';
   var logo='<svg viewBox="0 0 512 512" width="28" height="28" style="flex:none;display:block;border-radius:6px;box-shadow:0 1px 4px rgba(58,47,36,.35)"><rect width="512" height="512" rx="116" fill="#1d2433"/><circle cx="256" cy="256" r="186" fill="#2a4568"/><circle cx="256" cy="256" r="124" fill="#e8dfc8"/><circle cx="256" cy="256" r="64" fill="#7e212e"/></svg>';
@@ -3134,7 +3134,7 @@ function renderOverlay(){
   }else render();
 }
 function overlayView(){
-  var title=S.overlay==='codex'?'三叶世界书':S.overlay==='map'?'罗泽利亚地图':S.overlay==='preset'?'自定义预设':S.overlay==='api'?'AI 接口设置':S.overlay==='jpsb'?'日文沙盒':S.overlay==='set'?'设 置':S.overlay==='mem'?'长程记忆 · 编年长卷':'存 档';
+  var title=S.overlay==='codex'?'三叶世界书':S.overlay==='map'?'埃乌罗佩舆图':S.overlay==='preset'?'自定义预设':S.overlay==='api'?'AI 接口设置':S.overlay==='jpsb'?'日文沙盒':S.overlay==='set'?'设 置':S.overlay==='mem'?'长程记忆 · 编年长卷':'存 档';
   var inner=S.overlay==='codex'?codexBody():S.overlay==='map'?mapBody():S.overlay==='preset'?presetBody():S.overlay==='api'?apiBody():S.overlay==='jpsb'?jpsbBody():S.overlay==='set'?setBody():S.overlay==='mem'?memBody():savesBody();
   return '<div id="zjOvWrap" style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:14px">'
     +'<div id="zjOvDim" data-act="closeov" class="fade" style="position:absolute;inset:0;background:radial-gradient(120% 100% at 50% 40%,rgba(30,24,15,.14),rgba(18,13,8,.28));-webkit-backdrop-filter:blur(3px) saturate(115%);backdrop-filter:blur(3px) saturate(115%)"></div>'
@@ -3158,30 +3158,39 @@ function codexBody(){
   }
   return '<div class="row grow" style="min-height:0"><div id="zjCatBar" style="position:relative;flex:none;width:104px;border-right:1px solid rgba(42,69,104,.18);overflow-y:auto;padding:8px 0">'+cats+'</div><div class="row grow zjPane" style="min-height:0"><div id="zjEntList" style="position:relative;flex:none;width:230px;border-right:1px solid rgba(42,69,104,.18);overflow-y:auto;padding:8px">'+list+'</div>'+detail+'</div></div>';
 }
-/* ---------------- 天下棋盘 · 地点与前往 ---------------- */
+/* ---------------- 埃乌罗佩大陆舆图 · 地点与前往 ----------------
+   坐标系：小说原图逆时针旋转九十度为上北下南（罗盘N指原图右侧），viewBox 1000×707。
+   方位与世界书对齐：普尔梅尼亚在罗泽利亚东侧，莉莉安娜为西北隔海岛国（卡利亚市隔海峡相望），
+   卡萨布兰卡在南，赫泽兰在东北（经架桥小岛连里贝克州），库洛卡斯居极东，七玫瑰州如花瓣环绕王都。 */
 var ZJ_LOCS=[
-  {name:'首都贝尔',ch:'都',kind:'cap',x:500,y:320,note:'花之王都 · 罗泽利亚之心'},
-  {name:'布鲁洛兹',ch:'蓝',kind:'cap',x:390,y:240,note:'蓝蔷薇之州 · 三叶的庭院'},
-  {name:'斯特拉斯帕尔',ch:'斯',kind:'cap',x:220,y:280,note:'西部大州 · 重要防线'},
-  {name:'奥瑟利亚街道',ch:'道',kind:'pass',x:310,y:330,note:'两州边境 · 会战之地'},
-  {name:'贝里埃要塞',ch:'塞',kind:'city',x:170,y:390,note:'干道要冲 · 俯瞰斯市'},
-  {name:'西德里恩特',ch:'战',kind:'pass',x:80,y:300,note:'最前线 · 二十年战场'},
-  {name:'卡利亚市',ch:'伊',kind:'city',x:430,y:120,note:'伊尔洛兹家根据地'},
-  {name:'里贝克州',ch:'贝',kind:'city',x:760,y:150,note:'东北国境 · 第一军团驻地'},
-  {name:'诺斯贝尔市',ch:'诺',kind:'city',x:610,y:250,note:'广场上立着断头台'},
-  {name:'阿敏市',ch:'阿',kind:'city',x:700,y:300,note:'东进之路的城市'},
-  {name:'里特贝尔',ch:'红',kind:'city',x:640,y:400,note:'红玫瑰州 · 治安维持局驻地'},
-  {name:'哈尔吉奥村',ch:'村',kind:'city',x:560,y:440,note:'红玫瑰州 · 浅坟之地'},
-  {name:'蒙佩利亚',ch:'蒙',kind:'city',x:520,y:505,note:'南方国境州'},
-  {name:'卡萨布兰卡',ch:'公',kind:'cap',x:370,y:530,note:'南方同盟 · 大公国'},
-  {name:'莉莉安娜',ch:'莉',kind:'cap',x:90,y:120,note:'隔海的岛国 · 海洋霸主'},
-  {name:'赫泽兰',ch:'赫',kind:'cap',x:880,y:100,note:'东北联合王国 · 十王之国'},
-  {name:'普尔梅尼亚',ch:'普',kind:'cap',x:905,y:305,note:'宿敌帝国 · 皇帝鲁道夫'}
+  {name:'首都贝尔',ch:'都',kind:'cap',x:218,y:337,note:'花之王都 · 罗泽利亚之心',alias:['王都贝尔']},
+  {name:'卡利亚市',ch:'伊',kind:'city',x:150,y:265,note:'伊尔洛兹州都 · 海峡港市',la:'n',alias:['卡利雅','卡利阿']},
+  {name:'阿敏市',ch:'阿',kind:'city',x:178,y:293,note:'通往卡利亚之路的城市',la:'n',alias:['阿明市']},
+  {name:'诺斯贝尔市',ch:'诺',kind:'city',x:202,y:312,note:'邻近首都 · 广场上立着断头台',la:'n'},
+  {name:'里特贝尔',ch:'红',kind:'city',x:278,y:308,note:'红玫瑰州 · 治安维持局驻地',la:'n'},
+  {name:'哈尔吉奥村',ch:'村',kind:'city',x:250,y:322,note:'红玫瑰州 · 浅坟之地'},
+  {name:'布鲁洛兹',ch:'蓝',kind:'city',x:296,y:330,note:'蓝蔷薇之州 · 三叶的庭院',la:'n'},
+  {name:'里贝克州',ch:'贝',kind:'city',x:332,y:278,note:'东北国境 · 第一军团驻地',la:'n',alias:['利贝克']},
+  {name:'奥瑟利亚街道',ch:'道',kind:'pass',x:302,y:347,note:'两州边境 · 会战之地',alias:['奥瑟路','奥赛尔']},
+  {name:'斯特拉斯帕尔',ch:'斯',kind:'city',x:324,y:363,note:'德里恩特之后的大州 · 重要防线'},
+  {name:'贝里埃要塞',ch:'塞',kind:'pass',x:337,y:382,note:'干道要冲 · 俯瞰斯市'},
+  {name:'西德里恩特',ch:'战',kind:'pass',x:351,y:324,note:'最前线 · 二十年战场',la:'n',alias:['多利安特']},
+  {name:'东德里恩特',ch:'东',kind:'pass',x:376,y:342,note:'德里恩特东半 · 帝国占领地'},
+  {name:'蒙佩利亚',ch:'蒙',kind:'city',x:180,y:445,note:'南方国境州 · 与大公国接壤',alias:['蒙派拉']},
+  {name:'架桥小岛',ch:'桥',kind:'pass',x:366,y:242,note:'通往赫泽兰的必经小岛'},
+  {name:'卡萨布兰卡',ch:'公',kind:'cap',x:170,y:535,note:'南方同盟 · 大公国'},
+  {name:'莉莉安娜',ch:'莉',kind:'cap',x:118,y:158,note:'隔海的岛国 · 海洋霸主 · 王都林登丽露',alias:['莉莉亚','林登丽露']},
+  {name:'坎特伯里',ch:'港',kind:'city',x:150,y:188,note:'莉莉安娜的港湾都市'},
+  {name:'赫泽兰',ch:'赫',kind:'cap',x:600,y:192,note:'东北联合王国 · 十王之国',alias:['海泽兰德','赫泽兰德','海泽兰']},
+  {name:'普尔梅尼亚',ch:'普',kind:'cap',x:452,y:390,note:'宿敌帝国 · 帝都梅尔加尔多',alias:['梅尔加尔多','普美利亚','普梅尼亚']},
+  {name:'库洛卡斯',ch:'库',kind:'cap',x:770,y:280,note:'东方大帝国 · 野心昭彰',alias:['库罗卡斯']},
+  {name:'大轮教会领',ch:'教',kind:'cap',x:694,y:464,note:'大轮教圣地 · 教皇领'}
 ];
 function locByName(n){for(var i=0;i<ZJ_LOCS.length;i++)if(ZJ_LOCS[i].name===n)return ZJ_LOCS[i];return null;}
+var ZJ_KEYS=(function(){var a=[];ZJ_LOCS.forEach(function(L){a.push({L:L,k:L.name});(L.alias||[]).forEach(function(x){a.push({L:L,k:x});});});a.sort(function(p,q){return q.k.length-p.k.length;});return a;})();
 function playerLoc(){
   var p=currentPanel();var td=p?String((p.world['时地']||'')):'';
-  for(var i=0;i<ZJ_LOCS.length;i++){if(td.indexOf(ZJ_LOCS[i].name)>=0)return ZJ_LOCS[i];}
+  for(var i=0;i<ZJ_KEYS.length;i++){if(td.indexOf(ZJ_KEYS[i].k)>=0)return ZJ_KEYS[i].L;}
   return ZJ_LOCS[0];
 }
 function movePlayerTo(name){
@@ -3191,42 +3200,168 @@ function movePlayerTo(name){
   S.overlay=null;
   sendText('（起行——我自'+cur.name+'动身前往'+L.name+'，'+L.note+'。此回合我只是赶路：请描写沿途见闻与抵达'+L.name+'时的景象，并将时地更新为'+L.name+'。）');
 }
+var ZJ_SVG=null;
+function mapSvg(){
+  if(ZJ_SVG)return ZJ_SVG;
+  function P(d,f,s,w,extra){return '<path d="'+d+'" fill="'+f+'" stroke="'+(s||'none')+'"'+(w?' stroke-width="'+w+'"':'')+(extra||'')+'></path>';}
+  function poly(pts){var d='M'+pts[0]+' '+pts[1];for(var i=2;i<pts.length;i+=2)d+='L'+pts[i]+' '+pts[i+1];return d+'Z';}
+  function line(pts){var d='M'+pts[0]+' '+pts[1];for(var i=2;i<pts.length;i+=2)d+='L'+pts[i]+' '+pts[i+1];return d;}
+  var INK='#4a4032';
+  /* 共用边界（首尾与海岸缝合） */
+  var RP=[350,248,356,262,352,276,360,290,356,304,362,318,358,332,363,346,358,360,362,374,355,388,347,402,339,416,331,430,323,444,317,458,315,470];
+  var RC=[149,456,162,460,176,455,190,461,204,456,218,462,232,457,246,463,260,458,274,464,288,460,300,466,315,470];
+  var CP=[315,470,320,484,316,498,322,512,318,518];
+  var CE=[318,518,312,532,317,546,311,560,316,574,310,588,314,600];
+  var SB=[153,608,160,602,174,596,188,591,202,597,216,592,230,598,244,593,258,599,272,594,286,600,300,594,314,600];
+  var HF=[244,593,240,608,246,624,240,640,247,656,252,672];
+  var FG=[314,600,320,614,316,628,322,640,324,643];
+  var PS=[318,518,334,512,350,517,366,511,382,516,398,510,414,515,430,509,446,514,462,508,478,513,494,507,500,509,510,512,526,506,540,511,552,505,560,500];
+  var GZ=[446,514,452,538,447,562,453,586,448,610,452,634];
+  var ZS=[500,509,496,538,501,564,495,590,500,616,500,643];
+  var SD=[560,500,556,514,561,536,555,558,560,582,556,602,560,614];
+  var CD=[560,500,576,506,592,512,608,518,626,522,644,524,660,524];
+  var PC=[559,252,556,270,561,286,555,302,560,318,554,334,559,350,553,366,558,382,552,398,557,414,551,430,556,446,550,462,555,478,552,490,560,500];
+  var HC=[559,252,566,247,580,242,598,236,616,228,630,216,636,200,631,184,637,168,632,152,638,136,633,120,639,104,644,95];
+  var NCOAST=[138,258,152,250,168,255,184,248,200,253,216,247,232,252,248,246,264,251,280,245,296,250,310,246,324,249,338,244,350,248];
+  var WCOAST_R=[149,456,154,440,148,424,153,408,147,392,152,376,146,360,151,344,145,328,150,312,144,296,149,280,143,266,138,258];
+  var WCOAST_C=[153,608,158,592,152,576,157,560,151,544,156,528,150,512,155,496,150,480,154,468,149,456];
+  var PCOAST=[350,248,362,256,376,261,390,257,404,263,418,259,432,265,446,261,460,266,474,262,488,267,502,263,516,268,530,264,542,269,552,266,559,252];
+  var HZS=[559,252,552,240,536,244,522,238,508,243,494,237,480,242,466,236,452,241,438,235,424,240,410,234,398,238,391,240,383,231];
+  var HZW=[383,231,387,219,382,205,386,190,381,175,385,160,380,145,384,130,380,116,385,104,392,96];
+  var HZN=[392,96,410,101,428,94,446,100,464,93,482,99,500,93,518,99,536,93,554,98,572,92,590,98,608,92,626,98,644,95];
+  var CCN=[644,95,662,99,680,93,698,99,716,93,734,99,752,94,770,100,788,95,806,101,824,96,842,102,858,97,872,106,880,120];
+  var CCE=[880,120,886,138,882,156,887,174,883,192,888,210,884,228,878,246,882,262,874,280,866,296,854,312,844,326,830,342,818,356,802,372,788,384,770,396,752,406,734,414,718,424,706,436,696,450,688,462,682,474,674,486,668,498,664,510,660,524];
+  var DCOAST=[660,524,658,540,661,556,655,570,648,583,639,595,628,604,614,611,600,607,586,613,572,609,560,614];
+  var SCOAST_S=[560,614,548,622,532,628,516,636,500,643];
+  var SCOAST_Z=[500,643,484,648,468,641,452,634];
+  var SCOAST_G=[452,634,436,627,420,620,404,614,388,619,372,625,356,631,340,637,324,643];
+  var SCOAST_F=[324,643,308,637,292,644,278,652,266,662,252,672];
+  var SCOAST_H=[252,672,236,678,220,671,204,675,190,666,176,655,166,643,158,630,154,616,153,608];
+  function rev(a){var o=[];for(var i=a.length-2;i>=0;i-=2){o.push(a[i],a[i+1]);}return o;}
+  function cat(){var o=[];for(var i=0;i<arguments.length;i++)o=o.concat(arguments[i]);return o;}
+  /* 国家多边形 */
+  var pRoselia=poly(cat(NCOAST,RP,rev(RC),WCOAST_R.slice(2)));
+  var pPlumenia=poly(cat(PCOAST,PC.slice(2),rev(PS),rev(CP).slice(2),rev(RP).slice(2)));
+  var pCasa=poly(cat(RC,CP.slice(2),CE.slice(2),rev(SB).slice(2),WCOAST_C.slice(2)));
+  var pHydra=poly(cat(SB.slice(0,16),HF.slice(2),SCOAST_H));
+  var pFree=poly(cat(SB.slice(14),FG.slice(2),SCOAST_F,rev(HF).slice(2)));
+  var pGerb=poly(cat(PS.slice(0,18),GZ.slice(2),SCOAST_G,rev(FG).slice(2),rev(CE).slice(2)));
+  var pZeph=poly(cat(PS.slice(16,26),ZS.slice(2),SCOAST_Z,rev(GZ).slice(2)));
+  var pSalv=poly(cat(PS.slice(24),SD.slice(2),SCOAST_S,rev(ZS).slice(2)));
+  var pDahl=poly(cat(CD,DCOAST.slice(2),rev(SD).slice(2)));
+  var pHez=poly(cat(HZS,HZW.slice(2),HZN.slice(2),rev(HC).slice(2)));
+  var pCroc=poly(cat(HC,CCN.slice(2),CCE.slice(2),rev(CD).slice(2),rev(PC).slice(2)));
+  var pLilia='M64 96L78 84L94 76L108 66L124 57L140 52L154 58L166 52L176 62L179 76L171 88L177 102L169 116L174 130L166 144L171 158L162 172L166 186L155 197L141 192L129 201L114 206L100 198L88 190L92 176L80 168L84 152L73 144L77 128L66 120L70 106Z';
+  var pEnclave='M672 486L678 492L676 504L668 512L662 506L664 494Z';
+  var pChurch='M696 448L706 452L708 464L700 474L690 470L686 458Z';
+  var pIsles='M726 556L738 548L752 551L760 560L754 570L740 573L728 568Z';
+  var s='<svg viewBox="0 0 1000 707" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%">';
+  s+='<defs>'
+    +'<pattern id="zjPmD" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="#ddd1ad"></rect><circle cx="1.6" cy="1.6" r=".75" fill="rgba(74,64,50,.3)"></circle></pattern>'
+    +'<pattern id="zjHzD" width="7" height="7" patternUnits="userSpaceOnUse"><rect width="7" height="7" fill="#cfc09b"></rect><path d="M0 7L7 0" stroke="rgba(74,64,50,.3)" stroke-width="1"></path></pattern>'
+    +'<pattern id="zjCcS" width="5" height="5" patternUnits="userSpaceOnUse"><rect width="5" height="5" fill="#e8debd"></rect><rect width="5" height="1.1" y="1" fill="rgba(74,64,50,.16)"></rect></pattern>'
+    +'<pattern id="zjLlX" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="#d8cba6"></rect><path d="M0 0L6 6M6 0L0 6" stroke="rgba(74,64,50,.24)" stroke-width=".8"></path></pattern>'
+    +'<filter id="zjSh" x="-4%" y="-4%" width="108%" height="108%"><feDropShadow dx="1.5" dy="2.5" stdDeviation="2.2" flood-color="rgba(58,47,36,.4)"></feDropShadow></filter>'
+    +'</defs>';
+  /* 海 */
+  s+='<rect x="14" y="12" width="972" height="683" fill="#ded2ae"></rect>';
+  var wv='';[[52,182],[84,228],[58,432],[92,532],[70,662],[214,222],[300,158],[338,108],[250,120],[698,562],[762,612],[846,548],[948,204],[936,424],[952,650],[512,688],[906,96]].forEach(function(c){wv+='<path d="M'+c[0]+' '+c[1]+' q6 -5 12 0 t12 0" fill="none" stroke="rgba(90,110,130,.22)" stroke-width="1.2"></path>';});
+  s+=wv;
+  /* 陆地（整体投影） */
+  s+='<g filter="url(#zjSh)">'
+    +P(pCroc,'url(#zjCcS)',INK,1.3)
+    +P(pHez,'url(#zjHzD)',INK,1.3)
+    +P(pPlumenia,'url(#zjPmD)',INK,1.3)
+    +P(pRoselia,'#f8f2df',INK,1.3)
+    +P(pCasa,'#c9b992',INK,1.3)
+    +P(pHydra,'#eee3c4',INK,1.1)+P(pFree,'#dfd3b0',INK,1.1)+P(pGerb,'#e9dec0',INK,1.1)+P(pZeph,'#dcd0ac',INK,1.1)+P(pSalv,'#e5dabb',INK,1.1)+P(pDahl,'#d7cba6',INK,1.1)
+    +P(pLilia,'url(#zjLlX)',INK,1.3)
+    +'<circle cx="185" cy="112" r="3" fill="url(#zjLlX)" stroke="'+INK+'"></circle><circle cx="188" cy="126" r="2" fill="url(#zjLlX)" stroke="'+INK+'"></circle>'
+    +'<circle cx="360" cy="244" r="3.2" fill="#e6dcc0" stroke="'+INK+'"></circle><circle cx="367" cy="239" r="2.4" fill="#e6dcc0" stroke="'+INK+'"></circle><circle cx="373" cy="234" r="2" fill="#e6dcc0" stroke="'+INK+'"></circle><circle cx="364" cy="250" r="1.8" fill="#e6dcc0" stroke="'+INK+'"></circle>'
+    +P(pIsles,'url(#zjLlX)',INK,1.1)+'<circle cx="768" cy="576" r="3.5" fill="url(#zjLlX)" stroke="'+INK+'"></circle><circle cx="720" cy="545" r="2.5" fill="url(#zjLlX)" stroke="'+INK+'"></circle>'
+    +P(pEnclave,'url(#zjLlX)',INK,1.1)
+    +P(pChurch,'#b7a67d',INK,1.2)
+    +'</g>';
+  /* 罗泽利亚州界（虚线）：七玫瑰花瓣环 + 辐条 + 外州 */
+  var DS='fill="none" stroke="rgba(90,76,56,.5)" stroke-width=".7" stroke-dasharray="3 2.5"';
+  s+='<circle cx="218" cy="337" r="16" '+DS+'></circle>'
+    +'<path d="M218 256C262 260 298 296 307 342C313 380 276 412 232 418C186 424 148 400 142 356C136 312 170 260 218 256Z" '+DS+'></path>';
+  [[210,323,180,270],[226,323,256,270],[233,332,290,312],[234,341,300,362],[225,352,252,408],[213,352,196,410],[204,345,148,376],[202,334,140,324]].forEach(function(a){s+='<path d="M'+a[0]+' '+a[1]+'L'+a[2]+' '+a[3]+'" '+DS+'></path>';});
+  [[310,246,314,264,308,282,314,298],[314,298,332,303,351,304],[332,303,340,318,336,334,342,350,338,366,343,382,347,402],[273,289,308,282],[240,264,275,255,310,246],[180,270,150,262],[148,430,166,436,184,431,202,437,216,432,228,424],[230,420,242,440,246,463],[276,412,288,436,296,460,300,466]].forEach(function(a){s+='<path d="'+line(a)+'" '+DS+'></path>';});
+  /* 大国内部纹理线 */
+  var DS2='fill="none" stroke="rgba(90,76,56,.32)" stroke-width=".7" stroke-dasharray="3 2.5"';
+  [[420,262,430,300,424,340,432,380,426,420,432,460,428,500],[360,376,420,384,480,378,540,386,556,382],[700,100,694,180,700,260,692,330,682,380],[780,110,786,190,778,270,764,330],[455,100,448,160,455,230],[540,96,534,160,540,236]].forEach(function(a){s+='<path d="'+line(a)+'" '+DS2+'></path>';});
+  /* 山脉：德里恩特前线 + 南方三国交界 */
+  var mt='';[[357,300],[362,318],[356,336],[361,354],[355,372],[359,390],[302,470],[314,476],[326,468]].forEach(function(c){mt+='<path d="M'+(c[0]-7)+' '+c[1]+' l7 -10 l7 10" fill="none" stroke="#6b5c44" stroke-width="1.2"></path><path d="M'+(c[0]-3)+' '+c[1]+' l3 -4.5 l3 4.5" fill="none" stroke="rgba(107,92,68,.55)" stroke-width=".9"></path>';});
+  s+=mt;
+  /* 国名 */
+  function TX(x,y,t,fs,ls,fill,style){return '<text x="'+x+'" y="'+y+'" text-anchor="middle" font-size="'+fs+'" letter-spacing="'+ls+'" fill="'+(fill||'rgba(63,54,40,.85)')+'" style="font-family:var(--kai),serif;'+(style||'')+'">'+t+'</text>';}
+  s+=TX(218,376,'罗泽利亚',14,4,'rgba(63,54,40,.5)')
+    +TX(462,300,'普尔梅尼亚',17,7)
+    +TX(240,572,'卡萨布兰卡',15,5)
+    +TX(120,104,'莉莉安娜王国',11,2)
+    +TX(478,152,'赫泽兰',16,10)
+    +TX(748,208,'库洛卡斯',17,9)
+    +TX(204,646,'海德拉西亚',10,1)+TX(284,616,'弗利吉亚',10,1)+TX(388,588,'加贝拉',10,1)+TX(476,608,'赛菲洛斯',10,1)+TX(530,558,'萨尔比亚',10,1)+TX(608,562,'达利亚',10,1)
+    +'<text x="204" y="660" text-anchor="middle" font-size="8" fill="#6b5c44">★</text><text x="284" y="630" text-anchor="middle" font-size="8" fill="#6b5c44">★</text><text x="388" y="602" text-anchor="middle" font-size="8" fill="#6b5c44">★</text><text x="476" y="622" text-anchor="middle" font-size="8" fill="#6b5c44">★</text><text x="530" y="572" text-anchor="middle" font-size="8" fill="#6b5c44">★</text><text x="608" y="576" text-anchor="middle" font-size="8" fill="#6b5c44">★</text>';
+  /* 州名（小） */
+  var ST='rgba(107,92,68,.9)';
+  s+=TX(145,317,'伊尔洛兹',8.5,0,ST)+TX(228,280,'绿玫瑰',8.5,0,ST)+TX(184,382,'黑玫瑰',8.5,0,ST)+TX(290,412,'白玫瑰',8.5,0,ST)+TX(222,420,'粉红玫瑰',8.5,0,ST);
+  /* 莉莉亚领地：引线标注（仿原图） */
+  s+='<path d="M770 590L688 516L672 505" fill="none" stroke="rgba(74,64,50,.7)" stroke-width=".8"></path>'
+    +'<path d="M788 591L762 574" fill="none" stroke="rgba(74,64,50,.7)" stroke-width=".8"></path>'
+    +TX(800,596,'莉莉亚领地',10,1);
+  /* 图例 */
+  s+='<rect x="40" y="318" width="82" height="88" fill="rgba(244,236,214,.88)" stroke="'+INK+'" stroke-width="1"></rect>'
+    +'<rect x="44" y="322" width="74" height="80" fill="none" stroke="rgba(74,64,50,.35)"></rect>'
+    +'<text x="54" y="345" text-anchor="middle" font-size="11" fill="#7a5f28">★</text><text x="64" y="345" font-size="10" fill="#3a3024" style="font-family:var(--kai),serif">首都</text>'
+    +'<circle cx="54" cy="366" r="4" fill="#fbf6ea" stroke="'+INK+'" stroke-width="1.4"></circle><text x="64" y="370" font-size="10" fill="#3a3024" style="font-family:var(--kai),serif">城邑</text>'
+    +'<path d="M49 386l10 10M59 386l-10 10" stroke="#96323f" stroke-width="1.6"></path><text x="64" y="395" font-size="10" fill="#3a3024" style="font-family:var(--kai),serif">要冲</text>';
+  /* 罗盘 */
+  s+='<g opacity=".8"><path d="M915 611L920 630L939 635L920 640L915 659L910 640L891 635L910 630Z" fill="rgba(42,69,104,.5)" stroke="'+INK+'" stroke-width=".8"></path>'
+    +'<path transform="rotate(45 915 635)" d="M915 622L918 632L928 635L918 638L915 648L912 638L902 635L912 632Z" fill="rgba(42,69,104,.3)"></path>'
+    +'<circle cx="915" cy="635" r="2.6" fill="#4a4032"></circle>'
+    +'<text x="915" y="604" text-anchor="middle" font-size="13" fill="#2a4568" font-family="serif">N</text></g>';
+  /* 题签 + 印 */
+  s+='<rect x="698" y="614" width="180" height="58" fill="rgba(244,236,214,.85)" stroke="'+INK+'" stroke-width="1.2"></rect>'
+    +'<rect x="704" y="620" width="168" height="46" fill="none" stroke="rgba(74,64,50,.35)"></rect>'
+    +TX(788,646,'埃乌罗佩大陆',16,6,'#3f3628')
+    +TX(788,661,'大轮历 · 革命的时代',8.5,2,'rgba(107,92,68,.9)')
+    +'<g transform="rotate(-5 940 70)" opacity=".85"><rect x="908" y="36" width="64" height="68" fill="rgba(126,33,46,.5)" rx="3"></rect><rect x="913" y="41" width="54" height="58" fill="none" stroke="rgba(214,226,244,.35)"></rect><text x="940" y="65" text-anchor="middle" fill="#efdcba" font-size="21" font-family="serif">三</text><text x="940" y="91" text-anchor="middle" fill="#efdcba" font-size="21" font-family="serif">叶</text></g>';
+  /* 边框与角饰 */
+  s+='<rect x="14" y="12" width="972" height="683" fill="none" stroke="rgba(42,69,104,.35)" stroke-width="2.5"></rect><rect x="22" y="20" width="956" height="667" fill="none" stroke="rgba(42,69,104,.18)"></rect>';
+  [[26,24,1,1],[974,24,-1,1],[26,683,1,-1],[974,683,-1,-1]].forEach(function(c){
+    var x=c[0],y=c[1],sx=c[2],sy=c[3];
+    s+='<path d="M'+x+' '+(y+sy*34)+' L'+x+' '+y+' L'+(x+sx*34)+' '+y+'" fill="none" stroke="rgba(42,69,104,.4)" stroke-width="2.5"></path>'
+      +'<path d="M'+(x+sx*8)+' '+(y+sy*34)+' L'+(x+sx*8)+' '+(y+sy*8)+' L'+(x+sx*34)+' '+(y+sy*8)+'" fill="none" stroke="rgba(42,69,104,.22)" stroke-width="1.5"></path>';
+  });
+  s+=TX(500,52,'埃 乌 罗 佩 大 陆',24,16,'rgba(42,69,104,.22)','opacity:.9')
+    +'</svg>';
+  ZJ_SVG=s;return s;
+}
 function mapBody(){
   var p=currentPanel();var era=p?[p.world['纪年'],p.world['时地']].filter(Boolean).join(' · '):'大轮历 · 革命的时代';
   var cur=playerLoc();
   var pend=S.movePending?locByName(S.movePending):null;
   var kpos=pend||cur;
   var pieces=ZJ_LOCS.map(function(L){
-    var cap=L.kind==='cap', pass=L.kind==='pass';
-    var d=cap?54:pass?44:46;
-    var ring=cap?'rgba(42,69,104,.75)':pass?'rgba(122,140,150,.6)':'rgba(42,69,104,.45)';
-    var chColor=cap?'#2a4568':pass?'#54718f':'#4a4032';var chGlyph=cap?'♜':pass?'♞':'♟';
     var here=L.name===cur.name;
-    return '<div data-loc="'+esc(L.name)+'" style="position:absolute;left:'+(L.x/10)+'%;top:'+(L.y/5.8)+'%;transform:translate(-50%,-50%);width:'+d+'px;text-align:center;pointer-events:none">'
-      +'<div style="width:'+d+'px;height:'+d+'px;margin:0 auto;border-radius:50%;background:radial-gradient(circle at 34% 30%,#f9f3e2,#e0d3b2 70%);border:2px solid '+ring+';box-shadow:inset 0 0 0 3px #fbf6ea, inset 0 0 0 4px rgba(42,69,104,.25), 0 5px 12px rgba(58,47,36,.55);display:flex;align-items:center;justify-content:center">'
-        +'<span style="font-size:'+(cap?27:pass?22:23)+'px;line-height:1;color:'+chColor+'" title="'+esc(L.ch)+'">'+chGlyph+'</span></div>'
-      +'<div style="margin-top:4px;font-size:11px;letter-spacing:.12em;color:'+(here?'#274468':'#6a5b45')+';text-shadow:0 1px 3px #000;white-space:nowrap">'+esc(L.name)+(here?' · 现在这里':'')+'</div></div>';
+    var sym;
+    if(L.kind==='cap')sym='<span style="font-size:15px;line-height:1;color:#7a5f28;text-shadow:0 0 3px #f8f2df,0 1px 1px rgba(58,47,36,.4)">★</span>';
+    else if(L.kind==='pass')sym='<span style="position:relative;display:inline-block;width:11px;height:11px"><span style="position:absolute;inset:0;color:#96323f;font-size:11px;line-height:11px;font-weight:700">✕</span></span>';
+    else sym='<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#fbf6ea;border:1.5px solid #4a4032;box-shadow:0 1px 2px rgba(58,47,36,.4)"></span>';
+    var lbl='<div style="font-size:9.5px;letter-spacing:.06em;line-height:1.15;color:'+(here?'#274468':'#3a3024')+';font-weight:'+(here?'700':'400')+';text-shadow:0 0 3px #f2e8cf,0 0 3px #f2e8cf,0 0 4px #f2e8cf;white-space:nowrap">'+esc(L.name)+'</div>';
+    var symd='<div style="height:13px;display:flex;align-items:center;justify-content:center" title="'+esc(L.note)+'">'+sym+'</div>';
+    return '<div data-loc="'+esc(L.name)+'" style="position:absolute;left:'+(L.x/10)+'%;top:'+(L.y/7.07)+'%;transform:translate(-50%,'+(L.la==='n'?'calc(-100% + 7px)':'-7px')+');width:74px;text-align:center;pointer-events:none;z-index:2">'
+      +(here?'<div style="position:absolute;left:50%;'+(L.la==='n'?'bottom:1px':'top:6px')+';transform:translate(-50%,'+(L.la==='n'?'50%':'-50%')+');width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(143,116,48,.85);box-shadow:0 0 10px rgba(143,116,48,.5)"></div>':'')
+      +(L.la==='n'?lbl+symd:symd+lbl)+'</div>';
   }).join('');
-  var king=(pend?'<div style="position:absolute;left:'+(pend.x/10)+'%;top:'+(pend.y/5.8)+'%;transform:translate(-50%,-50%);width:76px;height:76px;border-radius:50%;border:2px dashed rgba(58,92,140,.75);box-shadow:0 0 26px rgba(160,42,64,.35);z-index:4;pointer-events:none"></div>':'')
-    +'<div id="zjKing" title="拖动棋子亲赴其地" style="position:absolute;left:'+(kpos.x/10)+'%;top:'+(kpos.y/5.8)+'%;transform:translate(-50%,-50%);width:60px;height:60px;border-radius:50%;cursor:grab;touch-action:none;z-index:5;background:radial-gradient(circle at 34% 30%,#a03448,#6e1d2c 72%);border:2px solid rgba(214,226,244,.8);box-shadow:inset 0 0 0 3px #571a26, inset 0 0 0 4px rgba(214,226,244,.4), 0 8px 20px rgba(126,33,46,.5), 0 0 24px rgba(160,42,64,.35);display:flex;align-items:center;justify-content:center">'
-    +'<span class="kai" style="font-size:30px;color:#f7ecd8;text-shadow:0 1px 2px #40121c;pointer-events:none">♛</span></div>';
-  var grid='';
-  [[26,24,1,1],[974,24,-1,1],[26,556,1,-1],[974,556,-1,-1]].forEach(function(c){
-    var x=c[0],y=c[1],sx=c[2],sy=c[3];
-    grid+='<path d="M'+x+' '+(y+sy*34)+' L'+x+' '+y+' L'+(x+sx*34)+' '+y+'" fill="none" stroke="rgba(42,69,104,.4)" stroke-width="2.5"></path>'
-        +'<path d="M'+(x+sx*8)+' '+(y+sy*34)+' L'+(x+sx*8)+' '+(y+sy*8)+' L'+(x+sx*34)+' '+(y+sy*8)+'" fill="none" stroke="rgba(42,69,104,.22)" stroke-width="1.5"></path>'
-        +'<path d="M'+(x+sx*16)+' '+(y+sy*34)+' L'+(x+sx*16)+' '+(y+sy*16)+' L'+(x+sx*34)+' '+(y+sy*16)+'" fill="none" stroke="rgba(42,69,104,.12)" stroke-width="1.5"></path>';
-  });
-  function mts(x,y,n){var s='';for(var i=0;i<n;i++){var mx=x+i*30;s+='<path d="M'+mx+' '+y+' l 13 -17 l 13 17" fill="none" stroke="rgba(122,140,150,.35)" stroke-width="1.5"></path><path d="M'+(mx+8)+' '+y+' l 8 -9 l 8 9" fill="none" stroke="rgba(122,140,150,.2)"></path>';}return s;}
-  grid+='<g transform="rotate(-5 916 66)" opacity=".85"><rect x="884" y="32" width="64" height="68" fill="rgba(126,33,46,.5)" rx="3"></rect><rect x="889" y="37" width="54" height="58" fill="none" stroke="rgba(214,226,244,.35)"></rect><text x="916" y="61" text-anchor="middle" fill="#efdcba" font-size="21" font-family="serif">三</text><text x="916" y="87" text-anchor="middle" fill="#efdcba" font-size="21" font-family="serif">叶</text></g>';
-  var board='<svg viewBox="0 0 1000 580" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%">'
-    +'<rect x="14" y="12" width="972" height="556" fill="none" stroke="rgba(42,69,104,.35)" stroke-width="2.5"></rect><rect x="22" y="20" width="956" height="540" fill="none" stroke="rgba(42,69,104,.18)"></rect>'
-    +grid
-    +'<text x="500" y="55" text-anchor="middle" fill="rgba(42,69,104,.2)" font-size="30" font-family="serif" letter-spacing="22">罗 泽 利 亚</text>'
-  +'</svg>';
+  var king=(pend?'<div style="position:absolute;left:'+(pend.x/10)+'%;top:'+(pend.y/7.07)+'%;transform:translate(-50%,-50%);width:62px;height:62px;border-radius:50%;border:2px dashed rgba(58,92,140,.75);box-shadow:0 0 26px rgba(160,42,64,.35);z-index:4;pointer-events:none"></div>':'')
+    +'<div id="zjKing" title="拖动御印亲赴其地" style="position:absolute;left:'+(kpos.x/10)+'%;top:'+(kpos.y/7.07)+'%;transform:translate(-50%,-50%);width:40px;height:40px;border-radius:50%;cursor:grab;touch-action:none;z-index:5;background:radial-gradient(circle at 34% 30%,#a03448,#6e1d2c 72%);border:2px solid rgba(214,226,244,.8);box-shadow:inset 0 0 0 3px #571a26, inset 0 0 0 4px rgba(214,226,244,.4), 0 6px 16px rgba(126,33,46,.5), 0 0 22px rgba(160,42,64,.35);display:flex;align-items:center;justify-content:center">'
+    +'<span class="kai" style="font-size:19px;color:#f7ecd8;text-shadow:0 1px 2px #40121c;pointer-events:none">叶</span></div>';
   return '<div class="col grow" style="min-height:0">'
-    +'<div style="flex:none;display:flex;align-items:center;gap:14px;padding:10px 18px;border-bottom:1px solid rgba(42,69,104,.15);flex-wrap:wrap"><span style="font-size:12.5px;color:#6a5b45;letter-spacing:.05em">执子而行 —— 拖动红色的「后」至任一城邑，即为亲赴其地，当作一回合行动</span><div class="grow"></div><span style="font-size:12px;color:var(--gold)">'+esc(era)+'</span></div>'
-    +'<div class="grow" style="overflow:auto;padding:12px"><div id="zjBoard" style="position:relative;min-width:760px;width:100%;max-width:1000px;margin:0 auto;aspect-ratio:1000/580;background:radial-gradient(ellipse at 50% 50%,transparent 62%,rgba(58,47,36,.16) 100%),repeating-conic-gradient(#f0e6cb 0% 25%,#d5c49d 25% 50%);background-size:100% 100%,25% 43.1%">'+board+pieces+king+'</div></div>'
+    +'<div style="flex:none;display:flex;align-items:center;gap:14px;padding:10px 18px;border-bottom:1px solid rgba(42,69,104,.15);flex-wrap:wrap"><span style="font-size:12.5px;color:#6a5b45;letter-spacing:.05em">舆图行军 —— 拖动红色御印至任一地点，即为亲赴其地，当作一回合行动</span><div class="grow"></div><span style="font-size:12px;color:var(--gold)">'+esc(era)+'</span></div>'
+    +'<div class="grow" style="overflow:auto;padding:12px"><div id="zjBoard" style="position:relative;min-width:760px;width:100%;max-width:1000px;margin:0 auto;aspect-ratio:1000/707;background:radial-gradient(ellipse at 50% 50%,transparent 62%,rgba(58,47,36,.16) 100%),linear-gradient(160deg,#f2e8cd,#e6d9b6 55%,#eee2c4)">'+mapSvg()+pieces+king+'</div></div>'
     +(pend
       ?'<div style="flex:none;display:flex;align-items:center;gap:12px;padding:9px 18px;border-top:1px solid rgba(160,42,64,.35);background:rgba(126,33,46,.1);flex-wrap:wrap"><span class="kai" style="font-size:14.5px;color:var(--gold3);letter-spacing:.05em">前往 '+esc(pend.name)+'？</span><span style="font-size:12px;color:#6a5b45">'+esc(pend.note)+' · 此举将耗去一回合</span><div class="grow"></div><button data-act="moveYes" class="gbtn btn" style="font-size:13.5px;letter-spacing:.18em;padding:7px 20px">确认前往</button><button data-act="moveNo" class="obtn btn" style="font-size:13px;letter-spacing:.15em;padding:7px 16px">收回</button></div>'
       :'<div id="zjMapHint" style="flex:none;padding:8px 18px;font-size:12px;letter-spacing:.08em;color:#6e5f4b;border-top:1px solid rgba(42,69,104,.12)">当前所在：'+esc(cur.name)+' · '+esc(cur.note)+'</div>')
@@ -4192,9 +4327,9 @@ var DRAG=null;
 function dropTarget(x,y,w,h){
   var best=null,bd=1e9;
   for(var i=0;i<ZJ_LOCS.length;i++){var L=ZJ_LOCS[i];
-    var dx=(x-L.x/1000)*w,dy=(y-L.y/580)*h,d=Math.sqrt(dx*dx+dy*dy);
+    var dx=(x-L.x/1000)*w,dy=(y-L.y/707)*h,d=Math.sqrt(dx*dx+dy*dy);
     if(d<bd){bd=d;best=L;}}
-  return bd<=48?best:null;
+  return bd<=38?best:null;
 }
 root.addEventListener('pointerdown',function(e){
   var k=e.target&&e.target.closest?e.target.closest('#zjKing'):null;
@@ -4212,7 +4347,7 @@ root.addEventListener('pointermove',function(e){
   DRAG.k.style.left=(x*100)+'%';DRAG.k.style.top=(y*100)+'%';
   var t=dropTarget(x,y,r.width,r.height);
   var hint=document.getElementById('zjMapHint');
-  if(hint)hint.textContent=t?('落子于：'+t.name+' · '+t.note):'执子而行……松手落子';
+  if(hint)hint.textContent=t?('前往：'+t.name+' · '+t.note):'执印而行……松手择地';
 });
 function dragEnd(e,commit){
   if(!DRAG)return;
