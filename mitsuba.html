@@ -212,6 +212,10 @@ var typedSet = (typeof WeakSet!=='undefined')?new WeakSet():{has:function(){retu
 /* 正文转换记忆化：stripMvu→抽思维链→用户正则→分段转义着色 这条管线对每条历史每次整渲染都要全跑一遍，
    长局（几十幕）在手机上是整渲染的 JS 大头。文本不变则直接复用；正则规则变更靠 RXE 世代号失效。 */
 var MSGC=(typeof WeakMap!=='undefined')?new WeakMap():null;var RXE=0;
+/* 消息级 DOM 节点缓存：整渲染的浏览器解析大头是正文几百幕的 HTML 重解析。
+   每幕最终 HTML 串未变则直接搬运上一轮的真实节点（零解析零重建），变了才重建该幕。
+   storyPane 把各幕装进 MSGBUF，render 在骨架 innerHTML 之后按缓存回填 #zjItems。 */
+var NODEC=(typeof WeakMap!=='undefined')?new WeakMap():null;var MSGBUF=null;
 var TYPE = {msg:null,full:'',pos:0,timer:null,wait:false,chase:false};
 var GENAC=null; /* 流式在途标记：打字机 wait 旗的兜底判据 */
 var DLGC='#8f7430';try{DLGC=localStorage.getItem('mitsuba_dlgc')||'#274468';}catch(e){}
@@ -696,13 +700,21 @@ function scanLore(recent,budget,history,userInput){
   /* 玩家自定义条目优先保障：内置常驻把 9000 字预算吃满时，自定义命中条目允许额外 +3000 字余量，
      绝不再被静默挤掉（此前「关键词命中了却不在激活列表」多半是这个原因） */
   function push(e){if(out.indexOf(e)>=0)return;var cap=budget+(isU(e)?3000:0);if(used+e.content.length<=cap){out.push(e);used+=e.content.length;}}
+  var _tc={},_lc={}; /* 深度→拼接文本/其小写缓存：249 条目逐条重拼重转小写是本函数的字符串大头 */
   function textAt(e){
     if(!history)return recent;
     var d9=e.depth||6; /* 默认深扫6轮（原生ST默认约2） */
-    return history.slice(-d9).map(function(h){return h.text;}).join('\n')+'\n'+(userInput||'');
+    if(_tc[d9]===undefined)_tc[d9]=history.slice(-d9).map(function(h){return h.text;}).join('\n')+'\n'+(userInput||'');
+    return _tc[d9];
   }
-  function hitBy(e,txt){ /* 大小写不敏感（ST 同款）：英文关键词不再因大小写错失 */
-    var lt=String(txt).toLowerCase();
+  function lowerAt(e){
+    if(!history)return String(recent).toLowerCase();
+    var d9=e.depth||6;
+    if(_lc[d9]===undefined)_lc[d9]=textAt(e).toLowerCase();
+    return _lc[d9];
+  }
+  function hitBy(e,txt,low){ /* 大小写不敏感（ST 同款）：英文关键词不再因大小写错失 */
+    var lt=low!=null?low:String(txt).toLowerCase();
     if(!(e.keys||[]).some(function(k){return k&&lt.indexOf(String(k).toLowerCase())>=0;}))return false;
     if(e.keys2&&e.keys2.length&&!e.keys2.some(function(k){return k&&lt.indexOf(String(k).toLowerCase())>=0;}))return false;
     return true;
@@ -714,16 +726,18 @@ function scanLore(recent,budget,history,userInput){
     if(!e.constant&&e.pin&&now!==null&&typeof e.from==='number'&&e.from<=now&&(typeof e.to!=='number'||now<=e.to)) push(e);
   });
   var cand=L.filter(function(e){return !e.constant&&!e.pin&&e.cat!=='InitVar'&&e.cat!=='MVU';});
-  var hit=cand.filter(function(e){return hitBy(e,textAt(e))&&pass(e);});
+  var hit=cand.filter(function(e){return hitBy(e,null,lowerAt(e))&&pass(e);});
   /* 递归扫描：已激活条目的内容可再点亮其他条目（一层，防环） */
   var rtxt=out.concat(hit).filter(function(e){return !e.prevR;}).map(function(e){return e.content;}).join('\n');
-  if(rtxt)cand.forEach(function(e){if(hit.indexOf(e)>=0||out.indexOf(e)>=0||e.exclR)return;if(hitBy(e,rtxt)&&pass(e))hit.push(e);});
+  var _rl1=rtxt.toLowerCase();
+  if(rtxt)cand.forEach(function(e){if(hit.indexOf(e)>=0||out.indexOf(e)>=0||e.exclR)return;if(hitBy(e,null,_rl1)&&pass(e))hit.push(e);});
   /* 第二层递归（防环：仍排除已激活与 exclR） */
   var rtxt2=hit.filter(function(e){return !e.prevR;}).map(function(e){return e.content;}).join('\n');
-  if(rtxt2)cand.forEach(function(e){if(hit.indexOf(e)>=0||out.indexOf(e)>=0||e.exclR)return;if(hitBy(e,rtxt2)&&pass(e))hit.push(e);});
+  var _rl2=rtxt2.toLowerCase();
+  if(rtxt2)cand.forEach(function(e){if(hit.indexOf(e)>=0||out.indexOf(e)>=0||e.exclR)return;if(hitBy(e,null,_rl2)&&pass(e))hit.push(e);});
   /* 频次×近因评分：命中次数计分，最近一轮双倍权重；同 order 层内高分优先装桶 */
   var _rl=String(recent).toLowerCase();
-  hit.forEach(function(e){var t=String(textAt(e)).toLowerCase();var sc=0;(e.keys||[]).forEach(function(k){if(!k)return;k=String(k).toLowerCase();var idx=0,c=0;while((idx=t.indexOf(k,idx))>=0){c++;idx+=k.length;if(c>9)break;}sc+=c;idx=0;c=0;while((idx=_rl.indexOf(k,idx))>=0){c++;idx+=k.length;if(c>9)break;}sc+=c;});e._sc=sc;});
+  hit.forEach(function(e){var t=lowerAt(e);var sc=0;(e.keys||[]).forEach(function(k){if(!k)return;k=String(k).toLowerCase();var idx=0,c=0;while((idx=t.indexOf(k,idx))>=0){c++;idx+=k.length;if(c>9)break;}sc+=c;idx=0;c=0;while((idx=_rl.indexOf(k,idx))>=0){c++;idx+=k.length;if(c>9)break;}sc+=c;});e._sc=sc;});
   hit.sort(function(a,b){var d=(a.order==null?100:a.order)-(b.order==null?100:b.order);return d!==0?d:((b._sc||0)-(a._sc||0));});
   /* 自定义命中条目最先装桶（玩家亲手写的最要紧），其后内置命中，最后千年记忆 */
   hit.filter(function(e){return isU(e)&&!past(e);}).forEach(push);
@@ -2736,7 +2750,8 @@ function storyPane(){
   var op=currentOpening();
   var hStart=Math.max(0,S.history.length-(S.histShow||30));
   var older=hStart>0?'<div style="text-align:center;margin:0 0 24px"><div class="btn obtn" data-act="histmore" style="display:inline-block;font-size:12px;letter-spacing:.18em;padding:7px 18px;border-radius:9px">▲ 展开更早 '+Math.min(30,hStart)+' 幕</div><div style="font-size:11px;color:var(--mut);margin-top:7px;letter-spacing:.1em">其前 '+hStart+' 幕未载入以保流畅，剧情已尽录于编年长卷（忆）</div></div>':'';
-  var items=older+S.history.slice(hStart).map(function(h,ri){var i=hStart+ri;
+  MSGBUF=[];if(older)MSGBUF.push({html:older});
+  S.history.slice(hStart).forEach(function(h,ri){var i=hStart+ri;
     if(h.role==='user'){
       var utb='<div class="btn" data-mtool="'+(i+1)+'" title="修改或删去此言" style="flex:none;align-self:flex-end;color:var(--mut);opacity:.4;padding:2px 7px;font-size:15px;letter-spacing:1px">⋯</div>';
       var ubody;
@@ -2752,7 +2767,7 @@ function storyPane(){
         +'<div class="btn obtn" data-act="mEdit" style="font-size:12px;padding:5px 14px">✎ 修此言</div>'
         +(i>0&&!S.thinking?'<div class="btn" data-act="mDel" style="cursor:pointer;font-size:12px;padding:5px 14px;background:transparent;border:1px solid rgba(126,33,46,.4);border-radius:9px;color:#96323f">删</div>':'')
         +'</div>':'';
-      return '<div class="fade" data-msg="'+i+'" style="margin-bottom:22px"><div style="display:flex;justify-content:flex-end;gap:6px">'+utb+ubody+'</div>'+utools+'</div>';
+      MSGBUF.push({h:h,html:'<div class="fade" data-msg="'+i+'" style="margin-bottom:22px"><div style="display:flex;justify-content:flex-end;gap:6px">'+utb+ubody+'</div>'+utools+'</div>'});return;
     }
     var chap='';
     var _mc=MSGC?MSGC.get(h):null;var _mk=(i===0?'0':'x')+'\u0001'+DLGC+'\u0001'+RXE+'\u0001'+h.text;
@@ -2817,8 +2832,9 @@ function storyPane(){
         +'<div style="display:flex;gap:8px;justify-content:flex-end;margin:7px 0 12px"><div class="btn obtn" data-act="mCancel" style="font-size:12px;padding:5px 14px">取消</div><div class="btn gbtn" data-act="mSave" style="font-size:12px;letter-spacing:.15em;padding:5px 16px">保存</div></div></div>';
       illu='';cotHtml='';retry='';
     }
-    return '<div class="fade" data-msg="'+i+'" style="margin-bottom:24px;position:relative">'+chap+illu+cotHtml+paras+retry+'</div>';
-  }).join('');
+    MSGBUF.push({h:h,html:'<div class="fade" data-msg="'+i+'" style="margin-bottom:24px;position:relative">'+chap+illu+cotHtml+paras+retry+'</div>'});
+  });
+  var items='<div id="zjItems"></div>';
   var thinking='';
   if(genSync()){
     thinking='<div style="display:flex;align-items:center;gap:8px;padding:6px 0 14px"><div style="position:relative;flex:1;height:27px;border-radius:9px;overflow:hidden;background:rgba(58,92,140,.08);border:1px solid rgba(58,92,140,.28);box-shadow:inset 0 1px 0 rgba(255,255,255,.4)">'
@@ -3840,6 +3856,18 @@ function render(){
   var noF=S._noFade||!!S.overlay;S._noFade=false;
   if(noF)root.classList.add('zjNoFade');
   root.innerHTML=view();
+  var _ih=document.getElementById('zjItems');
+  if(_ih&&MSGBUF){
+    var _fr=document.createDocumentFragment();
+    for(var _bi=0;_bi<MSGBUF.length;_bi++){var _be=MSGBUF[_bi],_bn=null,_bc=null;
+      if(_be.h&&NODEC){_bc=NODEC.get(_be.h);if(_bc&&_bc.html===_be.html)_bn=_bc.node;}
+      if(!_bn){var _tp=document.createElement('template');_tp.innerHTML=_be.html;
+        if(_be.h&&NODEC&&_tp.content.childElementCount===1){_bn=_tp.content.firstElementChild;NODEC.set(_be.h,{html:_be.html,node:_bn});}
+        else{while(_tp.content.firstChild)_fr.appendChild(_tp.content.firstChild);}}
+      if(_bn)_fr.appendChild(_bn);}
+    _ih.appendChild(_fr);
+  }
+  MSGBUF=null;
   if(ovScroll){var ovBox2=document.getElementById('zjOvBox');if(ovBox2)scrollRestore(ovBox2,ovScroll);}
   if(noF)setTimeout(function(){root.classList.remove('zjNoFade');},80);
   try{fitStoryPad();}catch(e){}
