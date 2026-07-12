@@ -717,17 +717,28 @@ function glInit(){
 
 /* ---------------- BGM: 幕间音乐迷你播放器 ---------------- */
 var BGM_TRACKS=[
-  {t:'第一曲 · 序幕',a:'曲目待上传（r01）',src:'core/res/r01.mp3'},
-  {t:'第二曲 · 苏醒',a:'曲目待上传（r02）',src:'core/res/r02.mp3'},
-  {t:'第三曲 · 军校',a:'曲目待上传（r03）',src:'core/res/r03.mp3'},
-  {t:'第四曲 · 行军',a:'曲目待上传（r04）',src:'core/res/r04.mp3'},
-  {t:'第五曲 · 要塞',a:'曲目待上传（r05）',src:'core/res/r05.mp3'},
-  {t:'第六曲 · 广场',a:'曲目待上传（r06）',src:'core/res/r06.mp3'},
-  {t:'第七曲 · 议会',a:'曲目待上传（r07）',src:'core/res/r07.mp3'},
-  {t:'第八曲 · 革命',a:'曲目待上传（r08）',src:'core/res/r08.mp3'},
-  {t:'第九曲 · 轮舞一',a:'曲目待上传（r09）',src:'core/res/r09.mp3'},
-  {t:'第十曲 · 轮舞二',a:'曲目待上传（r10）',src:'core/res/r10.mp3'},
-  {t:'第十一曲 · 轮舞三',a:'曲目待上传（r11）',src:'core/res/r11.mp3'}
+  {t:'La Marseillaise · 马赛曲',a:'Nino Ferrer',src:'core/res/data/idx/v1/7b00ad3944.dat'},
+  {t:'Le ça ira · 一切会好',a:'Édith Piaf',src:'core/res/data/idx/v1/682ab3828b.dat'},
+  {t:'L\'Internationale · 国际歌',a:'Armand Mestral',src:'core/res/data/idx/v1/4bb42ce62a.dat'},
+  {t:'Le drapeau rouge · 红旗',a:'Les Cœurs Révolutionnaires',src:'core/res/data/idx/v1/8bfd40e7e1.dat'},
+  {t:'En avant la classe ouvrière',a:'Les Cœurs Révolutionnaires',src:'core/res/data/idx/v1/d3df449cb9.dat'},
+  {t:'Le front des travailleurs',a:'Les Cœurs Révolutionnaires',src:'core/res/data/idx/v1/5a1c4eb660.dat'},
+  {t:'Le chant des partisans · 游击队之歌',a:'Armand Mestral',src:'core/res/data/idx/v1/89bd5db6d6.dat'},
+  {t:'Le chant des ouvriers · 工人之歌',a:'Armand Mestral',src:'core/res/data/idx/v1/362eec6760.dat'},
+  {t:'Le temps des cerises · 樱桃时节',a:'Yves Montand',src:'core/res/data/idx/v1/8858cb89a4.dat'},
+  {t:'La butte rouge · 红色山丘',a:'Yves Montand',src:'core/res/data/idx/v1/4f11d3bfd0.dat'},
+  {t:'Les canuts · 里昂织工',a:'Yves Montand',src:'core/res/data/idx/v1/58237b42f2.dat'},
+  {t:'Le galérien',a:'Yves Montand',src:'core/res/data/idx/v1/1f4e007409.dat'},
+  {t:'J\'avions reçu commandement',a:'Yves Montand',src:'core/res/data/idx/v1/ea29e27a9d.dat'},
+  {t:'Rendez-vous avec la liberté · 与自由有约',a:'Yves Montand',src:'core/res/data/idx/v1/438fb119b5.dat'},
+  {t:'La grève · 罢工',a:'Catherine Sauvage',src:'core/res/data/idx/v1/bce0b304d4.dat'},
+  {t:'L\'affiche rouge · 红色布告',a:'Catherine Sauvage',src:'core/res/data/idx/v1/fe42ec1336.dat'},
+  {t:'L\'insurgé · 起义者',a:'Mouloudji',src:'core/res/data/idx/v1/d1cf730107.dat'},
+  {t:'Le déserteur · 逃兵',a:'Mouloudji',src:'core/res/data/idx/v1/db5b3c56c9.dat'},
+  {t:'Complainte des assassins',a:'Germaine Montero',src:'core/res/data/idx/v1/d033661abb.dat'},
+  {t:'Aux marches du palais · 宫阶之上',a:'Les Compagnons De La Chanson',src:'core/res/data/idx/v1/f356773c9b.dat'},
+  {t:'Graine d\'ananar',a:'Léo Ferré',src:'core/res/data/idx/v1/b3a1b33d0f.dat'},
+  {t:'Maréchal nous voilà',a:'André Dassary',src:'core/res/data/idx/v1/3dd92967d2.dat'}
 ];
 var BGM={idx:0,playing:false,el:null,started:false,t0:0,_ls:0};
 try{var _bs=JSON.parse(localStorage.getItem('mitsuba_bgm_v1')||'{}');if(typeof _bs.idx==='number'&&BGM_TRACKS[_bs.idx])BGM.idx=_bs.idx;BGM.t0=+_bs.time||0;}catch(e){}
@@ -742,18 +753,29 @@ function bgmEl(){
   a.addEventListener('error',function(){BGM.playing=false;});
   BGM.el=a; return a;
 }
+function bgmSrc(i,cb){var tr=BGM_TRACKS[i];if(!tr)return cb(null);if(tr._u)return cb(tr._u);
+  fetch(tr.src).then(function(r){if(!r.ok)throw 0;return r.blob();}).then(function(b){tr._u=URL.createObjectURL(b);cb(tr._u);}).catch(function(){cb(null);});}
 function bgmPlay(i){
-  var a=bgmEl();
-  if(typeof i==='number'){
-    if(i!==BGM.idx||!a.getAttribute('src')){BGM.idx=(i%BGM_TRACKS.length+BGM_TRACKS.length)%BGM_TRACKS.length;a.src=BGM_TRACKS[BGM.idx].src;}
-  }else if(!a.getAttribute('src')){
-    a.src=BGM_TRACKS[BGM.idx].src;
-    if(BGM.t0>1){a.addEventListener('loadedmetadata',function once(){a.removeEventListener('loadedmetadata',once);try{if(BGM.t0<a.duration-5)a.currentTime=BGM.t0;}catch(e){}BGM.t0=0;});}
-  }
-  var p=a.play(); if(p&&p.catch)p.catch(function(){});
-  bgmSave();
+  var a=bgmEl(),L=BGM_TRACKS.length;
+  var target=(typeof i==='number')?((i%L+L)%L):BGM.idx;
+  var fresh=!a.getAttribute('src'),need=(target!==BGM.idx)||fresh;
+  BGM.idx=target;
+  if(!need){var p=a.play();if(p&&p.catch)p.catch(function(){});bgmSave();return;}
+  bgmSrc(target,function(u){
+    if(!u||target!==BGM.idx)return;
+    a.src=u;
+    if(fresh&&typeof i!=='number'&&BGM.t0>1){a.addEventListener('loadedmetadata',function once(){a.removeEventListener('loadedmetadata',once);try{if(BGM.t0<a.duration-5)a.currentTime=BGM.t0;}catch(e){}BGM.t0=0;});}
+    var p=a.play();if(p&&p.catch)p.catch(function(){});
+    bgmSave();
+  });
 }
 function bgmToggle(){ var a=bgmEl(); if(BGM.playing)a.pause(); else bgmPlay(); }
+/* 幕间音乐自动开演：进场即试播（自动播放被拦截时，改在玩家第一次触点后开始） */
+(function(){
+  function go(){try{if(!BGM.playing&&!S.muted)bgmPlay();}catch(e){}}
+  function arm(){document.addEventListener('pointerdown',function h(){document.removeEventListener('pointerdown',h);setTimeout(go,80);});}
+  setTimeout(function(){go();setTimeout(function(){if(!BGM.playing)arm();},600);},300);
+})();
 function setMuted(m){ S.muted=m; savePref(); if(BGM.el)BGM.el.muted=m; }
 
 /* ---------------- ENGINE ---------------- */
