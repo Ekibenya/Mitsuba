@@ -221,6 +221,7 @@ body{font-variant-numeric:lining-nums tabular-nums}
 <feDisplacementMap in="SourceGraphic" in2="ns" scale="20" xChannelSelector="R" yChannelSelector="G"/>
 </filter></defs></svg>
 <canvas id="zjGL"></canvas>
+<div id="zjRoseBg" aria-hidden="true" style="position:fixed;inset:0;z-index:0;display:none;background:#100d14 url(core/res/vn/bg_rose.webp) center/cover no-repeat"></div>
 <script>
 /* ============ 开幕演出:蓝蔷薇前,三叶对你开枪 ============ */
 (function(){
@@ -257,7 +258,7 @@ f.addEventListener('load',function(){
   if(done||armed)return;
   try{if(!(f.contentDocument&&f.contentDocument.getElementById('char')))return;}catch(e){}
   armed=true;
-  post({act:'frame',a:MB2?36:38,b:MB2?100:82});
+  post({act:'frame',a:38,b:82});
   f.style.opacity='1';
   t(function(){post({act:'gunKill'});},600);
   /* 开火≈600+1150ms;弹至镜前≈+700ms → 满屏黑一拍 → 揭幕 */
@@ -394,6 +395,15 @@ var TABISLE=true;try{TABISLE=localStorage.getItem('mitsuba_tabisle')!=='0';}catc
 /* 【实验】顶栏液态玻璃：默认开——顶部一整排（纪年地点/切换/全屏/设置…归）去掉各自方框，只在顶上铺一层液态玻璃渐变。
    与毛玻璃不同：强饱和+提亮的通透质感 + 高光条纹 + 亮边镜面。设置·显可一键切回旧的分框样式。 */
 var LIQGLASS=true;try{LIQGLASS=localStorage.getItem('mitsuba_liqglass')!=='0';}catch(e){}
+/* 正文国旗背景:默认关——进入游戏后停掉三色旗 WebGL,换蓝蔷薇静态图,省 GPU/电;设置·显可开(性能要求高) */
+var GAMEFLAG=false;try{GAMEFLAG=localStorage.getItem('mb_gameflag')==='1';}catch(e){}
+function zjBgSync(){
+  try{
+    var useRose=(typeof S!=='undefined'&&S&&S.screen==='game')&&!GAMEFLAG;
+    var rb=document.getElementById('zjRoseBg');if(rb)rb.style.display=useRose?'block':'none';
+    var gl=document.getElementById('zjGL');if(gl)gl.style.display=useRose?'none':'block';
+  }catch(e){}
+}
 /* 液态玻璃折射滤镜：静态挂在 body 上（root 重渲染不影响它），顶栏与输入区玻璃共用一份定义 */
 try{if(!document.getElementById('zjLiqRefract'))document.body.insertAdjacentHTML('beforeend','<svg width="0" height="0" style="position:absolute;pointer-events:none" aria-hidden="true"><filter id="zjLiqRefract" x="-8%" y="-8%" width="116%" height="116%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="0.005 0.011" numOctaves="2" seed="11" result="n"/><feGaussianBlur in="n" stdDeviation="1.6" result="nb"/><feDisplacementMap in="SourceGraphic" in2="nb" scale="13" xChannelSelector="R" yChannelSelector="G"/></filter></svg>');}catch(e){}
 function sendIcon(s){s=s||30;return '<svg viewBox="0 0 24 24" width="'+s+'" height="'+s+'" style="display:block"><circle cx="12" cy="12" r="11" fill="var(--gold2)"/><path d="M12 17.2V7.6M12 7.2l-4.3 4.3M12 7.2l4.3 4.3" fill="none" stroke="#f6f0e2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';}
@@ -618,9 +628,8 @@ function glInit(){
     (function loop(){
       requestAnimationFrame(loop);
       var scr=(typeof S!=='undefined'&&S&&S.screen)?S.screen:'title';
-      /* 手机端离开封面即整幅休眠：游戏内旗帜藏在正文毛玻璃后几不可见，省下的 GPU/内存给立绘岛 */
-      var _mob9=Math.min(screen.width||9e9,window.innerWidth||9e9)<=560;
-      if(_mob9&&scr!=='title'&&scr!=='select')return;
+      /* 正文默认不渲染国旗(设置·显可开):封面/选开局照常 */
+      if(scr==='game'&&!GAMEFLAG)return;
       var nw9=Date.now();
       /* 打字中降到 ~8 帧、游戏页且背景近实时 30 帧：把渲染通道让给键盘/正文（物理为时间基，降帧不变速） */
       var _ae9=document.activeElement,_typ9=!!(_ae9&&(_ae9.tagName==='TEXTAREA'||_ae9.tagName==='INPUT'));
@@ -3736,6 +3745,8 @@ function fontPane(){
    +'<div class="kai" style="font-size:19px;color:var(--gold2);letter-spacing:.15em;margin:34px 0 10px">性能</div>'
    +'<label style="display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink2);cursor:pointer;margin:6px 0"><input id="zjOptLow" type="checkbox" style="accent-color:#3c5a86"'+(LOWFX?' checked':'')+'>低配模式：手机防发热防卡顿（降特效模糊与渲染分辨率、背景光斑歇屏）</label>'
    +'<div style="font-size:11.5px;color:var(--mut);line-height:1.7;margin-top:4px">封面右上角的「低」是同一开关。默认关闭，画质无任何妥协。</div>'
+   +'<label style="display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink2);cursor:pointer;margin:12px 0 6px"><input id="zjOptFlag" type="checkbox" style="accent-color:#3c5a86"'+(GAMEFLAG?' checked':'')+'>正文国旗背景：进入游戏后仍实时渲染三色旗背景（性能要求高，手机易发热耗电）</label>'
+   +'<div style="font-size:11.5px;color:var(--mut);line-height:1.7;margin-top:4px">默认关闭：正文使用蓝蔷薇静态背景，国旗渲染在封面与选开局画面之外彻底停机，省性能。</div>'
    +'<div class="kai" style="font-size:19px;color:var(--gold2);letter-spacing:.15em;margin:34px 0 10px">输入栏功能</div>'
    +'<label style="display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink2);cursor:pointer;margin:6px 0"><input id="zjOptMic" type="checkbox" style="accent-color:#3c5a86"'+((S.micOn===true||(S.micOn==null&&!isMobile()))?' checked':'')+'>「声」语音输入按钮（说话成文；手机默认关，输入法自带语音）</label>'
    +'<label style="display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink2);cursor:pointer;margin:6px 0"><input id="zjOptSugg" type="checkbox" style="accent-color:#3c5a86"'+(S.sugg!==false?' checked':'')+'>懒人灵感：每幕后 AI 拟四条可点选项（每轮多一次杂务调用）</label>'
@@ -4067,6 +4078,7 @@ function autoGrowInput(ta){
 var _scrPrev;
 function render(){
   window.__ZJSCR=S.screen;
+  zjBgSync();
   try{if(S.screen==='game')memSync();}catch(e){}
   var focused=document.activeElement&&document.activeElement.id==='zjInput';
   var selStart=focused?document.activeElement.selectionStart:null;
@@ -4437,6 +4449,7 @@ root.addEventListener('change',function(e){
   if(e.target&&e.target.id==='zjTtsAuto'){TTS.auto=!!e.target.checked;ttsSave();return;}
   if(e.target&&e.target.id==='zjDlgPick'){var pD2=DLGC;DLGC=e.target.value||'#274468';dlgApply(pD2);return;}
   if(e.target&&e.target.id==='zjOptLow'){lowApply(!!e.target.checked);render();return;}
+  if(e.target&&e.target.id==='zjOptFlag'){GAMEFLAG=!!e.target.checked;try{localStorage.setItem('mb_gameflag',GAMEFLAG?'1':'0');}catch(err){}zjBgSync();return;}
   if(e.target&&e.target.id==='zjOptMic'){S.micOn=!!e.target.checked;savePref();render();return;}
   if(e.target&&e.target.id==='zjOptSugg'){S.sugg=!!e.target.checked;if(S.sugg===false)S.suggList=null;savePref();render();return;}
   if(e.target&&e.target.id==='zjOptInputBox'){INPUTGLASS=!e.target.checked;try{localStorage.setItem('mitsuba_inputglass',INPUTGLASS?'1':'0');}catch(er){}render();return;}
