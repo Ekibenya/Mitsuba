@@ -4523,7 +4523,7 @@ function initB3D(){
   if(b3d) return b3d;
   const canvas=$('fx3d');
   const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});
-  renderer.setPixelRatio(window.devicePixelRatio||1);
+  renderer.setPixelRatio(MB?1:(window.devicePixelRatio||1));
   renderer.outputEncoding=THREE.sRGBEncoding;
   const scene=new THREE.Scene();
   const cam=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,.1,200);
@@ -4655,6 +4655,8 @@ $('handBtn').onclick=()=>{
   $('handBtn').textContent={relax:'手势',open:'手势:张开',fist:'手势:握拳'}[HSEQ[hseqI]];
 };
 // ---- 剧场模式:被三叶物语引擎经 postMessage 驱动 ----
+const MB=/[?&]m=1/.test(location.search);
+if(MB){const st=document.createElement('style');st.textContent='.wf1,.wf2,.wf3,.ws1,.ws2,.wb3,.wb4,.wb5,.armLg,.armRg{animation:none!important}#char{animation:none!important}';document.head.appendChild(st);}
 const VN=/[?&]vn=1/.test(location.search);
 let vnOff=0, seqBusy=false;
 if(VN){

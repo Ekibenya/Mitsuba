@@ -566,6 +566,9 @@ function glInit(){
     (function loop(){
       requestAnimationFrame(loop);
       var scr=(typeof S!=='undefined'&&S&&S.screen)?S.screen:'title';
+      /* 手机端离开封面即整幅休眠：游戏内旗帜藏在正文毛玻璃后几不可见，省下的 GPU/内存给立绘岛 */
+      var _mob9=Math.min(screen.width||9e9,window.innerWidth||9e9)<=560;
+      if(_mob9&&scr!=='title'&&scr!=='select')return;
       var nw9=Date.now();
       /* 打字中降到 ~8 帧、游戏页且背景近实时 30 帧：把渲染通道让给键盘/正文（物理为时间基，降帧不变速） */
       var _ae9=document.activeElement,_typ9=!!(_ae9&&(_ae9.tagName==='TEXTAREA'||_ae9.tagName==='INPUT'));
@@ -2877,7 +2880,7 @@ function storyPane(){
       +'</div>'
       +'</div>';
   }
-  var HIDE3D=false;try{if(localStorage.getItem('mb_isle_v2')===null){localStorage.setItem('mb_isle_v2','1');localStorage.setItem('mb3d_hide','0');}HIDE3D=localStorage.getItem('mb3d_hide')==='1';}catch(e){}
+  var HIDE3D=false;try{if(localStorage.getItem('mb_isle_v3')===null){localStorage.setItem('mb_isle_v3','1');localStorage.setItem('mb3d_hide','0');}HIDE3D=localStorage.getItem('mb3d_hide')==='1';}catch(e){}
   var hideScene=false;
   var hide3d=HIDE3D;
   var sceneH=S.isleBig?Math.round((window.innerHeight||800)*(mob?0.54:0.58)):(mob?150:190);
@@ -5190,11 +5193,13 @@ var VN=window.__VN__={on:true,bg:'',prevNames:null,favorSeen:{},rev:false,
 try{VN.on=localStorage.getItem('mb_vn')!=='0';}catch(e){}
 try{VN.rev=localStorage.getItem('mb_vn_rev')==='1';}catch(e){}
 /* v2 一次性迁移:老存量状态(旧✕藏岛/旧沙盒关剧场)自动复位,之后用户的选择照常持久 */
-try{if(!localStorage.getItem('mb_vn_v2')){
-  localStorage.setItem('mb_vn_v2','1');
+try{if(!localStorage.getItem('mb_vn_v3')){
+  localStorage.setItem('mb_vn_v3','1');
   localStorage.setItem('mb_vn','1');VN.on=true;
   if(localStorage.getItem('mb3d_hide')==='1'){localStorage.removeItem('mb3d_hide');VN.unhide=true;}
 }}catch(e){}
+var MOB=false;try{MOB=Math.min(screen.width||9e9,window.innerWidth||9e9)<=560;}catch(e){}
+function vnUrl(f){return f.getAttribute('data-vnsrc')+(MOB?'&m=1':'');}
 var DIR='core/res/vn/';
 function ENG(){try{return window.__VNB?window.__VNB():null;}catch(e){return null;}}
 
@@ -5208,8 +5213,8 @@ root.innerHTML=
  +'<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.12),transparent 30%,transparent 72%,rgba(0,0,0,.3))"></div>'
  +'<iframe id="vnKrone" data-vnsrc="'+DIR+'krone.html?vn=1" allowtransparency="true" scrolling="no" style="position:absolute;left:1%;bottom:0;height:86%;width:30%;border:0;background:transparent;opacity:0;visibility:hidden;transition:opacity .8s ease,left .9s cubic-bezier(.3,.1,.25,1),height .9s cubic-bezier(.3,.1,.25,1),bottom .9s cubic-bezier(.3,.1,.25,1)"></iframe>'
  +'<iframe id="vnSandra" data-vnsrc="'+DIR+'sandra.html?vn=1" allowtransparency="true" scrolling="no" style="position:absolute;left:14%;bottom:0;height:86%;width:30%;border:0;background:transparent;opacity:0;visibility:hidden;transition:opacity .8s ease,left .9s cubic-bezier(.3,.1,.25,1),height .9s cubic-bezier(.3,.1,.25,1),bottom .9s cubic-bezier(.3,.1,.25,1)"></iframe>'
- +'<iframe id="vnMitsu" src="'+DIR+'mitsuba_chr.html?vn=1" allowtransparency="true" scrolling="no" style="position:absolute;left:30%;bottom:0;height:99%;width:40%;border:0;background:transparent;transition:left .9s cubic-bezier(.3,.1,.25,1),height .9s cubic-bezier(.3,.1,.25,1),bottom .9s cubic-bezier(.3,.1,.25,1)"></iframe>'
- +'<div id="vnJp" style="position:absolute;inset:0;z-index:2;display:none;overflow-y:auto;padding:36px 20px 16px;font-size:13px;line-height:2.1;color:#e6dcc8;white-space:pre-wrap;background:rgba(11,9,6,.55);pointer-events:auto;font-family:\'Hiragino Mincho ProN\',\'Yu Mincho\',serif"></div>'
+ +'<iframe id="vnMitsu" data-vnsrc="'+DIR+'mitsuba_chr.html?vn=1" allowtransparency="true" scrolling="no" style="position:absolute;left:30%;bottom:0;height:99%;width:40%;border:0;background:transparent;transition:left .9s cubic-bezier(.3,.1,.25,1),height .9s cubic-bezier(.3,.1,.25,1),bottom .9s cubic-bezier(.3,.1,.25,1)"></iframe>'
+ +'<div id="vnJp" style="position:absolute;inset:0;z-index:2;display:none;overflow-y:auto;padding:36px 20px 16px;font-size:13px;line-height:2.1;color:rgba(214,217,223,.62);white-space:pre-wrap;background:transparent;text-shadow:0 1px 3px rgba(10,8,6,.7),0 0 8px rgba(10,8,6,.45);pointer-events:auto;font-family:\'Hiragino Mincho ProN\',\'Yu Mincho\',serif"></div>'
  +'<div id="vnCtl" style="position:absolute;top:6px;right:10px;z-index:3;display:flex;gap:6px;pointer-events:auto"></div>';
 document.body.appendChild(root);
 /* VN 关闭时,岛右上角的迷你「剧场」入口 */
@@ -5288,7 +5293,7 @@ function presence(){
     var k=chr('k'),s2=chr('s'),m3=chr('m');
     function lazyShow(f,on,lx){
       if(!f)return;
-      if(on&&!f.getAttribute('src'))f.setAttribute('src',f.getAttribute('data-vnsrc'));
+      if(on&&!f.getAttribute('src'))f.setAttribute('src',vnUrl(f));
       f.style.opacity=on?1:0;
       f.style.visibility=on?'visible':'hidden';
       if(lx!=null)f.style.left=lx;
@@ -5358,19 +5363,28 @@ function tick(){
   var r=isle.getBoundingClientRect();
   if(r.width<60||r.height<60){root.style.display='none';return;}
   root.style.display='block';
+  if(!VN.ld){VN.ld=true;var mf0=chr('m');if(mf0&&!mf0.getAttribute('src'))mf0.setAttribute('src',vnUrl(mf0));}
   root.style.left=r.left+'px';root.style.top=r.top+'px';
   root.style.width=r.width+'px';root.style.height=r.height+'px';
   try{root.style.borderRadius=getComputedStyle(isle).borderRadius;}catch(e){}
   ctlRefresh();
 
-  /* galgame 取景:小窗=半身特写(放大+底部裁切),展开/全屏=全身 */
+  /* galgame 取景三档:小窗=胸像特写;展开=框沿及膝(头26%~膝81%);全屏=全身落地 */
   var E0=ENG();
-  var vBig=!!(E0&&E0.S&&(E0.S.isleBig||E0.S.worldFull));
-  if(VN.sizeKey!==vBig){VN.sizeKey=vBig;
+  var vSt=E0&&E0.S?(E0.S.worldFull?'F':(E0.S.isleBig?'B':'S')):'S';
+  if(VN.sizeKey!==vSt){VN.sizeKey=vSt;
     var mz=chr('m'),kz=chr('k'),sz=chr('s');
-    /* 三叶画布头顶在~26%处:全身裁掉顶部空白(132%),半身取头~腰窗口26%-56%(333%) */
-    if(mz){mz.style.height=vBig?'132%':'333%';mz.style.bottom=vBig?'0':'-146%';}
-    [kz,sz].forEach(function(f){if(f){f.style.height=vBig?'94%':'200%';f.style.bottom=vBig?'-8%':'-100%';}});
+    /* 三叶画布头顶在~26%、足底~99%:窗口[头,底]→ height=100/跨度, bottom=-(100-底)/跨度×100 */
+    if(mz){
+      if(vSt==='F'){mz.style.height='132%';mz.style.bottom='0';}
+      else if(vSt==='B'){mz.style.height='186%';mz.style.bottom='-38%';}
+      else{mz.style.height='385%';mz.style.bottom='-185%';}
+    }
+    [kz,sz].forEach(function(f){if(!f)return;
+      if(vSt==='F'){f.style.height='94%';f.style.bottom='-8%';}
+      else if(vSt==='B'){f.style.height='130%';f.style.bottom='-30%';}
+      else{f.style.height='230%';f.style.bottom='-130%';}
+    });
   }
 
   /* 说话 = 打字机正在打 或 TTS 在诵读 */
@@ -5426,7 +5440,7 @@ function tick(){
       ['k','s'].forEach(function(w){var f=chr(w);if(f){f.style.opacity=0;f.style.visibility='hidden';}});}
   }
 }
-setInterval(tick,250);
+setInterval(function(){try{tick();}catch(e){}},250);
 })();
 </script>
 
