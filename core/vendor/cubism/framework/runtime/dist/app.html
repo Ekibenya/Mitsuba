@@ -5569,9 +5569,14 @@ function moodOf(){
 function sceneOf(){
   var p=panelNow();
   if(!p)return 'bg_rose';                              /* 开局/无档案:蓝玫瑰 */
-  var w=p.world||{}; var npcs=p.npcs||[];
+  var w=p.world||{}; var npcs=p.npcs||[]; var c=p.char||{};
   var loc=String(w['时地']||''), wx=String(w['天气']||''), sit=String(w['时局']||'');
+  var inr=loc+' '+String(c['记录']||'')+' '+String(c['心念']||'')+' '+String(c['观瞻']||'');
   if(/革命爆发|起义|恐怖时代|断头台|共和国成立/.test(sit))VN.rev=true;
+  /* 内心世界·梦境·意识场景 → 黑玫瑰 */
+  if(/内心|心象|心念阁|梦境|梦中|入梦|噩梦|意识深处|精神世界|冥想|冥界|识海|幻境|心之壁|回忆深处|独白之/.test(loc))return 'bg_rose';
+  /* 苏醒·睁眼·沉睡(开局一等独处内心时刻) → 黑玫瑰 */
+  if(/苏醒|甦醒|睁开眼|睁开了眼|沉睡十年|沉睡多年|长眠初醒/.test(inr))return 'bg_rose';
   if(/议会|议事|议场|国民公会|议院|公会大厅/.test(loc))return 'bg_parliament';
   if(/街|广场|市集|码头|港口|城门|路上|途中|野外|营地|战场|阵地|桥|门前|巷/.test(loc))
     return VN.rev?'bg_city_rev':'bg_city';
