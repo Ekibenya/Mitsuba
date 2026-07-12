@@ -10,6 +10,26 @@
 <link rel="icon" type="image/png" sizes="192x192" href="core/res/icon-mitsuba-192.png">
 <style>@font-face{font-family:'ZCOOL XiaoWei';font-style:normal;font-weight:400;font-display:swap;src:url('core/res/fonts/zcool-xiaowei.woff2') format('woff2')}</style>
 <script>
+/* 内置字体三选一（设置·显·字体）：汇文明朝体（默认）/霞鹜文楷/京华老宋体，仅按需加载所选一款；
+   「跟随系统」则退回各系统衬线。上传的自定义字体文件（--serif/--kai 内联）优先级高于此处。 */
+var ZJFONT='huiwen';try{ZJFONT=localStorage.getItem('mitsuba_fontpre')||'huiwen';}catch(e){}
+var ZJFONT_LIB={
+  huiwen:['Huiwen Mincho','core/res/fonts/huiwen-mincho.woff2'],
+  wenkai:['LXGW WenKai','core/res/fonts/lxgw-wenkai.woff2'],
+  kinghwa:['KingHwa OldSong','core/res/fonts/kinghwa-oldsong.woff2']};
+function zjFontApply(){
+  var d=ZJFONT_LIB[ZJFONT],rs=document.documentElement.style;
+  if(!d){rs.removeProperty('--zjF');return;}
+  if(!document.getElementById('zjFF_'+ZJFONT)){
+    var st=document.createElement('style');st.id='zjFF_'+ZJFONT;
+    st.textContent="@font-face{font-family:'"+d[0]+"';src:url('"+d[1]+"?v=1') format('woff2');font-display:swap}";
+    document.head.appendChild(st);
+  }
+  rs.setProperty('--zjF',"'"+d[0]+"'");
+}
+zjFontApply();
+</script>
+<script>
 /* three.js 仅用于封面三色旗布料动画；加载失败回退 CDN r128。 */
 (function(){
   try{if(localStorage.getItem('mb3d_off')==='1'){window.__ZJ3D_OFF__=true;return;}}catch(e){}
@@ -31,8 +51,8 @@
   --bg:#e9dfc6; --panel:#f4edda; --panel2:#ece3cc; --ink:#2b231c; --ink2:#3a3024;
   --gold:#3c5a86; --gold2:#274468; --gold3:#1d3350; --mut:#564835; --mut2:#443929;
   --red:#7e212e; --red2:#a02a40; --grn:#3c6494; --grn2:#2f5480; --grn3:#4a72a2; --violet:#5c4680; --violet2:#7a5ca8;
-  --kai:'Songti SC','Noto Serif CJK SC','Source Han Serif SC','ZCOOL XiaoWei','STKaiti','SimSun',serif;
-  --serif:'Songti SC','Noto Serif CJK SC','Source Han Serif SC','ZCOOL XiaoWei','SimSun',serif;
+  --kai:var(--zjF,'Songti SC'),'Songti SC','Noto Serif CJK SC','Source Han Serif SC','ZCOOL XiaoWei','STKaiti','SimSun',serif;
+  --serif:var(--zjF,'Songti SC'),'Songti SC','Noto Serif CJK SC','Source Han Serif SC','ZCOOL XiaoWei','SimSun',serif;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--serif);overscroll-behavior:none;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
@@ -3481,6 +3501,10 @@ function fontPane(){
    +'<div style="font-size:12.5px;color:var(--mut);margin-top:8px;line-height:1.8">拖动即时生效：同时调节正文与档案的背景模糊与底色浓度——拉到最左＝完全透明（无模糊无底色，直接看穿到后面的水墨/三维），默认 9px 为初见效果；开低配模式时模糊被关闭。</div>'
    +'<div style="font-size:12.5px;color:var(--mut);margin-top:8px;line-height:1.8">拖动即时生效，作用于正文、档案与典的正文。</div>'
    +'<div class="kai" style="font-size:19px;color:var(--gold2);letter-spacing:.15em;margin:32px 0 14px">字体</div>'
+   +'<div style="display:flex;gap:9px;flex-wrap:wrap;margin-bottom:6px">'
+   +[['huiwen','汇文明朝体 · 默认'],['wenkai','霞鹜文楷'],['kinghwa','京华老宋体'],['system','跟随系统']].map(function(fo){var on=!fname&&((ZJFONT_LIB[ZJFONT]&&ZJFONT===fo[0])||(!ZJFONT_LIB[ZJFONT]&&fo[0]==='system'));return '<div class="btn" data-zjfont="'+fo[0]+'" style="cursor:pointer;padding:8px 18px;font-size:13.5px;letter-spacing:.08em;border:1px solid '+(on?'rgba(160,42,64,.6)':'rgba(58,47,36,.28)')+';border-radius:10px;color:'+(on?'#a02a40':'var(--mut)')+';background:'+(on?'linear-gradient(135deg,rgba(160,42,64,.12),rgba(160,42,64,.03))':'rgba(255,255,255,.02)')+'">'+fo[1]+'</div>';}).join('')
+   +'</div>'
+   +'<div style="font-size:12.5px;color:var(--mut);margin:0 0 14px;line-height:1.8">内置三款全设备显示一致（首次切换需下载，之后走缓存：明朝体 7.6M · 文楷 7.9M · 老宋 20M）；「跟随系统」样貌因设备而异。下方自定义字体文件优先于此处选择。</div>'
    +'<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">'
    +'<label class="btn glass" style="padding:10px 24px;cursor:pointer;color:var(--gold2);font-size:14px;letter-spacing:.1em">选择字体文件<input id="zjFontFile" type="file" accept=".ttf,.otf,.woff,.woff2" style="display:none"></label>'
    +(fname?'<button data-act="fontReset" class="obtn btn" style="padding:10px 20px;font-size:13px;letter-spacing:.1em">恢复默认</button>':'')
@@ -4573,6 +4597,7 @@ root.addEventListener('click',function(e){
           S.mem=_bkept;S.history=S.history.slice(0,_bi+1);S.memN=_brj+1;
           S.suggList=null;S.msgTools=null;S.msgEdit=null;S._noFade=true;S._keepScroll=true;S._anchorMsg=_bi;savePref();render();}
         return;}
+      if(t.getAttribute('data-zjfont')){var _fk=t.getAttribute('data-zjfont');ZJFONT=_fk;try{localStorage.setItem('mitsuba_fontpre',_fk);}catch(e){}zjFontApply();renderOverlay();return;}
       if(t.getAttribute('data-eye')){var _eid=t.getAttribute('data-eye');var _ein=document.getElementById(_eid);if(_ein){var _rev=(_ein.type==='password');_ein.type=_rev?'text':'password';t.innerHTML=eyeSvg(_rev);}return;}
       if(t.getAttribute('data-imgstyle')){syncImgForm();var oldSt=IMGCFG.style,newSt=t.getAttribute('data-imgstyle');var od=imgDefaults(oldSt),nd=imgDefaults(newSt);IMGSAMPFIELDS.forEach(function(k){if(!IMGCFG[k]||IMGCFG[k]===od[k])IMGCFG[k]=nd[k];});IMGCFG.style=newSt;imgCfgSave();renderOverlay();return;}
       if(t.getAttribute('data-imgloader')){syncImgForm();IMGCFG.comfyLoader=t.getAttribute('data-imgloader');S.imgComfyModels=null;imgCfgSave();renderOverlay();return;}
