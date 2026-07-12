@@ -2842,7 +2842,7 @@ function psW(w,cc,cw){
 }
 
 
-function newsBox(cw){
+function newsBox(cw,newsImg){
   cw=cw||{};
   function g(k){return String(cw[k]||'').trim();}
   var raw=g('新闻');
@@ -2921,13 +2921,21 @@ function newsBox(cw){
       +'<div style="font-size:11.5px;line-height:1.75;color:#6a3a3a;text-align:justify">'+esc(jiang)+'</div></div>';
   }
 
+  var photo=newsImg?'<div style="text-align:center;margin:9px 0 2px">'
+    +'<div style="display:inline-block;border:1px solid rgba(74,64,50,.55);padding:3px;background:#efe6cf;box-shadow:0 1px 4px rgba(58,47,36,.3)">'
+      +'<div data-img="'+esc(newsImg)+'" style="width:88px;aspect-ratio:2/3;overflow:hidden;border:1px solid rgba(74,64,50,.42);filter:sepia(.22) contrast(1.06) saturate(.82)"></div>'
+    +'</div>'
+    +'<div style="font-size:7.5px;letter-spacing:.22em;color:#8a7c62;margin-top:3px">── 现 场 速 写 ──</div>'
+  +'</div>':'';
   var foot='<div style="text-align:center;font-size:8.5px;letter-spacing:.2em;color:#9a8d72;margin-top:11px;padding-top:7px;border-top:1px solid rgba(74,64,50,.3)">— 付梓于王都贝尔 · 国家文书馆 —</div>';
 
   return '<div style="border:1px solid rgba(74,64,50,.42);border-radius:5px;background:linear-gradient(180deg,#f4eddb,#e7ddc4);box-shadow:inset 0 0 26px rgba(120,100,60,.15),inset 0 1px 0 rgba(255,255,255,.55),0 3px 10px rgba(58,47,36,.24);padding:12px 13px;position:relative;overflow:hidden">'
-    +mast+subline+newsBlock+worldBlock+meter+jiangBlock+foot+'</div>';
+    +mast+subline+photo+newsBlock+worldBlock+meter+jiangBlock+foot+'</div>';
 }
 function sidebar(){
   var p=currentPanel();var cc=p?p.char:{};var cw=p?p.world:{};
+  var _cm=null;for(var _k=S.history.length-1;_k>=0;_k--){if(S.history[_k].role==='world'){_cm=S.history[_k];break;}}
+  var _newsImg='';if(_cm){var _vv=imgVers(_cm);if(_vv){var _vx=(_cm.verIx==null?_vv.length-1:Math.max(0,Math.min(_cm.verIx,_vv.length-1)));var _v0=_vv[_vx]||_vv[0];if(_v0&&_v0[0])_newsImg=_v0[0];}}
   var PS=(G&&G.panelSpec)||null;
   var _wkeys=PS?(PS.widgets||[]).map(function(w){return w.k;}):[];
   var _txtKeys=PS?(PS.textOrder||[]):['衣装','持物','身体','观瞻'];
@@ -2953,7 +2961,7 @@ function sidebar(){
     +'<div style="text-align:center;font-size:9.5px;letter-spacing:.28em;color:var(--mut);margin:12px 0 2px">LIBERTÉ · ÉGALITÉ · PÂTISSERIE　自由 · 平等 · 甜食</div>'
         +'</div>':'')+'</div>'
     +'<div class="glass" style="margin:11px 12px 0;border-radius:14px">'+head(S.secN,'tgN','var(--grn)','在 场 之 人',S.secN)+(S.secN?'<div class="fade" style="padding:0 15px 12px">'+npcs+'</div>':'')+'</div>'
-    +'<div class="glass" style="margin:11px 12px 0;border-radius:14px">'+head(S.secP,'tgP','#7a6a52','公 报 · 时 局',S.secP)+(S.secP?'<div class="fade" style="padding:0 15px 14px">'+newsBox(cw)+'</div>':'')+'</div>'
+    +'<div class="glass" style="margin:11px 12px 0;border-radius:14px">'+head(S.secP,'tgP','#7a6a52','公 报 · 时 局',S.secP)+(S.secP?'<div class="fade" style="padding:0 15px 14px">'+newsBox(cw,_newsImg)+'</div>':'')+'</div>'
     +'<div class="glass" style="margin:11px 12px 0;border-radius:14px">'+head(S.secG,'tgG','#3e7256','人 物 图 谱',S.secG)+(S.secG?'<div class="fade" style="padding:0 15px 16px">'+graphInner()+'</div>':'')+'</div>'
     +'<div class="glass" style="margin:11px 12px 14px;border-radius:14px">'+head(S.secA,'tgA','#7a5ca8','编 年 史',S.secA)+(S.secA?'<div class="fade" style="padding:0 15px 16px">'+axisInner()+'</div>':'')+'</div>'
     +'</div>';
