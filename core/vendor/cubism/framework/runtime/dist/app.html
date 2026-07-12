@@ -1018,8 +1018,9 @@ function genSync(){
     if(!GEN.done&&GEN.mode==='gen'){var dt=now-GEN.t0;if(dt>=250&&dt<=90000){GEN.samples.push(dt);if(GEN.samples.length>8)GEN.samples=GEN.samples.slice(-8);try{localStorage.setItem('mitsuba_ttft_v1',JSON.stringify(GEN.samples));}catch(e){}}}GEN.done=true;}
   return busy;
 }
-function genTick(){var busy=genSync();if(busy){var fill=document.getElementById('zjGenFill'),txt=document.getElementById('zjGenTxt');if(fill)fill.style.width=genPct().toFixed(1)+'%';if(txt)txt.textContent=genLabel();}}
-try{setInterval(genTick,200);}catch(e){}
+function genTick(){var busy=genSync();if(busy){var fill=document.getElementById('zjGenFill'),txt=document.getElementById('zjGenTxt');if(fill)fill.style.width=genPct().toFixed(1)+'%';if(txt)txt.textContent=genLabel();}return busy;}
+var GENTMR=null;function genPulse(){var busy=genTick();if(busy){GENTMR=setTimeout(genPulse,200);}else{GENTMR=null;}}function genKick(){if(!GENTMR)genPulse();}
+/* genTick 改为生成期自脉冲(genKick,见 render) —— 空闲不再每秒5次空转 */
 function zoomIcon(s){s=s||16;return '<svg viewBox="0 0 24 24" width="'+s+'" height="'+s+'" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="display:block;pointer-events:none"><path d="M9 4H5.5A1.5 1.5 0 0 0 4 5.5V9"/><path d="M15 4h3.5A1.5 1.5 0 0 1 20 5.5V9"/><path d="M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15"/><path d="M4 15v3.5A1.5 1.5 0 0 0 5.5 20H9"/></svg>';}
 /* 闪电描边图标（极速模式用；on 时亮蓝发光、off 时全灰） */
 function bolt(on){var c=on?'#3c5a86':'#8a7f68';return '<svg viewBox="0 0 24 24" width="22" height="22" fill="'+c+'" style="display:block'+(on?';filter:drop-shadow(0 0 5px rgba(58,92,140,.6))':'')+'"><path d="M13 2 4.6 13.1c-.34.45-.02 1.1.53 1.1H11l-1.2 7.1c-.11.66.72 1.02 1.12.48L19.4 10c.34-.45.02-1.1-.53-1.1H13l1.2-6.5c.12-.63-.68-1-1.2-.4z"/></svg>';}
@@ -4224,6 +4225,7 @@ var _scrPrev;
 function render(){
   window.__ZJSCR=S.screen;
   zjBgSync();
+  try{genKick();}catch(e){}
   /* 弹窗与剧场层同帧让位:剧场层挂在 body(z5),弹窗关在游戏根容器(z1)里,若等 250ms 轮询会先被压在立绘后面再"穿"出来 */
   try{if(S.overlay||S.bgmOpen){var _vr=document.getElementById('vnRoot');if(_vr)_vr.style.display='none';var _vp=document.getElementById('vnPill');if(_vp)_vp.style.display='none';}}catch(e){}
   try{if(S.screen==='game')memSync();}catch(e){}
@@ -5674,9 +5676,12 @@ function tick(){
   root.style.display='block';
   setZZ(!!document.hidden);
   if(!VN.ld){VN.ld=true;var mf0=chr('m');if(mf0&&!mf0.getAttribute('src')){mf0.addEventListener('load',function(){VN.sizeKey=null;});mf0.setAttribute('src',vnUrl(mf0));}}
-  root.style.left=r.left+'px';root.style.top=r.top+'px';
-  root.style.width=r.width+'px';root.style.height=r.height+'px';
-  try{root.style.borderRadius=getComputedStyle(isle).borderRadius;}catch(e){}
+  var _rk=r.left+','+r.top+','+r.width+','+r.height;
+  if(VN._rk!==_rk){VN._rk=_rk;
+    root.style.left=r.left+'px';root.style.top=r.top+'px';
+    root.style.width=r.width+'px';root.style.height=r.height+'px';
+    try{root.style.borderRadius=getComputedStyle(isle).borderRadius;}catch(e){}
+  }
   ctlRefresh();
 
   /* galgame 取景三档(画布高度百分比,头顶≈40/胸≈58/膝·靴口≈82/足≈99):
