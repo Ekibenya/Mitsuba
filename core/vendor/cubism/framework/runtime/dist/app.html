@@ -3701,7 +3701,7 @@ function memScrollBody(){
     +'<div style="display:flex;gap:8px;margin-bottom:14px"><input id="zjMemAdd" placeholder="手记一笔（重要设定/约定/伏笔，AI 会永远记住）…" style="flex:1;background:rgba(255,255,255,.03);border:1px solid rgba(42,69,104,.25);color:#3a3024;font-size:12.5px;padding:9px 12px;font-family:inherit" autocomplete="off"><button data-act="memAdd" class="obtn btn" style="flex:none;font-size:13px;letter-spacing:.15em;padding:0 18px">记 入</button></div>'
     +rows+'</div>';
 }
-var BGBLUR=12;try{var _bb=parseInt(localStorage.getItem('mitsuba_bgblur'),10);if(isFinite(_bb))BGBLUR=Math.max(0,Math.min(24,_bb));}catch(e){}
+var BGBLUR=(window.innerWidth<920?19:12);try{var _bb=parseInt(localStorage.getItem('mitsuba_bgblur'),10);if(isFinite(_bb))BGBLUR=Math.max(0,Math.min(24,_bb));}catch(e){}
 function applyBgBlur(){try{if(document.documentElement){var r=document.documentElement.style;r.setProperty('--zjblur',BGBLUR+'px');r.setProperty('--zjbga',String(Math.min(.8,BGBLUR/30).toFixed(3)));}}catch(e){}}
 applyBgBlur();
 var FS=1;try{FS=Math.max(.85,Math.min(1.6,parseFloat(localStorage.getItem('mitsuba_fs'))||1));}catch(e){}
