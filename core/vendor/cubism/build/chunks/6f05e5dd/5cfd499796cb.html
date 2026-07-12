@@ -2982,7 +2982,7 @@ function sidebar(){
         +'</div>':'')+'</div>'
     +'<div class="glass" style="margin:11px 12px 0;border-radius:14px">'+head(S.secN,'tgN','var(--grn)','在 场 之 人',S.secN)+(S.secN?'<div class="fade" style="padding:0 15px 12px">'+npcs+'</div>':'')+'</div>'
     +'<div class="glass" style="margin:11px 12px 0;border-radius:14px">'+head(S.secP,'tgP','#7a6a52','公 报 · 时 局',S.secP)+(S.secP?'<div class="fade" style="padding:0 15px 14px">'+newsBox(cw,_newsImg)+'</div>':'')+'</div>'
-    +'<div class="glass" style="margin:11px 12px 0;border-radius:14px">'+head(S.secG,'tgG','#3e7256','人 物 图 谱',S.secG)+(S.secG?'<div class="fade" style="padding:0 15px 16px">'+graphInner()+'</div>':'')+'</div>'
+    +'<div class="glass" style="margin:11px 12px 0;border-radius:14px">'+head(S.secG,'tgG','#3e7256','人 物 图 谱',S.secG)+(S.secG?'<div id="zjGraphBox" class="fade" style="padding:0 15px 16px">'+graphInner()+'</div>':'')+'</div>'
     +'<div class="glass" style="margin:11px 12px 14px;border-radius:14px">'+head(S.secA,'tgA','#7a5ca8','编 年 史',S.secA)+(S.secA?'<div class="fade" style="padding:0 15px 16px">'+axisInner()+'</div>':'')+'</div>'
     +'</div>';
 }
@@ -3738,7 +3738,7 @@ function graphHydrate(){
     var n=GPH.drag;if(!n)return;
     GPH.drag=null;
     if((n._moved||0)>7){GPH.squelch=true;setTimeout(function(){GPH.squelch=false;},350);}
-    else if(!n.isC){var _nm=n.g.getAttribute('data-npc');if(_nm){GPH.squelch=true;setTimeout(function(){GPH.squelch=false;},350);var _pv=document.querySelector('.bambooV'),_ps=_pv?_pv.scrollTop:0;S.memNpc=(S.memNpc===_nm?null:_nm);S._noFade=true;render();var _pv2=document.querySelector('.bambooV');if(_pv2)_pv2.scrollTop=_ps;return;}}
+    else if(!n.isC){var _nm=n.g.getAttribute('data-npc');if(_nm){GPH.squelch=true;setTimeout(function(){GPH.squelch=false;},350);S.memNpc=(S.memNpc===_nm?null:_nm);var _gb=document.getElementById('zjGraphBox');if(_gb){_gb.innerHTML=graphInner();try{graphHydrate();}catch(_e){}}else{S._noFade=true;render();}return;}}
     nodes.forEach(function(o){o.ox=0;o.oy=0;});
     kick();
   }
@@ -4944,7 +4944,7 @@ root.addEventListener('click',function(e){
       if(t.getAttribute('data-mtool')){var mtix=parseInt(t.getAttribute('data-mtool'),10)-1;S.msgTools=(S.msgTools===mtix?null:mtix);S.msgEdit=null;S._noFade=true;S._keepScroll=true;S._anchorMsg=mtix;render();return;}
       if(t.getAttribute('data-medit')){S.memEdit=parseInt(t.getAttribute('data-medit'),10)-1;renderOverlay();return;}
       if(t.getAttribute('data-mdel')){S.mem.splice(parseInt(t.getAttribute('data-mdel'),10),1);savePref();renderOverlay();return;}
-      if(t.getAttribute('data-npc')!=null&&t.getAttribute('data-npc')!==''){if(GPH.squelch){GPH.squelch=false;return;}var npv=t.getAttribute('data-npc');var _pvz=document.querySelector('.bambooV'),_psz=_pvz?_pvz.scrollTop:0;S.memNpc=(S.memNpc===npv?null:npv);S._noFade=true;render();var _pvz2=document.querySelector('.bambooV');if(_pvz2)_pvz2.scrollTop=_psz;return;}
+      if(t.getAttribute('data-npc')!=null&&t.getAttribute('data-npc')!==''){if(GPH.squelch){GPH.squelch=false;return;}var npv=t.getAttribute('data-npc');S.memNpc=(S.memNpc===npv?null:npv);var _gbz=document.getElementById('zjGraphBox');if(_gbz){_gbz.innerHTML=graphInner();try{graphHydrate();}catch(_e){}}else{S._noFade=true;render();}return;}
       if(t.getAttribute('data-sugg')!=null&&t.getAttribute('data-sugg')!==''){if(S.thinking)return;var sgi=parseInt(t.getAttribute('data-sugg'),10);var sgt=(S.suggList||[])[sgi];if(sgt){S.suggList=null;sendText(S.dice?sgt+diceRoll():sgt);}return;}
       if(t.getAttribute('data-settab')){var stb=t.getAttribute('data-settab');if(stb===S.setTab)return;var spo=document.getElementById('zjSetPill');var spr=spo&&spo.getBoundingClientRect();S.setTab=stb;renderOverlay();pillFlip('zjSetPill',spr);return;}
       if(t.getAttribute('data-cat')){var ncat=t.getAttribute('data-cat');if(ncat===S.codexCat)return;var corder=[].map.call(document.querySelectorAll('[data-cat]'),function(x){return x.getAttribute('data-cat');});var cpo=document.getElementById('zjCatPill');var cpr=cpo&&cpo.getBoundingClientRect();var epo=document.getElementById('zjEntPill');var epr=epo&&epo.getBoundingClientRect();
