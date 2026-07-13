@@ -94,6 +94,7 @@ textarea:focus,button:focus,input:focus{outline:none}
 .obtn:hover{border-color:rgba(58,92,140,.75);color:var(--gold2);background:rgba(42,69,104,.08)}
 /* ── 低配模式：撤实时模糊，玻璃改实底；动画减负 ── */
 html.zjLow *{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+  html.zjLow body::before{display:none!important}  /* 低配:关掉背景光斑的实时 filter:blur(64px)——唯一漏网的实时模糊 */
 html.zjLow .glass{background:linear-gradient(135deg,rgba(247,241,228,.62),rgba(240,232,212,.58))!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 html.zjLow .fade{animation-duration:.22s}
 html.zjLow #zjStory,html.zjLow .bambooV{background:rgba(246,240,226,var(--zjbga,.42))!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
