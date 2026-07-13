@@ -4444,9 +4444,9 @@ setInterval(()=>{ if(gunState===0&&Math.random()<0.5) _armSwing(function(v){_swR
 function fit(){
   let s,ty=0;const tx=(vnOff*innerWidth);
   if(innerWidth/innerHeight>1.1){                       // 宽屏(电脑):按角色真实身高填满,顶天立地
-    const BT=1084,BH=1688;                              // 站立态角色在 char 空间的实测上界/身高
-    s=Math.min(innerHeight*0.84/BH, innerWidth*0.9/1104);
-    ty=innerHeight*0.08-BT*s;                           // 头顶落在视口~8%处
+    const HEAD=1024,KNEE=2236;                          // char 空间:可见发顶 / 膝盖(靴顶)
+    s=Math.min(innerHeight*0.93/(KNEE-HEAD), innerWidth*0.95/1104);
+    ty=innerHeight*0.06-HEAD*s;                         // 发顶~6%(维持基准),底部裁到膝盖
   }else{                                                // 竖屏(手机/重烘):保持原构图
     s=Math.min(innerHeight/2850.0, innerWidth/1200.0)*0.98;
   }
