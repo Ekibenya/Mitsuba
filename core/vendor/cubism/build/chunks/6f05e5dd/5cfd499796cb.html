@@ -260,7 +260,12 @@ function end(fast){
 }
 ov.addEventListener('click',function(){end(true);});
 ov.addEventListener('cancel',function(e){try{e.preventDefault();}catch(e2){}end(true);});
-/* 统一开场:所有设备都用轻量 DOM 皮套开场(mitsuba_open);老的 Live2D Cubism 开场已删除 */
+if(MB2){
+  /* 手机端:开场立绘含 Three.js/WebGL,弱机必崩 → 只露玫瑰底一闪即揭幕到封面,零 WebGL/零重资源 */
+  t(function(){end(false);},1100);
+  return;
+}
+/* 电脑端:轻量 DOM 皮套开场(mitsuba_open);老的 Live2D Cubism 开场已删除 */
 var _bb=document.getElementById('bootBlack');
 var openFrame=document.createElement('iframe');
 openFrame.src='core/res/vn/mitsuba_open.html?v=1';
