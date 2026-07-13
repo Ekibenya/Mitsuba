@@ -96,7 +96,7 @@ textarea:focus,button:focus,input:focus{outline:none}
 html.zjLow *{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 html.zjLow .glass{background:linear-gradient(135deg,rgba(247,241,228,.62),rgba(240,232,212,.58))!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 html.zjLow .fade{animation-duration:.22s}
-html.zjLow #zjStory,html.zjLow .bambooV{background:rgba(246,240,226,.42)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+html.zjLow #zjStory,html.zjLow .bambooV{background:rgba(246,240,226,var(--zjbga,.42))!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 /* ── 封面无框键：弥散暖雾，悬停/按住浮现流光金线 ── */
 .zjCoverBtn{position:relative;z-index:0;border:none;background:transparent;font-family:var(--kai);cursor:pointer;text-shadow:0 0 10px rgba(255,255,255,1),0 0 22px rgba(255,255,255,.9),0 0 46px rgba(255,255,255,.6),0 1px 0 rgba(255,255,255,.7);transition:transform .3s cubic-bezier(.3,1.3,.4,1),filter .3s}
 .zjCoverBtn::before{content:'';position:absolute;z-index:-1;left:-30%;right:-30%;top:-70%;bottom:-70%;pointer-events:none;background:radial-gradient(ellipse 50% 42% at 50% 50%,rgba(206,218,240,.16),rgba(178,196,226,.05) 55%,transparent 78%);-webkit-backdrop-filter:blur(5px) saturate(150%);backdrop-filter:blur(5px) saturate(150%);-webkit-mask-image:radial-gradient(ellipse 46% 40% at 50% 50%,#000 8%,transparent 72%);mask-image:radial-gradient(ellipse 46% 40% at 50% 50%,#000 8%,transparent 72%)}
@@ -3899,8 +3899,10 @@ function storeMeter(){
   return '<div style="margin-top:14px;padding:13px 16px;border:1px solid rgba(42,69,104,.2);border-radius:12px;background:rgba(255,255,255,.02)"><div style="font-size:12.5px;color:var(--gold2);letter-spacing:.12em">本机存储用量</div>'+lsRow+idbRow+'</div>';
 }
 function backupPane(){
-  return '<div class="grow" style="overflow-y:auto;padding:24px 28px"><div style="max-width:640px">'
-   +'<div class="kai" style="font-size:19px;color:var(--gold2);letter-spacing:.15em;margin-bottom:8px">数据备份</div>'
+  return '<div class="grow" style="overflow-y:auto;padding:24px 28px"><div style="max-width:640px">'+backupBody()+'</div></div>';
+}
+function backupBody(){
+  return '<div class="kai" style="font-size:19px;color:var(--gold2);letter-spacing:.15em;margin:34px 0 8px">数据备份</div>'
    +'<div style="font-size:12.5px;color:var(--mut);line-height:1.9">一键导出此浏览器里的全部游戏数据为一个 JSON 文件：对话与存档、编年长卷记忆、自定义预设与世界书、字号字体与接口配置。换设备或清数据前先备份。</div>'
    +storeMeter()
    +'<div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:12px">'
@@ -3916,8 +3918,7 @@ function backupPane(){
    +'<div style="font-size:12.5px;color:var(--mut);line-height:1.9">一键抹掉此浏览器里的全部游戏数据：对话与存档、编年长卷记忆、自定义预设与世界书、字号字体、AI 接口配置、全部缓存。不可恢复，清除后页面自动重载如初见。</div>'
    +(S.wipeArm
      ?'<button data-act="wipeAll" class="btn" style="margin-top:12px;cursor:pointer;font-size:14px;letter-spacing:.18em;padding:10px 26px;border-radius:10px;background:rgba(126,33,46,.32);border:1px solid rgba(126,33,46,.85);color:#efb3a0">确认清除——此操作不可撤销</button>'
-     :'<button data-act="wipeAll" class="btn" style="margin-top:12px;cursor:pointer;font-size:14px;letter-spacing:.18em;padding:10px 26px;border-radius:10px;background:transparent;border:1px solid rgba(126,33,46,.45);color:#96323f">一键清除所有数据…</button>')
-   +'</div></div>';
+     :'<button data-act="wipeAll" class="btn" style="margin-top:12px;cursor:pointer;font-size:14px;letter-spacing:.18em;padding:10px 26px;border-radius:10px;background:transparent;border:1px solid rgba(126,33,46,.45);color:#96323f">一键清除所有数据…</button>');
 }
 function fontPane(){
   var pct=Math.round(FS*100);
@@ -3971,6 +3972,7 @@ function fontPane(){
    +[['#38618c','青蓝'],['#3e7256','竹青'],['#8f7430','鎏金'],['#8c5480','藕荷'],['#55636f','石墨'],['off','不着色']].map(function(sw){var on=DLGC===sw[0];return '<div class="btn" data-dlgc="'+sw[0]+'" style="cursor:pointer;display:flex;align-items:center;gap:7px;padding:7px 14px;border-radius:99px;border:1px solid '+(on?'rgba(58,92,140,.7)':'rgba(42,69,104,.25)')+';color:'+(on?'var(--gold2)':'var(--mut2)')+';font-size:12.5px">'+(sw[0]!=='off'?'<span style="width:12px;height:12px;border-radius:50%;background:'+sw[0]+';display:inline-block"></span>':'')+sw[1]+'</div>';}).join('')
    +'<label style="display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--mut2);cursor:pointer">自选<input id="zjDlgPick" type="color" value="'+(DLGC==='off'?'#8f7430':DLGC)+'" style="width:36px;height:27px;border:none;background:transparent;padding:0;cursor:pointer"></label>'
    +'</div>'
+   +backupBody()
    +'</div></div>';
 }
 function lorePane(){
