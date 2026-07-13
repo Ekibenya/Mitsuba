@@ -2901,7 +2901,7 @@ function newsBox(cw,newsImg){
   }
   function secHd(t,sub){return '<div style="margin:13px 0 6px"><div style="display:flex;align-items:center;gap:9px"><span style="flex:1;height:1px;background:rgba(74,64,50,.4)"></span><span class="kai" style="font-size:12.5px;letter-spacing:.3em;color:#3a3024;white-space:nowrap;font-weight:700">'+t+'</span><span style="flex:1;height:1px;background:rgba(74,64,50,.4)"></span></div>'+(sub?'<div style="text-align:center;font-size:7.5px;letter-spacing:.3em;color:#9a8d72;font-family:Amarante,Georgia,serif;margin-top:2px">'+sub+'</div>':'')+'</div>';}
 
-  function gazClip(id){
+  function gazClip(id,colBreak){
     var _s=String(id),_h=0,_i;for(_i=0;_i<_s.length;_i++)_h=((_h*31+_s.charCodeAt(_i))>>>0);
     var mode=_h%2,w=70;
     var ov=function(css){return '<div style="position:absolute;inset:0;pointer-events:none;'+css+'"></div>';};
@@ -2918,7 +2918,7 @@ function newsBox(cw,newsImg){
     var es='<div style="position:absolute;top:-2px;left:50%;margin-left:-7px;width:14px;height:6px;border-radius:50%;background:radial-gradient(circle,rgba(28,16,8,.5),rgba(28,16,8,0));z-index:2"></div>';
     var pin='<img src="'+GAZ_PIN+'" alt="" style="position:absolute;top:-20px;left:50%;margin-left:-7px;height:28px;filter:drop-shadow(1px 1px 1.5px rgba(30,20,10,.5));z-index:4;pointer-events:none">';
     var clip='<div style="position:relative;display:inline-block;transform:rotate('+(mode?'2.5deg) translateX(20px':'-3deg')+')">'+frame+es+pin+'</div>';
-    return '<div style="break-inside:avoid;text-align:center;margin:20px 0 4px">'+clip+'</div>';
+    return '<div style="break-inside:avoid;text-align:center;margin:20px 0 4px'+(colBreak?';-webkit-column-break-before:always;break-before:column':'')+'">'+clip+'</div>';
   }
   var mast='<div style="text-align:center;padding:1px 0 6px">'
     +'<div style="font-size:8px;letter-spacing:.32em;color:#8a7c62;font-family:Amarante,Georgia,serif">❦ LIBERTÉ · ÉGALITÉ · PÂTISSERIE ❧</div>'
@@ -2960,7 +2960,7 @@ function newsBox(cw,newsImg){
       +'<div style="text-align:center;font-size:8px;letter-spacing:.2em;color:#9a8d72;margin:-2px 0 7px">〔 本 报 综 合 · 外 邮 专 递 〕</div>'
       +'<div style="'+(dashi.length>2?'column-count:2;column-gap:14px;column-rule:1px solid rgba(74,64,50,.22);':'')+'font-size:10.5px;line-height:1.72;color:#493d2d;text-align:justify">'
       +dashi.map(function(t){return '<p style="break-inside:avoid;margin:0 0 7px">'+dispatch(t)+'</p>';}).join('')
-      +gazClip(newsImg)
+      +gazClip(newsImg,dashi.length>2)
       +'</div>';
   }
   var meter='';
