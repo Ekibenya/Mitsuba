@@ -621,8 +621,8 @@ function ttsSpeak(i,sampleText){
 /* ---------------- 插画图库（IndexedDB 存图，存档只记编号；双层瘦身防卡防爆） ---------------- */
 var IDB=null;
 function idbOpen(cb){if(IDB)return cb(IDB);if(!window.indexedDB)return cb(null);
-  try{var rq=indexedDB.open('mitsuba_img',1);
-  rq.onupgradeneeded=function(){rq.result.createObjectStore('img');};
+  try{var rq=indexedDB.open('mitsuba_img',2);
+  rq.onupgradeneeded=function(){var db=rq.result;if(!db.objectStoreNames.contains('img'))db.createObjectStore('img');if(!db.objectStoreNames.contains('kv'))db.createObjectStore('kv');};
   rq.onsuccess=function(){IDB=rq.result;cb(IDB);};
   rq.onerror=function(){cb(null);};}catch(e){cb(null);}}
 function idbPut(id,blob,cb){idbOpen(function(db){if(!db)return cb&&cb(false);
@@ -642,6 +642,13 @@ function idbDel(id,cb){idbOpen(function(db){if(!db)return cb&&cb(false);
 function idbClearAll(cb){idbOpen(function(db){if(!db)return cb&&cb(false);
   try{var tx=db.transaction('img','readwrite');tx.objectStore('img').clear();
   tx.oncomplete=function(){try{Object.keys(IMGC).forEach(function(k){try{URL.revokeObjectURL(IMGC[k]);}catch(e3){}});IMGC={};IMGQ=[];}catch(e2){}cb&&cb(true);};tx.onerror=function(){cb&&cb(false);};}catch(e){cb&&cb(false);}});}
+/* kv 仓库：存世界书等大文本，容量随硬盘（GB 级），与 img 图片仓库互不相干 */
+function idbKvPut(k,val,cb){idbOpen(function(db){if(!db)return cb&&cb(false);
+  try{var tx=db.transaction('kv','readwrite');tx.objectStore('kv').put(val,k);
+  tx.oncomplete=function(){cb&&cb(true);};tx.onerror=function(){cb&&cb(false);};}catch(e){cb&&cb(false);}});}
+function idbKvGet(k,cb){idbOpen(function(db){if(!db)return cb(null);
+  try{var rq=db.transaction('kv').objectStore('kv').get(k);
+  rq.onsuccess=function(){cb(rq.result==null?null:rq.result);};rq.onerror=function(){cb(null);};}catch(e){cb(null);}});}
 var IMGC={},IMGQ=[];
 /* 插画尺寸缓存（id → "宽/高"），持久化。给图容器【预留纵横比高度】——切图/整页重渲染时容器不再塌成 0 再弹回，
    从根上消除「图片一换/一刷新就跳屏闪一下」。 */
@@ -1002,8 +1009,14 @@ function extractCoT(t){var outs=[];COT_RE.lastIndex=0;
   return {text:s.trim(),cot:outs.filter(Boolean).join('\n\n')};}
 /* ---------------- 玩家自定义世界书 ---------------- */
 var LKEY='mitsuba_lore_v1';
-var ULORE=[]; try{ULORE=JSON.parse(localStorage.getItem(LKEY)||'[]')||[];}catch(e){} if(!Array.isArray(ULORE))ULORE=[];
-function uloreSave(){try{localStorage.setItem(LKEY,JSON.stringify(ULORE));}catch(e){}}
+/* 世界书改存 IndexedDB（可容 GB 级，不再挤占 localStorage 那 5MB）：开局异步载入，用时（检索/编辑）皆已在内存；旧版存于 localStorage 者自动迁移一次并腾空。 */
+var ULORE=[];
+(function(){idbKvGet('ulore',function(v){
+  if(Array.isArray(v)){ULORE=v;}
+  else{try{var lg=JSON.parse(localStorage.getItem(LKEY)||'[]');if(Array.isArray(lg)&&lg.length){ULORE=lg;idbKvPut('ulore',ULORE,function(ok){if(ok){try{localStorage.removeItem(LKEY);}catch(e){}}});}}catch(e){}}
+  try{if(ULORE.length&&typeof S!=='undefined'&&S&&S.overlay&&typeof renderOverlay==='function')renderOverlay();}catch(e){}
+});})();
+function uloreSave(){idbKvPut('ulore',ULORE);}
 function uloreParse(txt){
   var obj=null;try{obj=JSON.parse(txt);}catch(e){}
   var out=[];
@@ -3721,8 +3734,11 @@ root.addEventListener('change',function(e){
       var keys=Object.keys(data||{}).filter(function(k){return /^(mitsuba_|mb3d_|mb_)/.test(k);});
       if(!keys.length){S.impMsg='未识别到可导入的数据（文件格式不符）';S.impMsgC='var(--red2)';renderOverlay();return;}
       if(!confirm('导入将【覆盖】本机现有的全部游戏数据（对话、存档、记忆、预设、世界书、接口与设置），确定吗？')){e.target.value='';return;}
-      keys.forEach(function(k){try{localStorage.setItem(k,data[k]);}catch(er){}});
-      alert('已导入 '+keys.length+' 项数据，页面将重载。');location.reload();
+      var _loreRaw=null;
+      keys.forEach(function(k){if(k===LKEY){_loreRaw=data[k];}else{try{localStorage.setItem(k,data[k]);}catch(er){}}});
+      var _fin=function(){alert('已导入 '+keys.length+' 项数据，页面将重载。');location.reload();};
+      if(_loreRaw!=null){try{var _lv=JSON.parse(_loreRaw||'[]');ULORE=Array.isArray(_lv)?_lv:[];idbKvPut('ulore',ULORE,function(){try{localStorage.removeItem(LKEY);}catch(e){}_fin();});}catch(er){_fin();}}
+      else{_fin();}
     }catch(err){S.impMsg='导入失败：文件不是有效的备份 JSON（'+String(err&&err.message||err).slice(0,60)+'）';S.impMsgC='var(--red2)';renderOverlay();}};
     ard.readAsText(af);return;}
   if(e.target.id==='zjImgRefFile'&&e.target.files&&e.target.files[0]){syncImgForm();imgRefLoad(e.target.files[0]);return;}
@@ -4184,6 +4200,7 @@ root.addEventListener('click',function(e){
       else if(a==='loreExport'){try{var lbl2=new Blob([JSON.stringify(ULORE,null,2)],{type:'application/json'});var lu=URL.createObjectURL(lbl2);var la=document.createElement('a');la.href=lu;la.download='三叶物语世界书备份.json';document.body.appendChild(la);la.click();document.body.removeChild(la);setTimeout(function(){URL.revokeObjectURL(lu);},4000);}catch(e){S.loreMsg='导出失败：'+e.message;renderOverlay();}}
       else if(a==='expAll'){try{var xo={__app:'三叶物语·死之轮舞',__type:'mitsuba-full-backup',__version:1,data:{}};
         for(var xi=0;xi<localStorage.length;xi++){var xk=localStorage.key(xi);if(xk&&/^(mitsuba_|mb3d_|mb_)/.test(xk))xo.data[xk]=localStorage.getItem(xk);}
+        try{if(ULORE&&ULORE.length)xo.data[LKEY]=JSON.stringify(ULORE);}catch(e9){}
         var xb=new Blob([JSON.stringify(xo,null,1)],{type:'application/json'});var xu=URL.createObjectURL(xb);var xa=document.createElement('a');xa.href=xu;xa.download='三叶物语全部数据备份.json';document.body.appendChild(xa);xa.click();document.body.removeChild(xa);setTimeout(function(){URL.revokeObjectURL(xu);},4000);}catch(e){}}
       else if(a==='wipeAll'){if(!S.wipeArm){S.wipeArm=true;renderOverlay();}else{try{var wks=[];for(var wi=0;wi<localStorage.length;wi++){var wk=localStorage.key(wi);if(wk&&/^(mitsuba_|mb3d_|mb_)/.test(wk))wks.push(wk);}wks.forEach(function(k){try{localStorage.removeItem(k);}catch(e2){}});}catch(e){}try{indexedDB.deleteDatabase('mitsuba_img');}catch(e4){}location.reload();}}
       else if(a==='fontReset'){try{localStorage.removeItem('mitsuba_font_v1');}catch(e){}FONTC=null;var frs=document.documentElement.style;frs.removeProperty('--serif');frs.removeProperty('--kai');renderOverlay();}
