@@ -263,18 +263,17 @@ ov.addEventListener('click',function(){end(true);});
 ov.addEventListener('cancel',function(e){try{e.preventDefault();}catch(e2){}end(true);});
 var f=document.getElementById('bootChr');
 if(MB2){
-  /* 手机端:不加载 Live2D 皮套(开场内存峰值会崩),改用轻量海报+标题淡入,让手机能正常进入游戏 */
+  /* 手机端:用 DOM 皮套开场动画(举枪→子弹→黑幕文字→云雾),播完揭幕到封面。不加载 Live2D Cubism(会崩) */
   var _bb=document.getElementById('bootBlack');
-  var mImg=document.createElement('img');mImg.src='core/res/vn/mitsuba_poster.webp';mImg.alt='';
-  mImg.style.cssText='position:absolute;left:50%;bottom:1%;transform:translateX(-50%);height:82%;opacity:0;transition:opacity 1.1s ease;filter:drop-shadow(0 6px 20px rgba(0,0,0,.55))';
-  ov.insertBefore(mImg,_bb);
-  var mTit=document.createElement('div');
-  mTit.style.cssText='position:absolute;left:0;right:0;top:9%;text-align:center;opacity:0;transition:opacity 1s ease';
-  mTit.innerHTML='<div style="font-size:9px;letter-spacing:.4em;color:#8a7c62;font-family:Georgia,serif">LIBERTÉ · ÉGALITÉ · PÂTISSERIE</div><div style="font-size:31px;font-weight:700;letter-spacing:.18em;color:#cda434;text-shadow:0 2px 14px rgba(205,164,52,.5);margin-top:6px">三叶物语</div><div style="font-size:11px;letter-spacing:.3em;color:#e8dcc4;opacity:.85;margin-top:6px">诅咒的少女与死之轮舞</div>';
-  ov.insertBefore(mTit,_bb);
-  t(function(){mImg.style.opacity='1';},60);
-  t(function(){mTit.style.opacity='1';},650);
-  t(function(){end(false);},2900);
+  var openFrame=document.createElement('iframe');
+  openFrame.src='core/res/vn/mitsuba_open.html?v=1';
+  openFrame.setAttribute('scrolling','no');openFrame.setAttribute('allowtransparency','true');
+  openFrame.style.cssText='position:absolute;inset:0;width:100%;height:100%;border:0;background:#0a0708;pointer-events:none';
+  ov.insertBefore(openFrame,_bb);
+  var _done=false;
+  var _om=function(e){ if(e&&e.data&&e.data.mitsubaBoot==='done'&&!_done){ _done=true; try{window.removeEventListener('message',_om);}catch(x){} end(false); } };
+  window.addEventListener('message',_om);
+  t(function(){ if(!_done){_done=true; try{window.removeEventListener('message',_om);}catch(x){} end(false);} },11000);
   return;
 }
 function post(d){try{f.contentWindow.postMessage(Object.assign({vn:'mitsuba'},d),'*');}catch(e){}}
