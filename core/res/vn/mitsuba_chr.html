@@ -4434,21 +4434,20 @@ addEventListener('message',e=>{
   else if(d.act==='sleep'){document.documentElement.classList.toggle('vnzz',!!d.on);}
   else if(d.act==='look'){window.__lookT=Date.now();PX.nx=+d.x||0;PX.ny=+d.y||0;setEyes(PX.nx,PX.ny);applyPose();}
 });
-// ---- 待机手臂微动:整条臂(大臂+小臂+手)绕肩作刚体微转;持枪/开枪时归零(交给枪骨骼,否则散架) ----
-let _atgtL=0,_atgtR=0,_acurL=0,_acurR=0;
+// ---- 待机手臂微动:整条臂(大臂+小臂+手)作刚体,偶尔朝身体外侧小幅摆出再收回;持枪/开枪归零(否则散架) ----
+const SWDIR_L=1, SWDIR_R=-1;   // 各臂"朝外"的旋转符号(实测:L+/R-手往外分开)
+let _swL=0,_swR=0,_swLt=0,_swRt=0;
 (function armIdle(){
-  const idle = gunState===0 && !gunBusy && !seqBusy && !(typeof MB!=='undefined' && MB);  // 移动端不动(省电,同风动画)
-  _acurL += ((idle?_atgtL:0)-_acurL)*0.06;
-  _acurR += ((idle?_atgtR:0)-_acurR)*0.06;
-  const s=Date.now()/1000;
-  const gl=(idle?Math.sin(s*0.5)*0.4:0)+_acurL;      // 连续轻摆 + 缓入的偶发微转
-  const gr=(idle?-Math.sin(s*0.55)*0.4:0)+_acurR;
-  document.querySelectorAll('.armLg').forEach(e=>e.style.transform=`rotate(${gl.toFixed(2)}deg)`);
-  document.querySelectorAll('.armRg').forEach(e=>e.style.transform=`rotate(${gr.toFixed(2)}deg)`);
+  const idle = gunState===0 && !gunBusy && !seqBusy && !(typeof MB!=='undefined' && MB);  // 移动端不动
+  _swL += ((idle?_swLt:0)-_swL)*0.05;                 // 缓入缓出:摆出/收回都柔和
+  _swR += ((idle?_swRt:0)-_swR)*0.05;
+  document.querySelectorAll('.armLg').forEach(e=>e.style.transform=`rotate(${_swL.toFixed(2)}deg)`);
+  document.querySelectorAll('.armRg').forEach(e=>e.style.transform=`rotate(${_swR.toFixed(2)}deg)`);
   setTimeout(armIdle,55);
 })();
-setInterval(()=>{ if(gunState===0) _atgtL = Math.random()<0.4?(Math.random()<0.5?-1:1)*(0.8+Math.random()*1.4):0; },7000);
-setInterval(()=>{ if(gunState===0) _atgtR = Math.random()<0.4?(Math.random()<0.5?-1:1)*(0.8+Math.random()*1.4):0; },8500);
+function _armSwing(set,dir){ set(dir*(1.6+Math.random()*1.3)); setTimeout(()=>set(0),900+Math.random()*700); }  // 摆出(朝外),停一下,收回
+setInterval(()=>{ if(gunState===0&&Math.random()<0.5) _armSwing(function(v){_swLt=v;},SWDIR_L); },6000);
+setInterval(()=>{ if(gunState===0&&Math.random()<0.5) _armSwing(function(v){_swRt=v;},SWDIR_R); },7500);
 function fit(){
   if(vnWin){
     const sp=Math.max(1,(vnWin[1]-vnWin[0]))/100;
