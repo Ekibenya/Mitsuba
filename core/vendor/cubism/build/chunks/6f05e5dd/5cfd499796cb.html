@@ -5508,6 +5508,8 @@ function lookAt(px,py){
   var r=isle.getBoundingClientRect();if(!r.width)return;
   var nx=Math.max(-0.5,Math.min(0.5,(px-(r.left+r.width/2))/(Math.max(320,window.innerWidth)*0.6)));
   var ny=Math.max(-0.5,Math.min(0.5,(py-(r.top+r.height*0.35))/(Math.max(320,window.innerHeight)*0.6)));
+  if(LOOK.raf){cancelAnimationFrame(LOOK.raf);LOOK.raf=0;}   /* 有新注视→打断复位缓动 */
+  LOOK.nx=nx;LOOK.ny=ny;
   ['m','k','s'].forEach(function(w){send(w,{act:'look',x:nx,y:ny});});
 }
 document.addEventListener('pointermove',function(e){lookAt(e.clientX,e.clientY);},{passive:true});
@@ -5533,7 +5535,16 @@ document.addEventListener('touchstart',function(e){var t=e.touches&&e.touches[0]
    (手机一直被手指刷,若持续跟随三叶就永远低头不抬;电脑端 MOB=false 完全不走这段) */
 if(MOB){
   var _lookRst=0;
-  function faceFront(){['m','k','s'].forEach(function(w){send(w,{act:'look',x:0,y:0});});}
+  function faceFront(){                                   /* 松手→缓缓转回正视前方(easeOutCubic,650ms) */
+    var sx=LOOK.nx||0,sy=LOOK.ny||0,t0=performance.now(),DUR=650;
+    if(LOOK.raf)cancelAnimationFrame(LOOK.raf);
+    (function step(now){
+      var t=Math.min(1,(now-t0)/DUR),e=1-Math.pow(1-t,3),nx=sx*(1-e),ny=sy*(1-e);
+      LOOK.nx=nx;LOOK.ny=ny;
+      ['m','k','s'].forEach(function(w){send(w,{act:'look',x:nx,y:ny});});
+      LOOK.raf = t<1 ? requestAnimationFrame(step) : 0;
+    })(t0);
+  }
   function frontSoon(){clearTimeout(_lookRst);_lookRst=setTimeout(function(){
     var ae=document.activeElement;
     if(ae&&(ae.tagName==='TEXTAREA'||ae.tagName==='INPUT'))return;      /* 还在打字→保持看输入方向,不回正 */
