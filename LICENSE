@@ -1,7 +1,7 @@
 三叶物语 · 死之轮舞 —— 使用条款与免责声明
 L'Histoire de Mitsuba — Terms of Use & Disclaimer
 
-版权所有 (c) 2026 Ekibenya。保留一切权利。
+版权所有 (c) 2026 Ekibenya。保留一切权利。 All Rights Reserved.
 
 本项目为基于轻小说《みつばものがたり》（作者：七沢またり）的非商业同人
 二次创作，仅供爱好者交流之用。原作及其角色、设定、剧情、名称等一切权利
@@ -57,3 +57,85 @@ L'Histoire de Mitsuba — Terms of Use & Disclaimer
 内容与作者无关；禁止扒取数据、商业化，以及基于相同架构的二次创作。
 
 联系方式：ekibenya@outlook.com
+
+
+════════════════════════════════════════════════════════
+[English Terms]
+（中文版为准；English translation follows for reference only.
+In case of any discrepancy, the Chinese version prevails.）
+════════════════════════════════════════════════════════
+
+This project is a non-commercial, fan-made derivative work based on the
+light novel "Mitsuba Monogatari" (みつばものがたり, by Nanasawa Matari /
+七沢またり), intended solely for enthusiast exchange. All rights to the
+original work — including its characters, settings, plot, and names —
+belong to the original author and the respective publishers; this
+project asserts no rights over any original-work material.
+
+────────────────────────────────────────────────────────
+I. Nature of the Software
+────────────────────────────────────────────────────────
+
+1. This project provides only a pure front-end (client-side) web
+   application. It contains no artificial-intelligence model, generation
+   service, or back-end program, and neither proxies nor provides any.
+
+2. This project is a purely static web page, with no server-side program
+   and no database. All user data — saves, chat logs, memory, API keys,
+   and the like — is stored solely in the user's own browser on the
+   user's own device; neither the author nor this project can collect,
+   receive, or upload any such data.
+
+3. The AI, image-generation, voice, and other interfaces required to run
+   the game are configured by the user, and are connected directly from
+   the user's browser to the third-party providers the user selects.
+
+────────────────────────────────────────────────────────
+II. Allocation of Responsibility
+────────────────────────────────────────────────────────
+
+4. All AI behavior, and all of the user's input, output, and play
+   activity, are produced independently by the user, who bears sole
+   responsibility for them; they are unrelated to this project or the
+   author.
+
+5. The user must comply with all applicable laws and regulations of the
+   user's jurisdiction, as well as the terms of the third-party providers
+   used. The user bears sole responsibility for any consequences arising
+   from the user's conduct or content.
+
+────────────────────────────────────────────────────────
+III. Restrictions on Use
+────────────────────────────────────────────────────────
+
+6. Scraping, harvesting, crawling, or reverse-extracting any code, asset,
+   or data of this project is prohibited.
+
+7. Using this project or any part of it for any commercial purpose is
+   prohibited.
+
+8. Creating derivative works, rewriting, re-skinning, re-packaging, or
+   redistributing based on the same architecture as this project is
+   prohibited.
+
+────────────────────────────────────────────────────────
+IV. Disclaimer
+────────────────────────────────────────────────────────
+
+9. This project is provided "AS IS", without warranty of any kind,
+   express or implied, including but not limited to the warranties of
+   merchantability, fitness for a particular purpose, and
+   non-infringement.
+
+10. In no event shall the author be liable for any direct, indirect,
+    incidental, special, or consequential damages arising out of the use
+    of, or inability to use, this project.
+
+────────────────────────────────────────────────────────
+
+Special notice: This project provides only the front-end application
+itself; all AI behavior and all user input and output content are
+unrelated to the author; scraping data, commercialization, and
+derivative creation based on the same architecture are prohibited.
+
+Contact: ekibenya@outlook.com
