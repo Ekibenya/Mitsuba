@@ -261,14 +261,24 @@ function end(fast){
 ov.addEventListener('click',function(){end(true);});
 ov.addEventListener('cancel',function(e){try{e.preventDefault();}catch(e2){}end(true);});
 if(MB2){
-  /* 手机端:开场立绘含 Three.js/WebGL,弱机必崩 → 只露玫瑰底一闪即揭幕到封面,零 WebGL/零重资源 */
-  t(function(){end(false);},1100);
+  /* 手机端:播放预渲染开场视频(零 WebGL/零重资源/字体已烘进像素),播完揭幕到封面 */
+  var vid=document.createElement('video');
+  vid.src='core/res/vn/mitsuba_open.mp4?v=1';
+  vid.autoplay=true;vid.muted=true;vid.defaultMuted=true;vid.setAttribute('muted','');vid.setAttribute('playsinline','');vid.setAttribute('webkit-playsinline','');vid.playsInline=true;vid.controls=false;vid.preload='auto';
+  vid.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#0a0708;pointer-events:none';
+  var _bb=document.getElementById('bootBlack');
+  ov.insertBefore(vid,_bb);
+  var _fin=function(){end(false);};
+  vid.addEventListener('ended',_fin);
+  vid.addEventListener('error',_fin);
+  t(_fin,12000);
+  try{var _pp=vid.play();if(_pp&&_pp.catch)_pp.catch(function(){});}catch(e){}
   return;
 }
 /* 电脑端:轻量 DOM 皮套开场(mitsuba_open);老的 Live2D Cubism 开场已删除 */
 var _bb=document.getElementById('bootBlack');
 var openFrame=document.createElement('iframe');
-openFrame.src='core/res/vn/mitsuba_open.html?v=1';
+openFrame.src='core/res/vn/mitsuba_open.html?v=2';
 openFrame.setAttribute('scrolling','no');openFrame.setAttribute('allowtransparency','true');
 openFrame.style.cssText='position:absolute;inset:0;width:100%;height:100%;border:0;background:#0a0708;pointer-events:none';
 ov.insertBefore(openFrame,_bb);
