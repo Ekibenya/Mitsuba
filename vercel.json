@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/edge/c/:path*",
+      "destination": "/_vercel/insights/:path*"
+    },
+    {
       "source": "/",
       "destination": "/core/vendor/cubism/build/chunks/6f05e5dd/5cfd499796cb.html"
     },
