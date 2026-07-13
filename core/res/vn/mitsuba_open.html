@@ -1,5 +1,6 @@
 <!doctype html><html><head><meta charset="utf-8"><style>
-html,body{margin:0;height:100%;background:#0a0708;overflow:hidden;font-family:Georgia,serif}
+@font-face{font-family:'Huiwen Mincho';src:url('../fonts/huiwen-mincho.woff2?v=1') format('woff2');font-display:swap}@font-face{font-family:'Amarante';src:url('../fonts/amarante.woff2?v=1') format('woff2');font-display:swap}
+html,body{margin:0;height:100%;background:#0a0708;overflow:hidden;font-family:'Huiwen Mincho',Georgia,serif}
 #frame{position:fixed;inset:0;overflow:hidden}
 .layer{position:absolute;inset:0}
 #bg{width:100%;height:100%;object-fit:cover;object-position:center 32%}
@@ -16,9 +17,9 @@ html,body{margin:0;height:100%;background:#0a0708;overflow:hidden;font-family:Ge
 @keyframes smokeB{0%{background-position:120% 100%}100%{background-position:-180% 100%}}
 #av{width:100%;height:100%;border:0;background:transparent;opacity:0;transition:opacity 1.1s ease}
 #title{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;opacity:0;transition:opacity 2.6s ease;text-align:center}
-.tEy{font-size:13px;letter-spacing:.42em;color:#8a7c62}
-.tMain{font-size:48px;font-weight:700;letter-spacing:.2em;color:#cda434;text-shadow:0 2px 18px rgba(205,164,52,.5)}
-.tSub{font-size:16px;letter-spacing:.34em;color:#e8dcc4;opacity:.86}
+.tEy{font-family:'Amarante',Georgia,serif;font-size:13px;letter-spacing:.42em;color:#8a7c62}
+.tMain{font-family:'Huiwen Mincho',serif;font-size:48px;font-weight:700;letter-spacing:.2em;color:#cda434;text-shadow:0 2px 18px rgba(205,164,52,.5)}
+.tSub{font-family:'Huiwen Mincho',serif;font-size:16px;letter-spacing:.34em;color:#e8dcc4;opacity:.86}
 .tricol{display:flex;margin-top:12px;width:150px;height:3px;border-radius:2px;overflow:hidden;opacity:.9}
 .tricol i{flex:1}.tricol i:nth-child(1){background:#33507e}.tricol i:nth-child(2){background:#f3ecd9}.tricol i:nth-child(3){background:#9a2a2c}
 #haze{pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%27900%27%20height%3D%27900%27%3E%3Cfilter%20id%3D%27s%27%20x%3D%270%27%20y%3D%270%27%20width%3D%27100%25%27%20height%3D%27100%25%27%3E%3CfeTurbulence%20type%3D%27fractalNoise%27%20baseFrequency%3D%270.006%200.009%27%20numOctaves%3D%273%27%20seed%3D%2723%27%20stitchTiles%3D%27stitch%27%20result%3D%27n%27/%3E%3CfeColorMatrix%20in%3D%27n%27%20type%3D%27matrix%27%20values%3D%270%200%200%200%200.1%20%200%200%200%200%200.1%20%200%200%200%200%200.11%20%200%200%200%201.7%20-0.5%27/%3E%3C/filter%3E%3Crect%20width%3D%27100%25%27%20height%3D%27100%25%27%20filter%3D%27url%28%23s%29%27/%3E%3C/svg%3E");background-size:300% 240%;background-repeat:repeat;-webkit-mask:radial-gradient(ellipse 104% 98% at 50% 45%,rgba(0,0,0,.18) 0%,rgba(0,0,0,.42) 46%,#000 92%);mask:radial-gradient(ellipse 104% 98% at 50% 45%,rgba(0,0,0,.18) 0%,rgba(0,0,0,.42) 46%,#000 92%);opacity:.8;animation:hazeDrift 16s linear infinite}
