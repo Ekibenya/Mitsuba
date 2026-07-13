@@ -245,7 +245,6 @@ ov.style.cssText='position:fixed;inset:0;width:100vw;height:100vh;max-width:none
 ov.innerHTML=
   '<img src="core/res/vn/bg_rose.webp" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:'+(MB2?'center center':'center 30%')+'">'
  +'<div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 42%,transparent 40%,rgba(4,3,7,.55) 100%)"></div>'
- +'<iframe id="bootChr" allowtransparency="true" scrolling="no" style="position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;opacity:0;transition:opacity .8s ease"></iframe>'
  +'<div id="bootBlack" style="position:absolute;inset:0;background:#000;opacity:0;transition:opacity .16s ease"></div>'
  +'<div style="position:absolute;left:0;right:0;bottom:calc(18px + env(safe-area-inset-bottom,0px));text-align:center;font-size:11px;letter-spacing:.35em;color:rgba(214,226,244,.5);font-family:serif;animation:zjIsleGlow 2.2s ease-in-out infinite">轻 触 跳 过</div>';
 document.body.appendChild(ov);
@@ -261,38 +260,19 @@ function end(fast){
 }
 ov.addEventListener('click',function(){end(true);});
 ov.addEventListener('cancel',function(e){try{e.preventDefault();}catch(e2){}end(true);});
-var f=document.getElementById('bootChr');
-if(MB2){
-  /* 手机端:用 DOM 皮套开场动画(举枪→子弹→黑幕文字→云雾),播完揭幕到封面。不加载 Live2D Cubism(会崩) */
-  var _bb=document.getElementById('bootBlack');
-  var openFrame=document.createElement('iframe');
-  openFrame.src='core/res/vn/mitsuba_open.html?v=1';
-  openFrame.setAttribute('scrolling','no');openFrame.setAttribute('allowtransparency','true');
-  openFrame.style.cssText='position:absolute;inset:0;width:100%;height:100%;border:0;background:#0a0708;pointer-events:none';
-  ov.insertBefore(openFrame,_bb);
-  var _done=false;
-  var _om=function(e){ if(e&&e.data&&e.data.mitsubaBoot==='done'&&!_done){ _done=true; try{window.removeEventListener('message',_om);}catch(x){} end(false); } };
-  window.addEventListener('message',_om);
-  t(function(){ if(!_done){_done=true; try{window.removeEventListener('message',_om);}catch(x){} end(false);} },11000);
-  return;
+/* 统一开场:所有设备都用轻量 DOM 皮套开场(mitsuba_open);老的 Live2D Cubism 开场已删除 */
+var _bb=document.getElementById('bootBlack');
+var openFrame=document.createElement('iframe');
+openFrame.src='core/res/vn/mitsuba_open.html?v=1';
+openFrame.setAttribute('scrolling','no');openFrame.setAttribute('allowtransparency','true');
+openFrame.style.cssText='position:absolute;inset:0;width:100%;height:100%;border:0;background:#0a0708;pointer-events:none';
+ov.insertBefore(openFrame,_bb);
+var _done=false;
+var _om=function(e){ if(e&&e.data&&e.data.mitsubaBoot==='done'&&!_done){ _done=true; try{window.removeEventListener('message',_om);}catch(x){} end(false); } };
+window.addEventListener('message',_om);
+t(function(){ if(!_done){_done=true; try{window.removeEventListener('message',_om);}catch(x){} end(false);} },11000);
 }
-function post(d){try{f.contentWindow.postMessage(Object.assign({vn:'mitsuba'},d),'*');}catch(e){}}
-var armed=false;
-f.addEventListener('load',function(){
-  if(done||armed)return;
-  try{if(!(f.contentDocument&&f.contentDocument.getElementById('char')))return;}catch(e){}
-  armed=true;
-  post({act:'frame',a:38,b:82});
-  f.style.opacity='1';
-  t(function(){post({act:'gunKill'});},600);
-  /* 开火≈600+1150ms;弹至镜前≈+700ms → 满屏黑一拍 → 揭幕 */
-  t(function(){var bb=document.getElementById('bootBlack');if(bb)bb.style.opacity='1';},2450);
-  t(function(){end(false);},3050);
-});
-f.src='core/res/vn/mitsuba_chr.html?vn=1&v=17'+(MB2?'&m=1':'');
-/* 兜底:立绘迟迟未载入(弱网)也不挡路 */
-t(function(){end(false);},8000);
-}
+
 /* 文档解析完再挂:流式解析中途创建的置顶固定层,部分 Chromium 不会正确参与合成排序 */
 if(document.readyState!=='loading')bootGo();
 else document.addEventListener('DOMContentLoaded',bootGo);
