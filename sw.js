@@ -1,7 +1,7 @@
 /* 三叶物语 — Service Worker
    网络优先：拿到最新代码即用，用户无需重装桌面图标；离线回退缓存。
    只处理【同源 GET】——AI 接口/NovelAI 中转/生图等跨域请求一律放行、绝不拦截。 */
-const CACHE = 'mitsuba-v1';
+const CACHE = 'mitsuba-v2';
 const SHELL = ['/'];
 self.addEventListener('install', function (e) {
   self.skipWaiting();
