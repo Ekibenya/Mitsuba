@@ -2622,7 +2622,7 @@ function wizardView(){
     body='<div class="kai" style="font-size:17px;color:var(--gold3);margin-bottom:14px">'+esc(era.label)+' · 故事从哪里开场？</div>'
       +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(220px,100%),1fr));gap:12px">'
       +era.places.map(function(p){return wizChip('data-wz-place',p,p,w.place===p&&!w.placeCustom);}).join('')
-      +wizChip('data-wz-place','__custom','自定义地点…',!!w.placeCustom,'写一个你想要的地方')+'</div>'
+      +wizChip('data-wz-place','__custom','自定义地点…',!!w.placeCustom)+'</div>'
       +(w.placeCustom?'<input id="zjWzPlace" value="'+esc(w.place==='__custom'?'':w.place)+'" placeholder="例如：贝尔城郊的无名咖啡馆" style="margin-top:12px;width:min(420px,100%);background:rgba(255,255,255,.32);border:1px solid rgba(42,69,104,.35);color:var(--gold3);font-size:15px;padding:9px 12px">':'');
   }else if(w.step===3){
     body='<div class="kai" style="font-size:17px;color:var(--gold3);margin-bottom:6px">开场时，谁在场？<span style="font-size:12px;color:var(--mut)">（可选一至三位，皆为此时代确有其人者）</span></div>'
@@ -2760,7 +2760,7 @@ function selectView(){
   var mine=S.customOp?('<div class="btn glass glassHover" data-act="opReplay" style="grid-column:1/-1;cursor:pointer;border-color:rgba(60,100,148,.4);padding:16px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">'
     +'<div style="flex:none;width:38px;height:38px;background:linear-gradient(160deg,#3e7256,#2e5340);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--kai);font-size:20px;color:#101a14;box-shadow:inset 0 0 0 2px rgba(226,238,252,.25)">存</div>'
     +'<div style="flex:1;min-width:220px"><div class="kai" style="font-size:18px;color:var(--gold2)">'+esc(S.customOp.scene||'自定义开局')+'</div>'
-    +'<div style="font-size:12px;color:var(--mut);margin-top:3px">'+esc(S.customOp.era||'')+' · 此前撰定的自定义开局，可重新入局，也可发口令与友人共启同一局</div></div>'
+    +'<div style="font-size:12px;color:var(--mut);margin-top:3px">'+esc(S.customOp.era||'')+' · 你先前写好并保存的开局，点此重玩，或发口令与友人共启同一局</div></div>'
     +'<button data-act="opShare" class="obtn btn" style="flex:none;font-size:12.5px;letter-spacing:.15em;padding:8px 16px">分享开局码</button>'
     +'<div style="flex:none;font-size:13px;letter-spacing:.3em;color:var(--gold)">进入 →</div></div>'):'';
   var synopBox='<div class="btn glass glassHover" data-ov="intro" style="grid-column:1/-1;cursor:pointer;border-color:rgba(201,160,99,.55);padding:15px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap'+(mob?';-webkit-backdrop-filter:none;backdrop-filter:none':'')+'">'
