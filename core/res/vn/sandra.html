@@ -67,6 +67,8 @@ function setTalking(on){
 $('talkBtn').onclick=()=>setTalking(!talking);
 // ---- 剧场模式 ----
 const VN=/[?&]vn=1/.test(location.search);
+const MB=/[?&]m=1/.test(location.search);
+if(MB){var _ms=document.createElement('style');_ms.textContent='#char img{filter:none!important}';document.head.appendChild(_ms);}  /* 手机端:关掉边缘黑色 drop-shadow 光影(省配置+消抽搐);呼吸保留 */
 if(VN){
   $('ui').style.display='none';$('tip').style.display='none';
   document.documentElement.style.background='transparent';
