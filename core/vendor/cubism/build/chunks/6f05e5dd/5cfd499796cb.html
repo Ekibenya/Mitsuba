@@ -2559,6 +2559,7 @@ function titleView(){
     +'<div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:clamp(1px,0.5vh,4px);margin-top:clamp(10px,2.4vh,22px);padding:4px 0">'
     +erb('data-act="toselect"','开 幕','OUVERTURE')
     +cont
+    +erb('data-ov="intro"','剧情简介','SYNOPSIS')
     +erb('data-ov="api"','接 入 AI','CONNEXION')
     +erb('data-ov="jpsb"','日 文 沙 盒','SANDBOX JAPONAIS'+(JPSB?' · ON':''))
     +'</div>'
@@ -2769,6 +2770,7 @@ function selectView(){
     +'<div class="grow" style="overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain">'
     +'<div style="position:sticky;top:0;z-index:6;pointer-events:none;margin-bottom:-26px;padding-bottom:26px">'+'<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(236,227,204,'+(mob?'.99':'.95')+') 0%,rgba(236,227,204,'+(mob?'.93':'.76')+') 56%,rgba(236,227,204,0) 100%);'+(mob?'':'-webkit-backdrop-filter:blur(12px) saturate(140%);backdrop-filter:blur(12px) saturate(140%);')+'-webkit-mask-image:linear-gradient(180deg,#000 54%,transparent);mask-image:linear-gradient(180deg,#000 54%,transparent)"></div>'+'<div style="position:relative;pointer-events:auto;display:flex;align-items:baseline;gap:16px;padding:18px 28px 10px;flex-wrap:wrap">'
     +'<button data-act="totitle" class="obtn btn" style="font-size:12px;letter-spacing:.2em;padding:6px 14px">〈 封面</button>'
+    +'<button data-ov="intro" class="obtn btn" style="font-size:12px;letter-spacing:.2em;padding:6px 14px;color:var(--gold3)">剧情简介</button>'
     +'<div class="kai" style="font-size:26px;letter-spacing:.14em;color:var(--gold2)">择一开局 · 轮舞之间</div></div></div>'
     +'<div style="padding:22px 28px 60px"><div style="max-width:1280px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(320px,100%),1fr));gap:16px">'+zero+mine+imp+grid+'</div></div>'
     +'</div></div>';
@@ -3386,9 +3388,57 @@ function renderOverlay(){
     codexPills();setPills();zjWglApply();
   }else render();
 }
+function introBody(){
+  var H=function(t,sub){return '<div class="kai" style="font-size:18px;color:var(--gold2);letter-spacing:.12em;margin:26px 0 9px">'+t+(sub?' <span style="font-size:12px;color:var(--mut);letter-spacing:.04em">'+sub+'</span>':'')+'</div>';};
+  var P=function(t){return '<div style="font-size:13px;line-height:1.95;color:var(--ink2);margin:0 0 8px">'+t+'</div>';};
+  var ops=[
+   ['一 · 苏醒的诅咒人偶','585 年春末 · 布鲁洛兹家城馆','三叶本人（11 岁，刚苏醒、什么都不记得）','昏睡十年后突然睁眼，她不知道自己是谁；而身边的大人看她的眼神却满是恐惧。','父亲吉尔莫亚（布鲁洛兹公爵）、笑里藏针的继母米莉亚娜、监护人尼可所长'],
+   ['二 · 炮兵科的插班生','585 年 6 月 · 王立军官学校','三叶本人（11 岁，特例插班生）','父亲中毒身亡、她被夺去姓氏幽禁，又被尼可所长半哄半骗塞进军校；她自选炮兵科，只因大炮破坏力最强。','唯一不怕她的同期波特库克、炮兵科加鲁多教官'],
+   ['三 · 从浅坟里爬出来','585 年深秋 · 哈尔吉奥村外','三叶本人（11 岁，刚死过一次）','随小队野外研习，撞破整座村子都是邪教徒；村民杀了众人、把她活埋——几小时后，她自己从坟里爬了出来。','带队的莫兰少尉、绿化教村民'],
+   ['四 · 贝里埃要塞防卫战','586 年 · 贝里埃要塞炮位','三叶本人（12 岁，战时准尉）','帝国大军入侵，学生们领到「通往地狱的车票」被送上前线；她被指派一门训练用炮、四名士兵，敌一万、我七千，会战在即。','并肩的战友克萝内、同级的士官生们'],
+   ['五 · 投票日兼生日','587 年 6 月 6 日 · 首都贝尔','三叶本人（今满 13 岁，上院议员·三叶派领袖）','战败、割地、革命的浪潮中，今天是议会表决国王命运之日，也是她的生日——而她昨天刚递交了辞呈。','内务大臣维克托、傀儡国王鲁洛伊、五千人的三叶党'],
+   ['六 · 二十年限定独裁宣言','587 年盛夏 · 宫殿','三叶本人（13 岁，共和国国家代表·自称总统）','王冠到手，她废除王政、宣布共和国成立，刚在广场发表「二十年限定」的独裁宣言，人群陷入狂热。','国民议会议长桑德拉、狂热的市民'],
+   ['七 · 十四岁的生日与革命纪念日','588 年 6 月 6 日 · 总统府邸','三叶本人（今满 14 岁，独裁二年目的总统）','一边谈和已成、一边战事僵持，大选后极可能再战；今天既是她生日、又是革命纪念日，首都从清晨就在办庆典。','旧友克萝内、国家保安厅的人'],
+   ['八 · 败北之味（你是克萝内）','586 年 · 贝里埃要塞医务室·当夜','克萝内——三叶的战友、西南炮台的死守者','血战一整天，你的炮台是唯一守住的；小不点战友三叶被榴弹直击、拖回一个俘虏后倒下，军医判定：死亡。','昏死的三叶、要塞里的败兵与军医——换一双眼睛，看她「死去」的那一夜'],
+   ['九 · 梦、理想与恐怖（你是桑德拉）','587 年冬 · 议长办公室','桑德拉——国民议会议长·内阁官房长官','共和国成立半年，三叶的独裁运转得好得令人不安；你被旧同志骂作叛徒，却在替国家铺一条「任期结束后回到民主」的路。今天保安厅副长官来访。','三叶、国家保安厅副长官——一个理想主义者如何与恐怖共处'],
+   ['十 · 隔离塔的入学申请（你是尼可所长）','585 年 6 月 · 隔离塔','尼科雷纳斯——魔术研究所所长·大炮的发明者·三叶的监护人','吉尔莫亚卿死后，诅咒人偶被幽禁塔中，塔里已离奇死了十三人；继母请你「处理」那孩子被你回绝——你带着一份军校入学申请书上门。','被幽禁的三叶、请托你的继母米莉亚娜——决定把这孩子领向世界的那个大人']
+  ];
+  var cards=ops.map(function(o){
+    return '<div style="border:1px solid rgba(58,47,36,.22);border-radius:12px;background:rgba(255,255,255,.03);padding:13px 16px;margin:9px 0">'
+     +'<div class="kai" style="font-size:15.5px;color:var(--gold3);letter-spacing:.05em">开局'+o[0]+'</div>'
+     +'<div style="font-size:11.5px;color:var(--mut);margin:3px 0 8px;letter-spacing:.04em">'+o[1]+'</div>'
+     +'<div style="font-size:12.5px;line-height:1.85;color:var(--ink2)"><b style="color:var(--gold)">你扮演：</b>'+o[2]+'</div>'
+     +'<div style="font-size:12.5px;line-height:1.85;color:var(--ink2);margin-top:3px"><b style="color:var(--gold)">处境：</b>'+o[3]+'</div>'
+     +'<div style="font-size:12.5px;line-height:1.85;color:var(--mut2);margin-top:3px"><b style="color:var(--grn2)">会遇到：</b>'+o[4]+'</div>'
+     +'</div>';
+  }).join('');
+  return '<div class="grow bambooV" style="overflow-y:auto;padding:24px 30px"><div style="max-width:760px;margin:0 auto">'
+   +P('<b style="color:var(--gold2)">没读过原作也能玩。</b>下面用大白话讲清楚：这是个什么故事、主角是谁、十个开局各扮演谁、会遇到什么人。')
+   +H('一句话故事')
+   +P('一个像人偶的银发少女，穿越到一个魔法与大炮并存、正走向战争与革命的国家。恨她的人会离奇惨死，而她自己毫无察觉——她就这样从「被诅咒的孩子」，一路走成了共和国的独裁者。')
+   +H('这个世界 · 罗泽利亚')
+   +P('埃乌罗佩大陆上的一个近世国家，气质很像大革命前后的法国：贵族与平民尖锐对立，魔术与火炮并存，战争、割地、革命接踵而至。故事横跨三卷、大轮历 585～588 年（三叶 11～14 岁）。')
+   +H('主角 · 三叶・克劳伯')
+   +P('银发蓝眼、宛如人偶的公爵之女。出生即是植物人，昏睡十年后在 11 岁醒来——而醒来的，其实是一个转生者（原本的现代人）。世人蔑称她「诅咒人偶」：对她怀有恶意的人往往离奇惨死，她本人却浑然不觉，只当成有趣的「前卫艺术」。她怕无聊胜过怕死，礼貌又天真，珍惜为数不多的朋友，然后顺手夺走了王冠。')
+   +P('多数开局你扮演三叶本人；也有几个开局让你扮演她身边的人（战友克萝内、议长桑德拉、监护人尼可所长），从旁观者的眼睛看这场「死之轮舞」。')
+   +H('时代脉络','剧情大致走向')
+   +'<div style="font-size:12.5px;line-height:2.15;color:var(--ink2);margin:0 0 4px">'
+     +'① <b style="color:var(--gold3)">苏醒</b>（585 春）：在城馆醒来，父亲被毒杀，她被当成怪物幽禁。<br>'
+     +'② <b style="color:var(--gold3)">军校</b>（585 夏）：被塞进军官学校炮兵科，恶名先她一步传开。<br>'
+     +'③ <b style="color:var(--gold3)">死与刻印</b>（585 秋）：野外研习撞破邪教村，死了一次，又自己爬回来。<br>'
+     +'④ <b style="color:var(--gold3)">战争</b>（586）：帝国入侵，学生被送上前线，贝里埃要塞死守。<br>'
+     +'⑤ <b style="color:var(--gold3)">革命</b>（587）：战败割地，议会审判国王，少女走向王冠。<br>'
+     +'⑥ <b style="color:var(--gold3)">独裁</b>（587 夏～588）：共和国成立，「二十年限定」独裁宣言，随后是谈和、僵局与大选前夜。'
+   +'</div>'
+   +H('十个开局','挑一个开始')
+   +P('前七个你扮演<b style="color:var(--gold)">三叶本人</b>，按时间顺序推进；后三个让你换一双眼睛，扮演她<b style="color:var(--gold)">身边的人</b>。')
+   +cards
+   +'<div style="height:10px"></div>'
+   +'</div></div>';
+}
 function overlayView(){
-  var title=S.overlay==='codex'?'三叶世界书':S.overlay==='map'?'埃乌罗佩舆图':S.overlay==='preset'?'自定义预设':S.overlay==='api'?'AI 接口设置':S.overlay==='jpsb'?'日文沙盒':S.overlay==='set'?'设 置':S.overlay==='mem'?'长程记忆 · 编年长卷':'存 档';
-  var inner=S.overlay==='codex'?codexBody():S.overlay==='map'?mapBody():S.overlay==='preset'?presetBody():S.overlay==='api'?apiBody():S.overlay==='jpsb'?jpsbBody():S.overlay==='set'?setBody():S.overlay==='mem'?memBody():savesBody();
+  var title=S.overlay==='intro'?'剧情简介 · 新手导览':S.overlay==='codex'?'三叶世界书':S.overlay==='map'?'埃乌罗佩舆图':S.overlay==='preset'?'自定义预设':S.overlay==='api'?'AI 接口设置':S.overlay==='jpsb'?'日文沙盒':S.overlay==='set'?'设 置':S.overlay==='mem'?'长程记忆 · 编年长卷':'存 档';
+  var inner=S.overlay==='intro'?introBody():S.overlay==='codex'?codexBody():S.overlay==='map'?mapBody():S.overlay==='preset'?presetBody():S.overlay==='api'?apiBody():S.overlay==='jpsb'?jpsbBody():S.overlay==='set'?setBody():S.overlay==='mem'?memBody():savesBody();
   return '<div id="zjOvWrap" style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:14px">'
     +'<div id="zjOvDim" data-act="closeov" class="fade" style="position:absolute;inset:0;background:radial-gradient(120% 100% at 50% 40%,rgba(30,24,15,.14),rgba(18,13,8,.28));-webkit-backdrop-filter:blur(3px) saturate(115%);backdrop-filter:blur(3px) saturate(115%)"></div>'
     +'<div data-stop="1" id="zjOvBox" class="glass" style="--glassTint:.58;-webkit-backdrop-filter:url(#glassR) blur(7px) saturate(165%) brightness(1.04);backdrop-filter:url(#glassR) blur(7px) saturate(165%) brightness(1.04);position:relative;width:min(1060px,96vw);height:min(720px,92vh);display:flex;flex-direction:column;overflow:hidden">'
