@@ -3769,10 +3769,13 @@ function graphInner(){
     var wdt=(1+Math.min(3,o.n/3)).toFixed(1);
     var sel=S.memNpc===o.name;
     lines+='<line data-ln="'+esc(o.name)+'" x1="'+cx+'" y1="'+cy+'" x2="'+x.toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="'+col+'" stroke-opacity="'+(sel?'.9':'.45')+'" stroke-width="'+wdt+'"/>';
+    var _nm=String(o.name),_nl=_nm.length;
+    var _nshow=_nl>6?_nm.slice(0,6):_nm;
+    var _nfs=_nl<=2?13.5:_nl===3?11.5:_nl===4?10:_nl===5?8.6:7.6;
     nodes+='<g data-npc="'+esc(o.name)+'" style="cursor:grab">'
-      +'<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="22" fill="rgba(255,253,246,.55)" stroke="'+col+'" stroke-width="'+(sel?2.2:1.2)+'"/>'
-      +'<text x="'+x.toFixed(1)+'" y="'+(y-2).toFixed(1)+'" text-anchor="middle" font-size="12" fill="'+(sel?'#274468':'#3a3024')+'" font-family="var(--kai)" style="pointer-events:none">'+esc(String(o.name).slice(0,4))+'</text>'
-      +'<text x="'+x.toFixed(1)+'" y="'+(y+11).toFixed(1)+'" text-anchor="middle" font-size="9" fill="'+col+'" style="pointer-events:none">'+fv+'</text></g>';
+      +'<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="24" fill="rgba(255,253,246,.55)" stroke="'+col+'" stroke-width="'+(sel?2.2:1.2)+'"/>'
+      +'<text x="'+x.toFixed(1)+'" y="'+(y-2).toFixed(1)+'" text-anchor="middle" font-size="'+_nfs+'" fill="'+(sel?'#274468':'#3a3024')+'" font-family="var(--kai)" style="pointer-events:none">'+esc(_nshow)+'</text>'
+      +'<text x="'+x.toFixed(1)+'" y="'+(y+11).toFixed(1)+'" text-anchor="middle" font-size="8.5" fill="'+col+'" style="pointer-events:none">'+fv+'</text></g>';
   });
   var center='<g data-gcenter="1" style="cursor:grab"><circle cx="'+cx+'" cy="'+cy+'" r="26" fill="rgba(126,33,46,.25)" stroke="#274468" stroke-width="1.4"/>'
     +'<text x="'+cx+'" y="'+(cy+5)+'" text-anchor="middle" font-size="14" fill="#274468" font-family="var(--kai)" style="pointer-events:none">'+(S.customRole?'我':'叶')+'</text></g>';
