@@ -2058,7 +2058,7 @@ function apiModelsRun(){
 
 var LSK='mitsuba_tavern_v1';
 function loadPref(){try{return JSON.parse(localStorage.getItem(LSK)||'{}');}catch(e){return {};}}
-function savePref(){try{localStorage.setItem(LSK,JSON.stringify({device:S.device,muted:S.muted,openingId:S.openingId,customOp:S.customOp||null,customRole:S.customRole||null,history:TH.available?null:S.history.map(function(h){var _iv=(h.imgVers&&(h.imgVers.length>1||(h.imgVers[0]&&h.imgVers[0].length>1)))?h.imgVers:undefined;return {role:h.role,text:h.text,img:h.img||undefined,imgVers:_iv,verIx:(_iv&&h.imgVers.length>1)?h.verIx:undefined,dispSize:h.dispSize||undefined,alts:(h.alts&&h.alts.length>1)?h.alts:undefined,altIx:h.altIx};}),saves:S.saves,mem:S.mem,memOn:S.memOn,memN:S.memN,dice:S.dice?1:0,sugg:S.sugg===false?0:1,chat:S.chatOnly?1:0,mic:S.micOn===false?0:(S.micOn===true?1:undefined),last:Date.now()}));}catch(e){}}
+function savePref(){try{localStorage.setItem(LSK,JSON.stringify({device:S.device,muted:S.muted,openingId:S.openingId,customOp:S.customOp||null,customRole:S.customRole||null,history:TH.available?null:S.history.map(function(h){var _iv=(h.imgVers&&(h.imgVers.length>1||(h.imgVers[0]&&h.imgVers[0].length>1)))?h.imgVers:undefined;return {role:h.role,text:h.text,img:h.img||undefined,imgVers:_iv,verIx:(_iv&&h.imgVers.length>1)?h.verIx:undefined,dispSize:h.dispSize||undefined,alts:(h.alts&&h.alts.length>1)?h.alts:undefined,altIx:h.altIx};}),saves:S.saves,mem:S.mem,memOn:S.memOn,memN:S.memN,dice:S.dice?1:0,sugg:S.sugg===false?0:1,chat:S.chatOnly?1:0,mic:S.micOn===false?0:(S.micOn===true?1:undefined),graphHidden:(S.graphHidden&&S.graphHidden.length)?S.graphHidden:undefined,npcMeta:(S.npcMeta&&Object.keys(S.npcMeta).length)?S.npcMeta:undefined,last:Date.now()}));}catch(e){}}
 
 /* ---------------- 长程记忆 · 编年长卷 ----------------
    每轮世界回应自动摘为一条编年纪要（纪年·时地·玩家之举·记录），永久保存、
@@ -2106,7 +2106,7 @@ function memChronicle(){
 var pref = loadPref();
 var S = {
   screen: 'title', device: pref.device||'auto', openingId: pref.openingId||null,
-  history: [], input:'', mode:'say', thinking:false, aiLive:null, muted:pref.muted||false, dice:!!pref.dice, sugg:pref.sugg!==0, chatOnly:!!pref.chat, micOn:(pref.mic===0?false:(pref.mic===1?true:null)),
+  history: [], input:'', mode:'say', thinking:false, aiLive:null, muted:pref.muted||false, dice:!!pref.dice, sugg:pref.sugg!==0, chatOnly:!!pref.chat, micOn:(pref.mic===0?false:(pref.mic===1?true:null)),graphHidden:pref.graphHidden||[], npcMeta:pref.npcMeta||{}, _npcMetaBusy:null,
   overlay:null, tab:'story', secC:true, secN:true, secP:true, secW:true, secG:true,secS:true, secA:true,
   codexCat:'核心', codexIdx:0, saves:pref.saves||[], connected:TH.available,
   mem:pref.mem||[], memOn:pref.memOn!==false, memN:pref.memN||0,
@@ -3741,10 +3741,10 @@ function npcStats(){
       if(disp&&disp.length<o.name.length)o.name=disp;
       if(np.favor!=null)o.favor=np.favor;
       if(np.state)o.state=np.state;
-      if(np.thought)o.thought=np.thought;
+      if(np.thought)o.thought=np.thought;if(np.role)o.role=np.role;if(np.place)o.place=np.place;if(np.age)o.age=np.age;if(np.sex)o.sex=np.sex;
     });
   });
-  return order.map(function(k){return map[k];});
+  var pre=presetNpcMeta(),preK={};Object.keys(pre).forEach(function(nm){preK[npcKey(nm)]=pre[nm];});var meta=S.npcMeta||{};return order.map(function(k){var o=map[k];var pm=pre[o.name]||preK[k];if(pm){if(!o.role&&pm.role)o.role=pm.role;if(!o.place&&pm.place)o.place=pm.place;if(!o.age&&pm.age)o.age=pm.age;if(!o.sex&&pm.sex)o.sex=pm.sex;}var mm=meta[o.name]||meta[k];if(mm){if(!o.role&&mm.role)o.role=mm.role;if(!o.place&&mm.place)o.place=mm.place;if(!o.age&&mm.age)o.age=mm.age;if(!o.sex&&mm.sex)o.sex=mm.sex;}return o;}).filter(function(o){return (S.graphHidden||[]).indexOf(o.name)<0;});
 }
 /* 好感度记忆：把曾登场每个人物的最近好感与近况汇成一段，注入系统提示——
    人物暂时离场也不「健忘」，再登场须自此值续演，不得凭空重置或乱跳。 */
@@ -3755,74 +3755,238 @@ function npcFavorDigest(){
   });
   return rows.length?rows.join('\n'):'';
 }
+function npcPairs(){
+  var hid=S.graphHidden||[],pc={};
+  S.history.forEach(function(h){
+    if(h.role!=='world')return;var p=h.panel||(h.panel=parseMvu(h.text));if(!p||!p.npcs)return;
+    var names=[];p.npcs.forEach(function(np){if(np&&np.name&&hid.indexOf(np.name)<0&&names.indexOf(np.name)<0)names.push(np.name);});
+    for(var i=0;i<names.length;i++)for(var j=i+1;j<names.length;j++){var a=names[i],b=names[j];var k=a<b?a+'\u0001'+b:b+'\u0001'+a;pc[k]=(pc[k]||0)+1;}
+  });
+  return pc;
+}
+function presetNpcMeta(){
+  try{
+    var op=currentOpening();if(!op||!op.text)return {};
+    var p=parseMvu(op.text);if(!p||!p.npcs)return {};
+    var m={};p.npcs.forEach(function(np){if(np&&np.name)m[np.name]={role:np.role||'',place:np.place||'',age:np.age||'',sex:np.sex||''};});
+    return m;
+  }catch(e){return {};}
+}
+var NPCMETA_SYS='你是人物设定提取器。下面给你一个近世欧陆（法国大革命风的架空世界「罗泽利亚」）角色扮演游戏里某NPC的历次出场片段，请推断其四项固定资料。只输出一个JSON对象，不要任何解释、不要代码块围栏：\n{"role":"其人身份或职业，如 炮兵科学生/元帅/侍女/议员/主教，尽量简短(≤5字)","place":"最近所在地","age":"年龄，可填数字或如 约四十","sex":"男 或 女"}\n凡片段中确实无从判断的字段，填空字符串""。';
+function npcMetaContext(name){
+  var out=[];
+  for(var i=0;i<S.history.length;i++){
+    var h=S.history[i];if(h.role!=='world')continue;
+    var p=h.panel||(h.panel=parseMvu(h.text));
+    if(p&&p.npcs)p.npcs.forEach(function(np){if(np&&np.name===name&&(np.state||np.thought))out.push('◈'+name+'｜'+(np.state||'')+(np.thought?'｜心声:'+np.thought:''));});
+    var txt=stripCoT(stripMvu(h.text));var idx=txt.indexOf(name);
+    if(idx>=0)out.push(txt.slice(Math.max(0,idx-46),idx+140).replace(/\s+/g,' '));
+  }
+  return out.slice(-16).join('\n').slice(0,2200);
+}
+function npcMetaParse(t){
+  t=String(t||'');var m=/\{[\s\S]*\}/.exec(t);if(!m)return null;
+  try{var o=JSON.parse(m[0]);var sx=String(o.sex||'').trim();sx=/女/.test(sx)?'女':(/男/.test(sx)?'男':'');
+    return {role:String(o.role||'').trim().slice(0,12),place:String(o.place||'').trim().slice(0,16),age:String(o.age||'').trim().slice(0,10),sex:sx};}catch(e){return null;}
+}
+function npcMetaFill(name){
+  if(!name||S._npcMetaBusy||!apiReady())return;
+  if(!S.npcMeta)S.npcMeta={};
+  var ctx=npcMetaContext(name);if(!ctx)return;
+  S._npcMetaBusy=name;
+  var c0=document.getElementById('zjGraphCard');if(c0&&S.memNpc===name)c0.innerHTML=graphCardHtml();
+  callAuxAI(NPCMETA_SYS,[{role:'user',content:'【NPC】'+name+'\n【历次出场片段】\n'+ctx}]).then(function(t){
+    S.npcMeta[name]=npcMetaParse(t)||{role:'',place:'',age:'',sex:''};savePref();
+  },function(){S.npcMeta[name]={role:'',place:'',age:'',sex:''};}).then(function(){
+    S._npcMetaBusy=null;var c1=document.getElementById('zjGraphCard');if(c1&&S.memNpc===name)c1.innerHTML=graphCardHtml();
+  });
+}
 function graphInner(){
   var ns=npcStats();
   if(!ns.length)return '<div style="padding:18px 0 6px;text-align:center;font-size:12px;letter-spacing:.2em;color:#6e5f4b;line-height:2">尚无人物入络<br>与 NPC 相逢相知后，此处自动结成关系网</div>';
-  ns=ns.slice(-10); /* 至多画10人，取最近出场者 */
-  var W=360,H=Math.max(320,215+ns.length*16),cx=W/2,cy=H/2,R=Math.min(W,H)/2-56;
-  var lines='',nodes='';
-  ns.forEach(function(o,i){
-    var ang=-Math.PI/2+i*2*Math.PI/ns.length;
-    var x=cx+R*Math.cos(ang),y=cy+R*Math.sin(ang);
+  var vis={};ns.forEach(function(o){vis[o.name]=1;});
+  var pc=npcPairs();
+  var adj={'__c':[]};ns.forEach(function(o){adj[o.name]=[];});
+  var gnames=ns.map(function(o){return o.name;}),gidx={};ns.forEach(function(o){gidx[o.name]=o;});
+  Object.keys(pc).forEach(function(k){var ab=k.split('\u0001');if(!vis[ab[0]]||!vis[ab[1]])return;adj[ab[0]].push(ab[1]);adj[ab[1]].push(ab[0]);});
+  var guf={};gnames.forEach(function(n){guf[n]=n;});
+  function gfind(x){while(guf[x]!==x){guf[x]=guf[guf[x]];x=guf[x];}return x;}
+  Object.keys(pc).forEach(function(k){var ab=k.split('\u0001');if(!vis[ab[0]]||!vis[ab[1]])return;var ra=gfind(ab[0]),rb=gfind(ab[1]);if(ra!==rb)guf[ra]=rb;});
+  var gcl={};gnames.forEach(function(n){var r=gfind(n);(gcl[r]=gcl[r]||[]).push(n);});
+  var hub={},anyHub=false,bestCl=null,bestTot=-1;
+  Object.keys(gcl).forEach(function(r){
+    var mem=gcl[r],maxN=0,tot=0,anchor=mem[0];
+    mem.forEach(function(m){var nn=gidx[m].n||0;tot+=nn;if(nn>maxN)maxN=nn;
+      if(nn>(gidx[anchor].n||0)||(nn===(gidx[anchor].n||0)&&(gidx[m].favor||0)>(gidx[anchor].favor||0)))anchor=m;});
+    if(maxN>=2){mem.forEach(function(m){if((gidx[m].n||0)>=2){hub[m]=1;anyHub=true;}});}
+    if(tot>bestTot){bestTot=tot;bestCl=anchor;}
+  });
+  if(!anyHub&&bestCl)hub[bestCl]=1;
+  gnames.forEach(function(n){if(hub[n]){adj['__c'].push(n);adj[n].push('__c');}});
+  var depthOf={'__c':0},parent={},seen={'__c':1},q=['__c'];
+  while(q.length){var cur=q.shift();(adj[cur]||[]).forEach(function(nb){if(!seen[nb]){seen[nb]=1;depthOf[nb]=depthOf[cur]+1;parent[nb]=cur;q.push(nb);}});}
+  var floated=[];ns.forEach(function(o){if(!seen[o.name])floated.push(o.name);});
+  var kidsOf={'__c':[]};ns.forEach(function(o){if(seen[o.name]){var pp=parent[o.name];(kidsOf[pp]=kidsOf[pp]||[]).push(o.name);}});
+  var maxD=1;ns.forEach(function(o){if((depthOf[o.name]||0)>maxD)maxD=depthOf[o.name];});
+  var depN={};ns.forEach(function(o){if(seen[o.name]){var dd=depthOf[o.name];depN[dd]=(depN[dd]||0)+1;}});
+  var ring=84,radAt={};
+  for(var di=1;di<=maxD;di++){radAt[di]=Math.max(ring*di,(depN[di]||1)*9);}
+  for(var dj=2;dj<=maxD;dj++){if(radAt[dj]<radAt[dj-1]+ring)radAt[dj]=radAt[dj-1]+ring;}
+  var coreR=radAt[maxD]||ring;
+  var floatR=Math.max(coreR+ring*0.9,(floated.length||1)*8.6);
+  var maxR=Math.max(coreR,floatR),W=Math.round((maxR+48)*2),H=W,cx=W/2,cy=H/2;
+  function leafN(nm){var k=kidsOf[nm]||[];if(!k.length)return 1;var s=0;k.forEach(function(c){s+=leafN(c);});return s;}
+  var pos={'__c':{x:cx,y:cy}};
+  function lay(nm,a0,a1,depth){
+    var kids=kidsOf[nm]||[];if(!kids.length)return;
+    var tot=0;kids.forEach(function(c){tot+=leafN(c);});
+    var a=a0;
+    kids.forEach(function(c){
+      var span=(a1-a0)*(leafN(c)/tot),mid=a+span/2,rr=radAt[depthOf[c]]||ring;
+      pos[c]={x:cx+rr*Math.cos(mid),y:cy+rr*Math.sin(mid)};
+      lay(c,a,a+span,depth+1);a+=span;
+    });
+  }
+  lay('__c',-Math.PI/2,-Math.PI/2+2*Math.PI,0);
+  var fseen={},ford=[];
+  floated.forEach(function(st){if(fseen[st])return;var qq=[st];fseen[st]=1;while(qq.length){var cc=qq.shift();ford.push(cc);(adj[cc]||[]).forEach(function(nb){if(floated.indexOf(nb)>=0&&!fseen[nb]){fseen[nb]=1;qq.push(nb);}});}});
+  ford.forEach(function(nm,i){var ang=-Math.PI/2+(i+0.5)*2*Math.PI/ford.length;pos[nm]={x:cx+floatR*Math.cos(ang),y:cy+floatR*Math.sin(ang)};});
+  var hubLines='';
+  ns.forEach(function(o){
+    if(!hub[o.name])return;
+    var cp=pos[o.name]||{x:cx,y:cy},pp=pos['__c'];
     var fv=Number(o.favor);if(!isFinite(fv))fv=50;
     var col=fv>=70?'#3c6494':fv>=40?'#8f7430':'#96323f';
-    var wdt=(1+Math.min(3,o.n/3)).toFixed(1);
     var sel=S.memNpc===o.name;
-    lines+='<line data-ln="'+esc(o.name)+'" x1="'+cx+'" y1="'+cy+'" x2="'+x.toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="'+col+'" stroke-opacity="'+(sel?'.9':'.45')+'" stroke-width="'+wdt+'"/>';
-    var _nm=String(o.name),_nl=_nm.length;
-    var _nshow=_nl>6?_nm.slice(0,6):_nm;
-    var _nfs=_nl<=2?13.5:_nl===3?11.5:_nl===4?10:_nl===5?8.6:7.6;
+    hubLines+='<line data-a="__c" data-b="'+esc(o.name)+'" x1="'+pp.x.toFixed(1)+'" y1="'+pp.y.toFixed(1)+'" x2="'+cp.x.toFixed(1)+'" y2="'+cp.y.toFixed(1)+'" stroke="'+col+'" stroke-opacity="'+(sel?'.92':'.5')+'" stroke-width="'+(1+Math.min(2.4,o.n/3)).toFixed(1)+'"/>';
+  });
+  var webLines='';
+  Object.keys(pc).forEach(function(k){
+    var ab=k.split('\u0001');if(!vis[ab[0]]||!vis[ab[1]])return;
+    var a=pos[ab[0]],b=pos[ab[1]],cnt=pc[k];if(!a||!b)return;
+    var w=Math.min(2.2,.5+cnt*.35);
+    var seld=(S.memNpc===ab[0]||S.memNpc===ab[1]);
+    webLines+='<line data-a="'+esc(ab[0])+'" data-b="'+esc(ab[1])+'" x1="'+a.x.toFixed(1)+'" y1="'+a.y.toFixed(1)+'" x2="'+b.x.toFixed(1)+'" y2="'+b.y.toFixed(1)+'" stroke="#9a8a6a" stroke-opacity="'+(seld?'.7':'.34')+'" stroke-width="'+w.toFixed(1)+'"/>';
+  });
+  var lines=webLines+hubLines;
+  var nodes='';
+  ns.forEach(function(o){
+    var x=pos[o.name].x,y=pos[o.name].y;
+    var fv=Number(o.favor);if(!isFinite(fv))fv=50;
+    var col=fv>=70?'#3c6494':fv>=40?'#8f7430':'#96323f';
+    var sel=S.memNpc===o.name;
+    var _pn=String(o.name),_pl=_pn.length,_pshow=_pl>6?_pn.slice(0,6):_pn;
+    var _pfs=_pl<=2?13.5:_pl===3?11.5:_pl===4?10:_pl===5?8.6:7.6;
     nodes+='<g data-npc="'+esc(o.name)+'" style="cursor:grab">'
-      +'<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="24" fill="rgba(255,253,246,.55)" stroke="'+col+'" stroke-width="'+(sel?2.2:1.2)+'"/>'
-      +'<text x="'+x.toFixed(1)+'" y="'+(y-2).toFixed(1)+'" text-anchor="middle" font-size="'+_nfs+'" fill="'+(sel?'#274468':'#3a3024')+'" font-family="var(--kai)" style="pointer-events:none">'+esc(_nshow)+'</text>'
+      +'<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="22" fill="rgba(255,253,246,.72)" stroke="'+col+'" stroke-width="'+(sel?2.4:1.2)+'"/>'
+      +'<text x="'+x.toFixed(1)+'" y="'+(y-2).toFixed(1)+'" text-anchor="middle" font-size="'+_pfs+'" fill="'+(sel?'#274468':'#3a3024')+'" font-family="var(--kai)" style="pointer-events:none">'+esc(_pshow)+'</text>'
       +'<text x="'+x.toFixed(1)+'" y="'+(y+11).toFixed(1)+'" text-anchor="middle" font-size="8.5" fill="'+col+'" style="pointer-events:none">'+fv+'</text></g>';
   });
   var center='<g data-gcenter="1" style="cursor:grab"><circle cx="'+cx+'" cy="'+cy+'" r="26" fill="rgba(126,33,46,.25)" stroke="#274468" stroke-width="1.4"/>'
     +'<text x="'+cx+'" y="'+(cy+5)+'" text-anchor="middle" font-size="14" fill="#274468" font-family="var(--kai)" style="pointer-events:none">'+(S.customRole?'我':'叶')+'</text></g>';
-  var card='';
-  if(S.memNpc){
-    var sel2=null;ns.forEach(function(o){if(o.name===S.memNpc)sel2=o;});
-    if(sel2){var fv2=Number(sel2.favor);if(!isFinite(fv2))fv2=50;
-      card='<div style="border:1px solid rgba(58,92,140,.4);border-radius:12px;padding:11px 13px;margin-top:8px;background:rgba(255,255,255,.02)">'
-      +'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="kai" style="font-size:15px;color:var(--gold2)">'+esc(sel2.name)+'</span><span style="font-size:11px;color:var(--mut)">出场 '+sel2.n+' 幕</span>'
-      +'<div style="flex:1;min-width:80px;height:5px;border-radius:3px;background:rgba(255,255,255,.07);overflow:hidden"><div style="width:'+Math.max(2,Math.min(100,fv2))+'%;height:100%;background:linear-gradient(90deg,#96323f,#8f7430,#3c6494)"></div></div>'
-      +'<span style="font-size:11px;color:var(--gold3)">好感 '+fv2+'</span></div>'
-      +(sel2.state?'<div style="font-size:12px;color:var(--ink2);margin-top:6px">近况：'+esc(sel2.state)+'</div>':'')
-      +(sel2.thought?'<div style="font-size:12px;color:#5d5142;margin-top:3px;line-height:1.7;color:#6b4f8e">心声：'+esc(sel2.thought)+'</div>':'')+'</div>';}
-  }
-  return '<div style="font-size:11px;color:var(--mut);line-height:1.7;margin:2px 0 2px">线愈粗缘愈深，色由好感定：<span style="color:#3e7256">青亲厚</span> · <span style="color:#3c5a86">金平和</span> · <span style="color:#96323f">赤疏恶</span>。小球可拖拽把玩，轻点看详情。</div>'
-    +'<svg id="zjGraphSvg" viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block;touch-action:none">'+lines+center+nodes+'</svg>'+card;
+  var hid=(S.graphHidden||[]).length;
+  var resetLine=hid?'<div style="text-align:right;margin-top:6px"><span class="btn" data-act="npcUnhide" style="cursor:pointer;font-size:11px;color:var(--mut)">已移除 '+hid+' 人 · 还原全部</span></div>':'';
+  return '<div style="font-size:11px;color:var(--mut);line-height:1.7;margin:2px 0 2px">蛛网人物图：常现之人系于你、结成你的一张网（连线色由好感定 <span style="color:#3c6494">青亲</span>·<span style="color:#8f7430">金平</span>·<span style="color:#96323f">赤疏</span>）；同幕共处者以金丝互连，可自成一网、亦可多网相牵；孤身偶现者自在漂浮。小球可拖拽，轻点看详情、移除重复球——手机双指、电脑滚轮放大细看，拖背景平移。</div>'
+    +'<div id="zjGraphWrap" style="position:relative;border-radius:12px;overflow:hidden">'
+    +'<svg id="zjGraphSvg" data-bw="'+W+'" data-bh="'+H+'" viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block;touch-action:none">'+lines+center+nodes+'</svg>'
+    +'<span data-act="graphZoomReset" class="btn" style="position:absolute;right:8px;bottom:8px;font-size:11px;color:var(--mut);background:rgba(246,240,226,.82);border:1px solid rgba(58,92,140,.3);border-radius:8px;padding:3px 10px;cursor:pointer">复位</span>'
+    +'</div>'
+    +'<div id="zjGraphCard">'+graphCardHtml()+'</div>'+resetLine;
 }
-/* 图谱小球联动拖拽：弹簧回位物理 */
+function graphCardHtml(){
+  if(!S.memNpc)return '';
+  var ns=npcStats(),sel2=null;ns.forEach(function(o){if(o.name===S.memNpc)sel2=o;});
+  if(!sel2)return '';
+  var fv2=Number(sel2.favor);if(!isFinite(fv2))fv2=50;
+  var lack=(!sel2.role||!sel2.place||!sel2.age||!sel2.sex);
+  if(lack&&apiReady()&&S.npcMeta&&!S.npcMeta[sel2.name]&&S._npcMetaBusy!==sel2.name)setTimeout(function(){npcMetaFill(sel2.name);},30);
+  var busy=(S._npcMetaBusy===sel2.name);
+  var redo=apiReady()?'<div class="btn" data-act="npcMetaRedo" style="cursor:pointer;font-size:11.5px;color:var(--gold3);border:1px solid rgba(58,92,140,.3);border-radius:8px;padding:4px 12px;margin-right:auto">↻ 重新推断资料</div>':'';
+  return '<div class="fade" style="border:1px solid rgba(58,92,140,.4);border-radius:12px;padding:11px 13px;margin-top:8px;background:rgba(255,255,255,.02)">'
+    +'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="kai" style="font-size:15px;color:var(--gold2)">'+esc(sel2.name)+'</span><span style="font-size:11px;color:var(--mut)">出场 '+sel2.n+' 幕</span>'
+    +'<div style="flex:1;min-width:80px;height:5px;border-radius:3px;background:rgba(255,255,255,.07);overflow:hidden"><div style="width:'+Math.max(2,Math.min(100,fv2))+'%;height:100%;background:linear-gradient(90deg,#96323f,#8f7430,#3c6494)"></div></div>'
+    +'<span style="font-size:11px;color:var(--gold3)">好感 '+fv2+'</span></div>'
+    +((sel2.role||sel2.sex||sel2.age||sel2.place)?'<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">'
+      +(sel2.role?'<span style="font-size:11px;color:var(--gold3);border:1px solid rgba(58,92,140,.35);border-radius:7px;padding:2px 9px">'+esc(sel2.role)+'</span>':'')
+      +(sel2.sex?'<span style="font-size:11px;color:var(--mut);border:1px solid rgba(58,92,140,.2);border-radius:7px;padding:2px 9px">'+esc(sel2.sex)+'</span>':'')
+      +(sel2.age?'<span style="font-size:11px;color:var(--mut);border:1px solid rgba(58,92,140,.2);border-radius:7px;padding:2px 9px">'+esc(sel2.age)+(/^\d+$/.test(String(sel2.age))?'岁':'')+'</span>':'')
+      +(sel2.place?'<span style="font-size:11px;color:var(--mut);border:1px solid rgba(58,92,140,.2);border-radius:7px;padding:2px 9px">在·'+esc(sel2.place)+'</span>':'')
+      +'</div>':'')
+    +(sel2.state?'<div style="font-size:12px;color:var(--ink2);margin-top:6px;line-height:1.7">近况：'+esc(sel2.state)+'</div>':'')
+    +(sel2.thought?'<div style="font-size:12px;color:#6b4f8e;margin-top:3px;line-height:1.7">心声：'+esc(sel2.thought)+'</div>':'')
+    +(busy?'<div style="font-size:11px;color:var(--gold3);margin-top:7px;line-height:1.7;opacity:.85">✦ 正据出场记录推断身份/所在/年龄/性别…</div>':'')
+    +'<div style="display:flex;align-items:center;gap:8px;margin-top:8px">'+redo+'<div class="btn" data-act="npcDrop" style="cursor:pointer;font-size:11.5px;color:#96323f;border:1px solid rgba(126,33,46,.4);border-radius:8px;padding:4px 12px">移除此球</div></div></div>';
+}
+function graphSelect(nm){
+  S.memNpc=(nm&&S.memNpc!==nm)?nm:null;
+  var svg=document.getElementById('zjGraphSvg');
+  if(svg){
+    [].forEach.call(svg.querySelectorAll('g[data-npc]'),function(g){
+      var selc=g.getAttribute('data-npc')===S.memNpc,c=g.querySelector('circle'),ts=g.querySelectorAll('text');
+      if(c)c.setAttribute('stroke-width',selc?2.4:1.2);
+      if(ts[0])ts[0].setAttribute('fill',selc?'#274468':'#3a3024');
+    });
+    [].forEach.call(svg.querySelectorAll('line[data-b]'),function(l){
+      var a=l.getAttribute('data-a'),b=l.getAttribute('data-b'),touch=(a===S.memNpc||b===S.memNpc),isHub=(a==='__c');
+      l.setAttribute('stroke-opacity',touch?(isHub?'.92':'.7'):(isHub?'.5':'.34'));
+    });
+  }
+  var card=document.getElementById('zjGraphCard');if(card)card.innerHTML=graphCardHtml();
+}
+var GZOOM={s:1,vx:0,vy:0};
+function gzApplyVB(svg,BW,BH){
+  if(GZOOM.s<1)GZOOM.s=1;if(GZOOM.s>6)GZOOM.s=6;
+  var vw=BW/GZOOM.s,vh=BH/GZOOM.s;
+  if(GZOOM.vx>BW-vw)GZOOM.vx=BW-vw;if(GZOOM.vx<0)GZOOM.vx=0;
+  if(GZOOM.vy>BH-vh)GZOOM.vy=BH-vh;if(GZOOM.vy<0)GZOOM.vy=0;
+  svg.setAttribute('viewBox',GZOOM.vx.toFixed(1)+' '+GZOOM.vy.toFixed(1)+' '+vw.toFixed(1)+' '+vh.toFixed(1));
+}
+function gzZoom(svg,BW,BH,clientX,clientY,factor){
+  var r=svg.getBoundingClientRect();if(!r.width||!r.height)return;
+  var vw=BW/GZOOM.s,vh=BH/GZOOM.s;
+  var rx=(clientX-r.left)/r.width,ry=(clientY-r.top)/r.height;
+  var sx=GZOOM.vx+rx*vw,sy=GZOOM.vy+ry*vh;
+  var ns=GZOOM.s*factor;if(ns<1)ns=1;if(ns>6)ns=6;GZOOM.s=ns;
+  GZOOM.vx=sx-rx*(BW/ns);GZOOM.vy=sy-ry*(BH/ns);
+  gzApplyVB(svg,BW,BH);
+}
+function gzPan(svg,BW,BH,dx,dy){
+  var r=svg.getBoundingClientRect();if(!r.width||!r.height)return;
+  GZOOM.vx-=dx*(BW/GZOOM.s/r.width);GZOOM.vy-=dy*(BH/GZOOM.s/r.height);
+  gzApplyVB(svg,BW,BH);
+}
+function gzReset(){var svg=document.getElementById('zjGraphSvg');if(!svg)return;GZOOM.s=1;GZOOM.vx=0;GZOOM.vy=0;gzApplyVB(svg,+svg.getAttribute('data-bw')||360,+svg.getAttribute('data-bh')||360);}
 var GPH={drag:null,raf:0,squelch:false};
 function graphHydrate(){
   var svg=document.getElementById('zjGraphSvg');
   if(!svg||svg.__gph)return;
   svg.__gph=1;
-  var nodes=[];
+  var BW=+svg.getAttribute('data-bw')||360,BH=+svg.getAttribute('data-bh')||360;
+  gzApplyVB(svg,BW,BH);
+  var byName={},nodes=[];
   [].forEach.call(svg.querySelectorAll('g[data-npc]'),function(g){
     var c=g.querySelector('circle');if(!c)return;
-    var nm=g.getAttribute('data-npc'),ln=null;
-    [].forEach.call(svg.querySelectorAll('line[data-ln]'),function(l){if(l.getAttribute('data-ln')===nm)ln=l;});
     var x=parseFloat(c.getAttribute('cx')),y=parseFloat(c.getAttribute('cy'));
-    nodes.push({g:g,c:c,ts:g.querySelectorAll('text'),ln:ln,x0:x,y0:y,x:x,y:y,vx:0,vy:0,ox:0,oy:0});
+    var nd={g:g,c:c,ts:g.querySelectorAll('text'),x0:x,y0:y,x:x,y:y,vx:0,vy:0,ox:0,oy:0};
+    nodes.push(nd);byName[g.getAttribute('data-npc')]=nd;
   });
-  var allLn=[].slice.call(svg.querySelectorAll('line[data-ln]'));
   var cg=svg.querySelector('g[data-gcenter]');
   if(cg){var cc0=cg.querySelector('circle');
     if(cc0){var cxx=parseFloat(cc0.getAttribute('cx')),cyy=parseFloat(cc0.getAttribute('cy'));
-      nodes.push({g:cg,c:cc0,ts:cg.querySelectorAll('text'),ln:null,lns:allLn,isC:true,x0:cxx,y0:cyy,x:cxx,y:cyy,vx:0,vy:0,ox:0,oy:0});}}
+      var cn={g:cg,c:cc0,ts:cg.querySelectorAll('text'),isC:true,x0:cxx,y0:cyy,x:cxx,y:cyy,vx:0,vy:0,ox:0,oy:0};
+      nodes.push(cn);byName['__c']=cn;}}
   if(!nodes.length)return;
+  var edges=[];
+  [].forEach.call(svg.querySelectorAll('line[data-a]'),function(l){
+    var a=byName[l.getAttribute('data-a')],bb=byName[l.getAttribute('data-b')];
+    if(a&&bb)edges.push({el:l,a:a,b:bb});
+  });
+  function updEdges(){edges.forEach(function(e){e.el.setAttribute('x1',e.a.x);e.el.setAttribute('y1',e.a.y);e.el.setAttribute('x2',e.b.x);e.el.setAttribute('y2',e.b.y);});}
   function apply(n){
     n.c.setAttribute('cx',n.x);n.c.setAttribute('cy',n.y);
-    if(n.isC){
-      if(n.ts[0]){n.ts[0].setAttribute('x',n.x);n.ts[0].setAttribute('y',n.y+5);}
-      if(n.lns)n.lns.forEach(function(l){l.setAttribute('x1',n.x);l.setAttribute('y1',n.y);});
-      return;
-    }
+    if(n.isC){if(n.ts[0]){n.ts[0].setAttribute('x',n.x);n.ts[0].setAttribute('y',n.y+5);}return;}
     if(n.ts[0]){n.ts[0].setAttribute('x',n.x);n.ts[0].setAttribute('y',n.y-2);}
     if(n.ts[1]){n.ts[1].setAttribute('x',n.x);n.ts[1].setAttribute('y',n.y+11);}
-    if(n.ln){n.ln.setAttribute('x2',n.x);n.ln.setAttribute('y2',n.y);}
   }
   function step(){
     var act=false;
@@ -3834,43 +3998,42 @@ function graphHydrate(){
       if(Math.abs(n.vx)+Math.abs(n.vy)+Math.abs(tx-n.x)+Math.abs(ty-n.y)>.15)act=true;
       apply(n);
     });
+    updEdges();
     GPH.raf=act?requestAnimationFrame(step):0;
   }
   function kick(){if(!GPH.raf)GPH.raf=requestAnimationFrame(step);}
   function pt(e){var q=svg.createSVGPoint();q.x=e.clientX;q.y=e.clientY;var m=svg.getScreenCTM();return m?q.matrixTransform(m.inverse()):{x:0,y:0};}
+  GPH.ptrs={};
+  function actN(){return Object.keys(GPH.ptrs).length;}
+  function nAt(g){var n=null;nodes.forEach(function(x){if(x.g===g)n=x;});return n;}
+  function pinchInit(){var ids=Object.keys(GPH.ptrs),a=GPH.ptrs[ids[0]],b=GPH.ptrs[ids[1]];GPH._pinch={d:Math.hypot(a.x-b.x,a.y-b.y)||1,mx:(a.x+b.x)/2,my:(a.y+b.y)/2};}
+  function pinchMove(){var ids=Object.keys(GPH.ptrs);if(ids.length<2)return;var a=GPH.ptrs[ids[0]],b=GPH.ptrs[ids[1]];var d=Math.hypot(a.x-b.x,a.y-b.y)||1,mx=(a.x+b.x)/2,my=(a.y+b.y)/2;var pcx=GPH._pinch;if(!pcx){GPH._pinch={d:d,mx:mx,my:my};return;}gzZoom(svg,BW,BH,mx,my,d/pcx.d);gzPan(svg,BW,BH,mx-pcx.mx,my-pcx.my);GPH._pinch={d:d,mx:mx,my:my};}
   svg.addEventListener('pointerdown',function(e){
+    GPH.ptrs[e.pointerId]={x:e.clientX,y:e.clientY};
+    if(actN()>=2){if(GPH.drag){GPH.drag=null;nodes.forEach(function(o){o.ox=0;o.oy=0;});kick();}GPH.pan=null;pinchInit();e.preventDefault();return;}
     var g=e.target&&e.target.closest?e.target.closest('g[data-npc],g[data-gcenter]'):null;
-    if(!g)return;
-    var n=null;nodes.forEach(function(x){if(x.g===g)n=x;});
-    if(!n)return;
-    GPH.drag=n;n._moved=0;n._sx=e.clientX;n._sy=e.clientY;
+    var n=g?nAt(g):null;
+    if(n){GPH.drag=n;n._moved=0;n._sx=e.clientX;n._sy=e.clientY;kick();}
+    else{GPH.pan={lx:e.clientX,ly:e.clientY};}
     try{svg.setPointerCapture(e.pointerId);}catch(ex){}
-    e.preventDefault();kick();
+    e.preventDefault();
   });
   svg.addEventListener('pointermove',function(e){
-    var n=GPH.drag;if(!n)return;
-    var q=pt(e);
-    n._moved=Math.max(n._moved||0,Math.abs(e.clientX-n._sx)+Math.abs(e.clientY-n._sy));
-    n.x=q.x;n.y=q.y;apply(n);
-    var dx=n.x-n.x0,dy=n.y-n.y0;
-    nodes.forEach(function(o){
-      if(o===n)return;
-      var dd=Math.hypot(o.x0-n.x0,o.y0-n.y0)||1;
-      var w=Math.min(.42,21/dd);
-      o.ox=dx*w;o.oy=dy*w;
-    });
-    kick();
+    if(GPH.ptrs[e.pointerId])GPH.ptrs[e.pointerId]={x:e.clientX,y:e.clientY};
+    if(actN()>=2){pinchMove();e.preventDefault();return;}
+    if(GPH.drag){var n=GPH.drag,q=pt(e);n._moved=Math.max(n._moved||0,Math.abs(e.clientX-n._sx)+Math.abs(e.clientY-n._sy));n.x=q.x;n.y=q.y;apply(n);updEdges();var dx=n.x-n.x0,dy=n.y-n.y0;nodes.forEach(function(o){if(o===n)return;var dd=Math.hypot(o.x0-n.x0,o.y0-n.y0)||1;var w=Math.min(.42,21/dd);o.ox=dx*w;o.oy=dy*w;});kick();}
+    else if(GPH.pan){gzPan(svg,BW,BH,e.clientX-GPH.pan.lx,e.clientY-GPH.pan.ly);GPH.pan.lx=e.clientX;GPH.pan.ly=e.clientY;}
   });
-  function gup(){
-    var n=GPH.drag;if(!n)return;
-    GPH.drag=null;
-    if((n._moved||0)>7){GPH.squelch=true;setTimeout(function(){GPH.squelch=false;},350);}
-    else if(!n.isC){var _nm=n.g.getAttribute('data-npc');if(_nm){GPH.squelch=true;setTimeout(function(){GPH.squelch=false;},350);S.memNpc=(S.memNpc===_nm?null:_nm);var _gb=document.getElementById('zjGraphBox');if(_gb){_gb.innerHTML=graphInner();try{graphHydrate();}catch(_e){}}else{S._noFade=true;render();}return;}}
-    nodes.forEach(function(o){o.ox=0;o.oy=0;});
-    kick();
+  function gup(e){
+    if(e&&e.pointerId!=null)delete GPH.ptrs[e.pointerId];
+    if(actN()<2)GPH._pinch=null;
+    if(actN()>0)return;
+    if(GPH.drag){var n=GPH.drag;GPH.drag=null;var tap=(n._moved||0)<=10;nodes.forEach(function(o){o.ox=0;o.oy=0;});kick();GPH.squelch=true;setTimeout(function(){GPH.squelch=false;},400);if(tap){graphSelect(n.g.getAttribute('data-npc'));}}
+    GPH.pan=null;
   }
   svg.addEventListener('pointerup',gup);
   svg.addEventListener('pointercancel',gup);
+  svg.addEventListener('wheel',function(e){e.preventDefault();gzZoom(svg,BW,BH,e.clientX,e.clientY,e.deltaY<0?1.15:1/1.15);},{passive:false});
 }
 function axisInner(){
   var ms=S.mem||[];
@@ -5135,7 +5298,7 @@ root.addEventListener('click',function(e){
       if(t.getAttribute('data-mtool')){var mtix=parseInt(t.getAttribute('data-mtool'),10)-1;S.msgTools=(S.msgTools===mtix?null:mtix);S.msgEdit=null;S._noFade=true;S._keepScroll=true;S._anchorMsg=mtix;render();return;}
       if(t.getAttribute('data-medit')){S.memEdit=parseInt(t.getAttribute('data-medit'),10)-1;renderOverlay();return;}
       if(t.getAttribute('data-mdel')){S.mem.splice(parseInt(t.getAttribute('data-mdel'),10),1);savePref();renderOverlay();return;}
-      if(t.getAttribute('data-npc')!=null&&t.getAttribute('data-npc')!==''){if(GPH.squelch){GPH.squelch=false;return;}var npv=t.getAttribute('data-npc');S.memNpc=(S.memNpc===npv?null:npv);var _gbz=document.getElementById('zjGraphBox');if(_gbz){_gbz.innerHTML=graphInner();try{graphHydrate();}catch(_e){}}else{S._noFade=true;render();}return;}
+      if(t.getAttribute('data-npc')!=null&&t.getAttribute('data-npc')!==''){if(GPH.squelch){GPH.squelch=false;return;}graphSelect(t.getAttribute('data-npc'));return;}
       if(t.getAttribute('data-sugg')!=null&&t.getAttribute('data-sugg')!==''){if(S.thinking)return;var sgi=parseInt(t.getAttribute('data-sugg'),10);var sgt=(S.suggList||[])[sgi];if(sgt){S.suggList=null;sendText(S.dice?sgt+diceRoll():sgt);}return;}
       if(t.getAttribute('data-settab')){var stb=t.getAttribute('data-settab');if(stb===S.setTab)return;var spo=document.getElementById('zjSetPill');var spr=spo&&spo.getBoundingClientRect();S.setTab=stb;renderOverlay();pillFlip('zjSetPill',spr);return;}
       if(t.getAttribute('data-cat')){var ncat=t.getAttribute('data-cat');if(ncat===S.codexCat)return;var corder=[].map.call(document.querySelectorAll('[data-cat]'),function(x){return x.getAttribute('data-cat');});var cpo=document.getElementById('zjCatPill');var cpr=cpo&&cpo.getBoundingClientRect();var epo=document.getElementById('zjEntPill');var epr=epo&&epo.getBoundingClientRect();
@@ -5215,7 +5378,7 @@ root.addEventListener('click',function(e){
         var su9=location.origin+location.pathname+'#op='+sc9;
         if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(su9).then(function(){S.opMsg='开局链接已复制——发给友人，点开即得同一开局。';render();},function(){prompt('复制此链接分享：',su9);});
         else prompt('复制此链接分享：',su9);}
-      else if(a==='opToggle'){S.opShow=!S.opShow;render();}
+      else if(a==='opToggle'){S.opShow=!S.opShow;render();}else if(a==='graphZoomReset'){gzReset();}else if(a==='npcDrop'){if(S.memNpc){S.graphHidden=(S.graphHidden||[]).concat([S.memNpc]);S.memNpc=null;savePref();S._noFade=true;render();}}else if(a==='npcUnhide'){S.graphHidden=[];savePref();S._noFade=true;render();}else if(a==='npcMetaRedo'){if(S.memNpc){if(S.npcMeta)delete S.npcMeta[S.memNpc];savePref();npcMetaFill(S.memNpc);}return;}
       else if(a==='opImport'){var oc9=document.getElementById('zjOpCode');
         var sh9=parseShareCode(oc9?oc9.value:'');
         if(!sh9){S.opMsg='识别不出：请完整粘贴开局码或分享链接';render();}
