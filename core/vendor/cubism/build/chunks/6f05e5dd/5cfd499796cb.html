@@ -172,7 +172,8 @@ textarea,input{border-radius:10px}
 .slip{height:7px;border-radius:3px;opacity:.75;background:linear-gradient(90deg,transparent 0,#2a4568 14%,#2a4568 38%,#efe8d6 38%,#efe8d6 62%,#7e212e 62%,#7e212e 86%,transparent 100%)}
 .bamboo{background-image:none}
 .bambooV{background-image:none}
-#zjPager.zjSliding #zjStory,#zjPager.zjSliding .bambooV{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+#zjPager.zjSliding #zjStory{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+#zjPager.zjSliding .bambooV{background:rgba(255,253,246,.3)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 #zjPager.zjSliding #zjBotScrim{opacity:0}
 @keyframes flick{0%,100%{transform:scaleY(1);opacity:.95}25%{transform:scaleY(1.18) translateX(.6px);opacity:1}55%{transform:scaleY(.82);opacity:.75}80%{transform:scaleY(1.06) translateX(-.6px);opacity:.9}}
 @keyframes glow{0%,100%{opacity:.4}50%{opacity:.72}}
@@ -2983,7 +2984,7 @@ function sidebar(){
   }).join('')||'<div style="font-size:12px;color:var(--mut);padding:6px 0">场上暂无旁人。</div>';
   var worldRows=['纪年','时地','天气'].filter(function(k){return cw[k];}).map(function(k){return '<div style="display:flex;gap:12px;font-size:13px;line-height:1.7;margin:3px 0"><span style="flex:none;width:2.6em;color:var(--mut)">'+k+'</span><span style="flex:1;color:var(--ink2)">'+esc(cw[k])+'</span></div>';}).join('');
   function head(open,act,color,title,mark){return '<div class="btn" data-act="'+act+'" style="display:flex;align-items:center;gap:10px;padding:12px 15px;cursor:pointer"><span class="diamond" style="background:'+color+'"></span><span class="kai" style="font-size:16px;letter-spacing:.22em;color:var(--gold2);flex:1">'+title+'</span><span style="color:var(--mut);font-size:11px">'+(open?'▾ 收':'▸ 展')+'</span></div>';}
-  return '<div class="bambooV" data-zjzoom style="height:100%;overflow-y:auto;touch-action:pan-y;background:rgba(255,253,246,var(--zjbga,.3));-webkit-backdrop-filter:blur(var(--zjblur,9px)) saturate(180%);backdrop-filter:blur(var(--zjblur,9px)) saturate(180%);zoom:'+FS+';padding-top:'+(isMobile()?(glassUI()?'128px':'100px'):'62px')+';padding-bottom:'+(isMobile()?'calc(78px + env(safe-area-inset-bottom))':'0')+'">'
+  return '<div class="bambooV" data-zjzoom style="height:100%;overflow-y:auto;touch-action:pan-y;background:rgba(245,239,227,.965);transition:background .25s ease;zoom:'+FS+';padding-top:'+(isMobile()?(glassUI()?'128px':'100px'):'62px')+';padding-bottom:'+(isMobile()?'calc(78px + env(safe-area-inset-bottom))':'0')+'">'
     +'<div style="padding:15px 15px 3px"><div class="kai" style="font-size:19px;letter-spacing:.26em;color:var(--gold2);text-align:center">文书馆 · 观剧档案</div><div class="slip" style="margin-top:9px"></div></div>'
     +'<div class="glass" style="margin:11px 12px 0;border-radius:14px">'+head(S.secC,'tgC','var(--red)','我 · 近 况',S.secC)
       +(S.secC?'<div class="fade" style="padding:0 15px 16px">'+charRows
