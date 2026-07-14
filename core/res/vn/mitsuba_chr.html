@@ -5,7 +5,7 @@
   html,body{margin:0;height:100%;background:radial-gradient(ellipse at 50% 25%,#3a3d4d,#22232d 70%);overflow:hidden;
     font-family:-apple-system,'PingFang SC',sans-serif}
   #stage{height:100vh;display:flex;justify-content:center;align-items:flex-start}
-  #fit{transform-origin:50% 0;transition:transform .9s cubic-bezier(.3,.1,.25,1)}
+  #fit{transform-origin:50% 0;transition:transform .9s cubic-bezier(.3,.1,.25,1);visibility:hidden}
   #char{position:relative;width:1200.0px;height:2850.0px;animation:breath 4.4s ease-in-out infinite}
   #char img{position:absolute;user-select:none;-webkit-user-drag:none}
   .grp{position:absolute;inset:0}
@@ -4456,10 +4456,12 @@ function fit(){
     const sp=Math.max(1,(vnWin[1]-vnWin[0]))/100;
     const s=innerHeight/(2850.0*sp);
     $('fit').style.transform=`translateX(${(vnOff*innerWidth).toFixed(0)}px) translateY(${(-vnWin[0]/100*2850.0*s).toFixed(1)}px) scale(${s})`;
+    $('fit').style.visibility='visible';
     return;
   }
   const s=Math.min(innerHeight/2850.0, innerWidth/1200.0)*0.98;
   $('fit').style.transform=`translateX(${(vnOff*innerWidth).toFixed(0)}px) scale(${s})`;
+  $('fit').style.visibility='visible';
 }
 addEventListener('resize',fit);fit();
 /* 海报帧:单张整图先盖住正在逐个解码的 48 层内联立绘,全部解码完成后交叉淡出——
