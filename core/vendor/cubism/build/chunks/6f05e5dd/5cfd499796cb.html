@@ -5003,14 +5003,34 @@ function zenToggle(){
     }
   }
 }
+function paneSlide(dir,fn){
+  var oldPane=document.querySelector('.zjPane');
+  if(reducedMotion()||!oldPane||!oldPane.animate||!oldPane.parentNode){fn();return;}
+  var host=oldPane.parentNode;
+  [].forEach.call(host.querySelectorAll('.zjPane[data-slideold]'),function(x){if(x.parentNode)x.parentNode.removeChild(x);});
+  fn();
+  var newPane=document.querySelector('.zjPane');
+  if(!newPane||newPane===oldPane||!newPane.parentNode){if(oldPane.parentNode)oldPane.parentNode.removeChild(oldPane);return;}
+  var np=newPane.parentNode,fwd=dir>0;
+  oldPane.setAttribute('data-slideold','1');
+  oldPane.style.position='absolute';oldPane.style.left='0';oldPane.style.top='0';oldPane.style.right='0';oldPane.style.bottom='0';oldPane.style.margin='0';oldPane.style.pointerEvents='none';oldPane.style.willChange='transform,opacity';oldPane.style.zIndex=fwd?'1':'3';
+  newPane.style.willChange='transform,opacity';newPane.style.zIndex=fwd?'3':'1';
+  np.appendChild(oldPane);
+  var D=380,E='cubic-bezier(.32,.72,0,1)',aNew;
+  if(fwd){
+    aNew=newPane.animate([{transform:'translateX(100%)'},{transform:'translateX(0)'}],{duration:D,easing:E});
+    oldPane.animate([{transform:'translateX(0)',opacity:1},{transform:'translateX(-26%)',opacity:.55}],{duration:D,easing:E});
+  }else{
+    aNew=newPane.animate([{transform:'translateX(-26%)',opacity:.55},{transform:'translateX(0)',opacity:1}],{duration:D,easing:E});
+    oldPane.animate([{transform:'translateX(0)'},{transform:'translateX(100%)'}],{duration:D,easing:E});
+  }
+  function cleanup(){if(oldPane&&oldPane.parentNode)oldPane.parentNode.removeChild(oldPane);if(newPane){newPane.style.willChange='';newPane.style.zIndex='';}}
+  if(aNew&&aNew.finished&&aNew.finished.then){aNew.finished.then(cleanup,cleanup);}
+  setTimeout(cleanup,D+140);
+}
 function swipeTab(ntb){
   if(ntb!==S.tab&&(ntb==='story'||ntb==='panel')){
-    var _oldTab=S.tab;var tdir=ntb==='panel'?1:-1;
-    vtRender(ntb==='panel'?'zjTab-f':'zjTab-b',function(){S.tab=ntb;render();});
-    if(!reducedMotion()){
-      if(TABISLE){tabIsleAnim(_oldTab,ntb);}
-      else{var pill=document.getElementById('zjTabPill');if(pill&&pill.animate)pill.animate([{transform:'translateX('+(-tdir*103)+'%)'},{transform:'none'}],{duration:340,easing:'cubic-bezier(.3,1.1,.3,1)'});}
-    }
+    paneSlide(ntb==='panel'?1:-1,function(){S.tab=ntb;render();});
   }
 }
 (function(){
