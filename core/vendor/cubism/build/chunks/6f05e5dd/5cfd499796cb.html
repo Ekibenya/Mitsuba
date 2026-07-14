@@ -5002,11 +5002,13 @@ function zenToggle(){
 }
 /* 点正文进出全屏（zen）：纯点击才触发——滑动、选字、点按钮/图片/操作栏/三维场景都不触发；再点一下退出 */
 (function(){
-  var _tx=0,_ty=0,_tt=0,_tmv=false,_tok=false;
+  var _tx=0,_ty=0,_tt=0,_tmv=false,_tok=false,_kbEl=null;
   var _skipSel='button,a,textarea,input,select,img,svg,[data-act],[data-ov],[data-mode],[data-sugg],[data-tab],[data-bgm],[data-cidx],[data-imgprev],[data-imgnext],[data-imgzoom],[data-drawidx],[data-tts],[data-rr],[data-rrfmt],[data-backto],[data-wedit],[data-eye],[contenteditable]';
   root.addEventListener('pointerdown',function(e){
     var story=document.getElementById('zjStory');
     _tok=!!(story&&story.contains(e.target))&&!(e.target.closest&&e.target.closest(_skipSel));
+    var _ae=document.activeElement;
+    _kbEl=(e.pointerType!=='mouse'&&_ae&&(_ae.tagName==='TEXTAREA'||_ae.tagName==='INPUT'||_ae.isContentEditable)&&_ae!==document.body)?_ae:null;
     _tx=e.clientX;_ty=e.clientY;_tt=Date.now();_tmv=false;
   },true);
   root.addEventListener('pointermove',function(e){if(_tok&&(Math.abs(e.clientX-_tx)>8||Math.abs(e.clientY-_ty)>8))_tmv=true;},true);
@@ -5015,6 +5017,7 @@ function zenToggle(){
     if(_tmv||Date.now()-_tt>400)return;
     if(S.overlay||S.worldFull)return;
     var sel=window.getSelection&&window.getSelection();if(sel&&String(sel).length>0)return;
+    if(_kbEl){try{_kbEl.blur();}catch(_e){}_kbEl=null;return;}
     zenToggle();
   },true);
 })();
