@@ -686,7 +686,7 @@ function glInit(){
 
 /* ---------------- BGM: 幕间音乐迷你播放器 ---------------- */
 var BGM_TRACKS=[
-  {t:'La Marseillaise · 马赛曲',a:'Nino Ferrer',src:'core/res/data/idx/v1/7b00ad3944.dat'},
+  {t:'La Marseillaise · 马赛曲',a:'Nino Ferrer',src:'core/res/data/idx/v1/7b00ad3944.dat',s0:0.5},
   {t:'Le ça ira · 一切会好',a:'Édith Piaf',src:'core/res/data/idx/v1/682ab3828b.dat'},
   {t:'L\'Internationale · 国际歌',a:'Armand Mestral',src:'core/res/data/idx/v1/4bb42ce62a.dat'},
   {t:'Le drapeau rouge · 红旗',a:'Les Cœurs Révolutionnaires',src:'core/res/data/idx/v1/8bfd40e7e1.dat'},
@@ -733,7 +733,9 @@ function bgmPlay(i){
   bgmSrc(target,function(u){
     if(!u||target!==BGM.idx)return;
     a.src=u;
-    if(fresh&&typeof i!=='number'&&BGM.t0>1){a.addEventListener('loadedmetadata',function once(){a.removeEventListener('loadedmetadata',once);try{if(BGM.t0<a.duration-5)a.currentTime=BGM.t0;}catch(e){}BGM.t0=0;});}
+    var seek=(typeof i!=='number'&&BGM.t0>1)?BGM.t0:(BGM_TRACKS[target]&&BGM_TRACKS[target].s0||0);
+    BGM.t0=0;
+    if(seek>0.05){a.addEventListener('loadedmetadata',function once(){a.removeEventListener('loadedmetadata',once);try{if(seek<a.duration-5)a.currentTime=seek;}catch(e){}});}
     var p=a.play();if(p&&p.catch)p.catch(function(){});
     bgmSave();
   });
@@ -742,8 +744,12 @@ function bgmToggle(){ var a=bgmEl(); if(BGM.playing)a.pause(); else bgmPlay(); }
 /* 幕间音乐自动开演：进场即试播（自动播放被拦截时，改在玩家第一次触点后开始） */
 (function(){
   function go(){try{if(!BGM.playing&&!S.muted)bgmPlay();}catch(e){}}
-  function arm(){document.addEventListener('pointerdown',function h(){document.removeEventListener('pointerdown',h);setTimeout(go,80);});}
-  setTimeout(function(){go();setTimeout(function(){if(!BGM.playing)arm();},600);},300);
+  function arm(){var h=function(){document.removeEventListener('pointerdown',h,true);document.removeEventListener('touchstart',h,true);document.removeEventListener('keydown',h,true);go();};document.addEventListener('pointerdown',h,true);document.addEventListener('touchstart',h,true);document.addEventListener('keydown',h,true);}
+  try{bgmSrc(BGM.idx,function(){});}catch(e){}
+  arm();
+  go();
+  setTimeout(go,120);
+  setTimeout(function(){if(!BGM.playing)go();},700);
 })();
 function setMuted(m){ S.muted=m; savePref(); if(BGM.el)BGM.el.muted=m; }
 
