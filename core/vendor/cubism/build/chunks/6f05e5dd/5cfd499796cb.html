@@ -5003,6 +5003,39 @@ function zenToggle(){
     }
   }
 }
+function swipeTab(ntb){
+  if(ntb!==S.tab&&(ntb==='story'||ntb==='panel')){
+    var _oldTab=S.tab;var tdir=ntb==='panel'?1:-1;
+    vtRender(ntb==='panel'?'zjTab-f':'zjTab-b',function(){S.tab=ntb;render();});
+    if(!reducedMotion()){
+      if(TABISLE){tabIsleAnim(_oldTab,ntb);}
+      else{var pill=document.getElementById('zjTabPill');if(pill&&pill.animate)pill.animate([{transform:'translateX('+(-tdir*103)+'%)'},{transform:'none'}],{duration:340,easing:'cubic-bezier(.3,1.1,.3,1)'});}
+    }
+  }
+}
+(function(){
+  var _wx=0,_wy=0,_wlx=0,_wly=0,_wt=0,_wok=false;
+  var _wSkip='button,a,textarea,input,select,img,svg,[data-act],[data-ov],[data-mode],[data-sugg],[data-tab],[data-bgm],[data-cidx],[data-imgprev],[data-imgnext],[data-imgzoom],[data-drawidx],[data-tts],[data-rr],[data-rrfmt],[data-backto],[data-wedit],[data-eye],[data-npc],[data-seat],[data-gcenter],[contenteditable]';
+  function _wScrollX(el,pane){var n=el;while(n&&n!==pane){try{if(n.scrollWidth-n.clientWidth>4){var ov=getComputedStyle(n).overflowX;if(ov==='auto'||ov==='scroll')return true;}}catch(e){}n=n.parentElement;}return false;}
+  root.addEventListener('pointerdown',function(e){
+    _wok=false;
+    if(e.pointerType==='mouse'||S.zen||S.overlay||S.screen!=='game')return;
+    var pane=e.target&&e.target.closest?e.target.closest('.zjPane'):null;if(!pane)return;
+    if(e.target.closest&&e.target.closest(_wSkip))return;
+    if(_wScrollX(e.target,pane))return;
+    _wx=_wlx=e.clientX;_wy=_wly=e.clientY;_wt=Date.now();_wok=true;
+  },true);
+  root.addEventListener('pointermove',function(e){if(_wok){_wlx=e.clientX;_wly=e.clientY;}},true);
+  function _wEnd(){
+    if(!_wok)return;_wok=false;
+    if(Date.now()-_wt>620)return;
+    var dx=_wlx-_wx,dy=_wly-_wy;
+    if(Math.abs(dx)<56||Math.abs(dx)<Math.abs(dy)*1.7)return;
+    swipeTab(dx<0?'panel':'story');
+  }
+  root.addEventListener('pointerup',_wEnd,true);
+  root.addEventListener('pointercancel',_wEnd,true);
+})();
 /* 点正文进出全屏（zen）：纯点击才触发——滑动、选字、点按钮/图片/操作栏/三维场景都不触发；再点一下退出 */
 (function(){
   var _tx=0,_ty=0,_tt=0,_tmv=false,_tok=false,_kbEl=null;
@@ -5050,12 +5083,7 @@ root.addEventListener('click',function(e){
         return;}
       if(t.getAttribute('data-dlgc')){var pD=DLGC;DLGC=t.getAttribute('data-dlgc');dlgApply(pD);return;}
       if(t.getAttribute('data-dev')){S.device=t.getAttribute('data-dev');savePref();render();codexPills();setPills();return;}
-      if(t.getAttribute('data-tab')){var ntb=t.getAttribute('data-tab');if(ntb===S.tab)return;var _oldTab=S.tab;var tdir=ntb==='panel'?1:-1;vtRender(ntb==='panel'?'zjTab-f':'zjTab-b',function(){S.tab=ntb;render();});
-        if(!reducedMotion()){
-          if(TABISLE){tabIsleAnim(_oldTab,ntb);}
-          else{var pill=document.getElementById('zjTabPill');if(pill&&pill.animate)pill.animate([{transform:'translateX('+(-tdir*103)+'%)'},{transform:'none'}],{duration:340,easing:'cubic-bezier(.3,1.1,.3,1)'});}
-        }
-        return;}
+      if(t.getAttribute('data-tab')){swipeTab(t.getAttribute('data-tab'));return;}
       if(t.getAttribute('data-jpact')){var jk9=t.getAttribute('data-jpact');readJpForm();JPCFG[jk9]=!JPCFG[jk9];jpcfgSave();renderOverlay();return;}
       if(t.getAttribute('data-ov')){if(morphBusy)return;var ovK=t.getAttribute('data-ov');var ovWas=S.overlay;S.overlay=ovK;S.movePending=null;S.apiMsg=null;S.jpMsg=null;S.wipeArm=false;try{var _vr9=document.getElementById('vnRoot');if(_vr9)_vr9.style.display='none';var _vp9=document.getElementById('vnPill');if(_vp9)_vp9.style.display='none';}catch(e9){}
         if(ovWas){renderOverlay();codexPills();setPills();return;}
