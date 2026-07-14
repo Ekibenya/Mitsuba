@@ -2763,18 +2763,23 @@ function selectView(){
     +'<div style="font-size:12px;color:var(--mut);margin-top:3px">'+esc(S.customOp.era||'')+' · 此前撰定的自定义开局，可重新入局，也可发口令与友人共启同一局</div></div>'
     +'<button data-act="opShare" class="obtn btn" style="flex:none;font-size:12.5px;letter-spacing:.15em;padding:8px 16px">分享开局码</button>'
     +'<div style="flex:none;font-size:13px;letter-spacing:.3em;color:var(--gold)">进入 →</div></div>'):'';
-  var imp='<div class="glass" style="grid-column:1/-1;padding:13px 20px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">'
+  var synopBox='<div class="btn glass glassHover" data-ov="intro" style="grid-column:1/-1;cursor:pointer;border-color:rgba(201,160,99,.55);padding:15px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap'+(mob?';-webkit-backdrop-filter:none;backdrop-filter:none':'')+'">'
+    +'<div style="flex:none;width:42px;height:42px;background:linear-gradient(160deg,#b98f3f,#7e5f28);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:\'Amarante\',Georgia,serif;font-size:22px;color:#f7ecd2;box-shadow:inset 0 0 0 2px rgba(201,160,99,.35)">❦</div>'
+    +'<div style="flex:1;min-width:220px"><div class="kai" style="font-size:20px;color:var(--gold2);letter-spacing:.06em">剧情快速简介</div>'
+    +'<div style="font-size:12.5px;line-height:1.75;color:#5d5142;margin-top:4px"><b style="color:#c9705a">没看过漫画或小说必看！</b>世界观、主角、拿破仑原型、舆图，以及每个开局的简单剧情介绍与出场人物。</div></div>'
+    +'<div style="flex:none;font-size:13px;letter-spacing:.3em;color:var(--gold)">查看 →</div></div>';
+  var friendBox=S.opShow?('<div class="glass" style="grid-column:1/-1;padding:13px 20px;display:flex;gap:10px;align-items:center;flex-wrap:wrap'+(mob?';-webkit-backdrop-filter:none;backdrop-filter:none':'')+'">'
     +'<div class="kai" style="font-size:16px;color:var(--gold2);letter-spacing:.1em;flex:none">友传开局</div>'
     +'<input id="zjOpCode" placeholder="粘贴友人分享的开局码或链接，即可开同一局…" style="flex:1;min-width:200px;background:rgba(255,255,255,.03);border:1px solid rgba(42,69,104,.3);border-radius:9px;color:var(--ink);padding:9px 12px;font-size:13px" autocomplete="off" spellcheck="false">'
     +'<button data-act="opImport" class="obtn btn" style="flex:none;font-size:13px;letter-spacing:.15em;padding:9px 18px">导 入</button>'
-    +(S.opMsg?'<div style="width:100%;font-size:12px;color:var(--gold3)">'+esc(S.opMsg)+'</div>':'')+'</div>';
+    +(S.opMsg?'<div style="width:100%;font-size:12px;color:var(--gold3)">'+esc(S.opMsg)+'</div>':'')+'</div>'):'';
   return '<div class="col">'
     +'<div class="grow" style="overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain">'
     +'<div style="position:sticky;top:0;z-index:6;pointer-events:none;margin-bottom:-26px;padding-bottom:26px">'+'<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(236,227,204,'+(mob?'.99':'.95')+') 0%,rgba(236,227,204,'+(mob?'.93':'.76')+') 56%,rgba(236,227,204,0) 100%);'+(mob?'':'-webkit-backdrop-filter:blur(12px) saturate(140%);backdrop-filter:blur(12px) saturate(140%);')+'-webkit-mask-image:linear-gradient(180deg,#000 54%,transparent);mask-image:linear-gradient(180deg,#000 54%,transparent)"></div>'+'<div style="position:relative;pointer-events:auto;display:flex;align-items:baseline;gap:16px;padding:18px 28px 10px;flex-wrap:wrap">'
     +'<button data-act="totitle" class="obtn btn" style="font-size:12px;letter-spacing:.2em;padding:6px 14px">〈 封面</button>'
-    +'<button data-ov="intro" class="obtn btn" style="font-size:12px;letter-spacing:.2em;padding:6px 14px;color:var(--gold3)">剧情简介</button>'
+    +'<button data-act="opToggle" class="obtn btn" style="font-size:12px;letter-spacing:.2em;padding:6px 14px'+(S.opShow?';color:var(--gold2);border-color:rgba(201,160,99,.6)':';color:var(--mut)')+'">友传开局</button>'
     +'<div class="kai" style="font-size:26px;letter-spacing:.14em;color:var(--gold2)">择一开局 · 轮舞之间</div></div></div>'
-    +'<div style="padding:22px 28px 60px"><div style="max-width:1280px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(320px,100%),1fr));gap:16px">'+zero+mine+imp+grid+'</div></div>'
+    +'<div style="padding:22px 28px 60px"><div style="max-width:1280px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(320px,100%),1fr));gap:16px">'+synopBox+zero+mine+friendBox+grid+'</div></div>'
     +'</div></div>';
 }
 
@@ -5189,6 +5194,7 @@ root.addEventListener('click',function(e){
         var su9=location.origin+location.pathname+'#op='+sc9;
         if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(su9).then(function(){S.opMsg='开局链接已复制——发给友人，点开即得同一开局。';render();},function(){prompt('复制此链接分享：',su9);});
         else prompt('复制此链接分享：',su9);}
+      else if(a==='opToggle'){S.opShow=!S.opShow;render();}
       else if(a==='opImport'){var oc9=document.getElementById('zjOpCode');
         var sh9=parseShareCode(oc9?oc9.value:'');
         if(!sh9){S.opMsg='识别不出：请完整粘贴开局码或分享链接';render();}
