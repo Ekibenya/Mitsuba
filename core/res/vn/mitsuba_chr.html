@@ -4398,7 +4398,7 @@ $('handBtn').onclick=()=>{
 };
 // ---- 剧场模式:被三叶物语引擎经 postMessage 驱动 ----
 const MB=/[?&]m=1/.test(location.search);
-if(MB){const st=document.createElement('style');st.textContent='#char img{filter:none!important}';document.head.appendChild(st);}  /* 手机端:关掉重量级 drop-shadow 发光(真省性能);头发/手臂动画恢复正常 */
+if(MB){const st=document.createElement('style');st.textContent='#char img{filter:none!important}.wf1,.wf2,.wf3,.ws1,.ws2,.wb3,.wb4,.wb5,.armLg,.armRg{animation:none!important}';document.head.appendChild(st);}  /* 手机端:关发光 + 关大图层动画(每层大图动画=独立合成层,会爆显存崩溃)。二者皆关最轻 */
 const VN=/[?&]vn=1/.test(location.search);
 let vnOff=0, seqBusy=false;
 if(VN){
