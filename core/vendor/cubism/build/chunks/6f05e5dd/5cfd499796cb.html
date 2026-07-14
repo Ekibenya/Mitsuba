@@ -5819,8 +5819,6 @@ function lastWorld(){
   return null;
 }
 function tick(){
-  /* 开局演出层(#bootShot)只要还在，剧场立绘层一律隐藏并禁止加载：从进场第0.1秒到揭幕黑幕淡出全程压住，杜绝立绘头顶在揭幕一瞬闪到屏幕底部 */
-  if(document.getElementById('bootShot')){root.style.display='none';if(pill)pill.style.display='none';setZZ(true);return;}
   /* 只认「位置在顶部区域·尺寸达标」的岛，忽略转场瞬间残留/错位的同 id 岛(否则角色层会被定到屏幕底部只露头顶) */
   var isle=null;{var _iss=document.querySelectorAll('[id="zjSceneIsle"]');for(var _ii=0;_ii<_iss.length;_ii++){var _ir=_iss[_ii].getBoundingClientRect();if(_ir.width>=60&&_ir.height>=60&&_ir.top<window.innerHeight*0.55){isle=_iss[_ii];break;}}}
   /* 迁移期:岛曾被旧✕藏起 → 自动点顶栏药丸把它请回来 */
