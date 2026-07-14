@@ -3414,6 +3414,42 @@ function introBody(){
      +'<div style="font-size:12.5px;line-height:1.85;color:var(--mut2);margin-top:3px"><b style="color:var(--grn2)">会遇到：</b>'+o[4]+'</div>'
      +'</div>';
   }).join('');
+  var mapPieces=(typeof ZJ_LOCS!=='undefined'?ZJ_LOCS:[]).map(function(L){
+    var sym;
+    if(L.kind==='cap')sym='<span style="font-size:14px;line-height:1;color:#7a5f28;text-shadow:0 0 3px #f8f2df,0 1px 1px rgba(58,47,36,.4)">★</span>';
+    else if(L.kind==='sea')sym='<span style="font-size:13px;line-height:1;color:#2a4568;font-weight:700;text-shadow:0 0 3px #f2e8cf">≈</span>';
+    else if(L.kind==='pass')sym='<span style="color:#96323f;font-size:11px;line-height:11px;font-weight:700">✕</span>';
+    else sym='<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#fbf6ea;border:1.5px solid #4a4032;box-shadow:0 1px 2px rgba(58,47,36,.4)"></span>';
+    var lbl='<div style="font-size:9px;letter-spacing:.04em;line-height:1.1;color:#3a3024;text-shadow:0 0 3px #f2e8cf,0 0 3px #f2e8cf,0 0 4px #f2e8cf;white-space:nowrap">'+esc(L.name)+'</div>';
+    var symd='<div style="height:12px;display:flex;align-items:center;justify-content:center">'+sym+'</div>';
+    return '<div style="position:absolute;left:'+(L.x/10)+'%;top:'+(L.y/7.07)+'%;transform:translate(-50%,'+(L.la==='n'?'calc(-100% + 6px)':'-6px')+');width:74px;text-align:center;z-index:2">'+(L.la==='n'?lbl+symd:symd+lbl)+'</div>';
+  }).join('');
+  var mapHtml='<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid rgba(74,64,50,.3);border-radius:10px;margin:2px 0 6px"><div style="position:relative;min-width:700px;aspect-ratio:1000/707;background:radial-gradient(ellipse at 50% 50%,transparent 62%,rgba(58,47,36,.16) 100%),linear-gradient(160deg,#f2e8cd,#e6d9b6 55%,#eee2c4)">'+(typeof mapSvg==='function'?mapSvg():'')+mapPieces+'</div></div>';
+  var GZ=function(title,color,items){return '<div style="margin:10px 0 3px;font-size:13.5px;color:'+color+';font-weight:700;letter-spacing:.06em">'+title+'</div>'+items.map(function(it){return '<div style="font-size:12.5px;line-height:1.82;color:var(--ink2);margin:3px 0"><b style="color:var(--gold3)">'+it[0]+'</b> — '+it[1]+'</div>';}).join('');};
+  var tier1=[
+   ['罗泽利亚','故事舞台国，＝大革命时代的法国。历经王国→共和国，三叶在此从囚徒登上顶点。'],
+   ['王都贝尔','「花之王都」、罗泽利亚之心（＝巴黎）——宫殿、议会、军官学校、断头台都在这里。'],
+   ['布鲁洛兹州','三叶的家乡、她口中「我的庭院」，遍地蓝蔷薇；老家城馆与幽禁她的隔离塔都在此。'],
+   ['陆军军官学校','三叶「住得最久的家」，炮兵科所在，也是她与克萝内、桑德拉相识的起点。'],
+   ['斯特拉斯帕尔 · 贝里埃要塞','卷二防卫战的核心战场；要塞一破，防线连锁崩溃、直抵王都。'],
+   ['西德里恩特','与帝国拉锯二十年的最前线，卷二战败后被割让出去。'],
+   ['哈尔吉奥村 · 里特贝尔','红玫瑰州；「浅坟」之地（卷一，三叶死了一次又爬回来）与治安局驻地。'],
+   ['奥瑟利亚街道','两州边境的会战之地（卷三「蔷薇的葬列」，帝国大军在此覆灭）。']
+  ];
+  var tier2=[
+   ['普尔梅尼亚帝国','东方宿敌、主要假想敌（≈普鲁士等大陆列强）；黑衣骑兵、恐惧三叶的皇帝鲁道夫。'],
+   ['莉莉亚 / 莉莉安娜','隔海的岛国、海洋霸主、罗泽利亚的前宗主国（≈英国）；殖民地遍布。'],
+   ['阿尔卡迪亚合众国','新大陆的「自由之国」（≈美国）；罗泽利亚曾出兵助其独立，正如法国援美。'],
+   ['卡萨布兰卡大公国','南方真正的盟友，王妃玛丽安娜的祖国；重谈判、守礼节。'],
+   ['赫泽兰','东北由十位国王凑成的联合王国，墙头草中立，卷三谈和对象。'],
+   ['库洛卡斯大帝国','东方野心帝国，扬言要统一大陆，疑为邪教背后的金主。'],
+   ['大轮教会领','大轮教圣地、教皇领，位于大陆东部。']
+  ];
+  var tier3=[
+   ['帝国南邻四国','加贝拉、赛菲洛斯、萨尔比亚、达利亚——帝国南面的邻国群，仅在地图上标注。'],
+   ['南方小国','海德拉西亚、弗利吉亚——大陆南端的小王国，纯属世界点缀。'],
+   ['莉莉亚海外领地 · 边角地点','岛国的离岛飞地，以及架桥小岛等——为让世界完整而画上，剧情基本不涉足。']
+  ];
   return '<div class="grow bambooV" style="overflow-y:auto;padding:24px 30px"><div style="max-width:760px;margin:0 auto">'
    +P('<b style="color:var(--gold2)">没读过原作也能玩。</b>下面用大白话讲清楚：这是个什么故事、主角是谁、十个开局各扮演谁、会遇到什么人。')
    +H('一句话故事')
@@ -3447,6 +3483,14 @@ function introBody(){
    +H('十个开局','挑一个开始')
    +P('前七个你扮演<b style="color:var(--gold)">三叶本人</b>，按时间顺序推进；后三个让你换一双眼睛，扮演她<b style="color:var(--gold)">身边的人</b>。')
    +cards
+   +H('埃乌罗佩 · 舆图')
+   +P('故事发生在埃乌罗佩大陆。下面就是游戏里的舆图（进游戏后点右上「图」，还能拖动红色御印亲赴各地当作一回合行动）。')
+   +mapHtml
+   +H('地点与国家 · 由主到次')
+   +P('按剧情分量排个序：主舞台 → 有戏份的列强邻国 → 只在地图上出现的世界背景。')
+   +GZ('① 最重要 · 主舞台（罗泽利亚国内）','#7e212e',tier1)
+   +GZ('② 次要 · 列强与邻国','#3c5a86',tier2)
+   +GZ('③ 原著几乎未出现 · 世界背景','#6a5b45',tier3)
    +'<div style="height:10px"></div>'
    +'</div></div>';
 }
