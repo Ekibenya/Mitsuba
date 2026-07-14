@@ -569,8 +569,7 @@ function glInit(){
         x.globalAlpha=1;
       })();
       /* 织纹与边缘旧渍盖在印花之上：印花融进布里而不是浮在布上 */
-      x.globalAlpha=.032;x.strokeStyle='#3a2f24';
-      for(i=0;i<640;i+=3){x.beginPath();x.moveTo(0,i);x.lineTo(1024,i);x.stroke();}
+      (function(){var _li=new Image();_li.onload=function(){try{var _lc=document.createElement('canvas');_lc.width=_li.width;_lc.height=_li.height;var _lx=_lc.getContext('2d');_lx.filter='grayscale(1) contrast(1.3)';_lx.drawImage(_li,0,0);var _pat=x.createPattern(_lc,'repeat');var _sc=(1024/6.15)/_li.width;try{_pat.setTransform(new DOMMatrix([_sc,0,0,_sc,0,0]));}catch(e){}x.save();x.setTransform(2,0,0,2,0,0);x.globalCompositeOperation='overlay';x.globalAlpha=1;x.fillStyle=_pat;x.fillRect(0,0,1024,640);x.globalCompositeOperation='multiply';x.globalAlpha=.4;x.fillStyle='rgb(206,189,154)';x.fillRect(0,0,1024,640);x.restore();tex.needsUpdate=true;}catch(e){}};_li.src='core/res/vn/hessian.jpg?v=1';})();
       x.globalAlpha=1;
       g=x.createLinearGradient(0,0,0,640);
       g.addColorStop(0,'rgba(60,50,36,.08)');g.addColorStop(.12,'rgba(0,0,0,0)');
@@ -582,7 +581,8 @@ function glInit(){
       x.fillStyle=g;x.fillRect(0,0,1024,640);
       tex.needsUpdate=true;
     }
-    var mat=new T.MeshStandardMaterial({map:tex,roughness:.62,metalness:0,side:T.DoubleSide}); /* 降粗糙度：布面波峰带一线柔光泽，凹凸更立体 */
+    var mat=new T.MeshStandardMaterial({map:tex,roughness:1,metalness:0,side:T.DoubleSide});
+      (function(){try{var _bt=new T.TextureLoader().load('core/res/vn/hessian.jpg?v=1',function(){try{mat.needsUpdate=true;}catch(e){}});_bt.wrapS=_bt.wrapT=T.RepeatWrapping;_bt.repeat.set(6.15,4.1);mat.bumpMap=_bt;mat.bumpScale=.12;}catch(e){}})(); /* 降粗糙度：布面波峰带一线柔光泽，凹凸更立体 */
     mat.shadowSide=T.BackSide; /* 双面网格投影用背面深度，避免自阴影痤疮 */
     var OVS=2.05; /* 旗面出血倍数（贴图分带与几何共用，务必同步） */
     var SEGX0=LOWFX?64:96, SEGY0=LOWFX?42:64, SEG_X=SEGX0, SEG_Y=SEGY0;
