@@ -172,6 +172,7 @@ textarea,input{border-radius:10px}
 .slip{height:7px;border-radius:3px;opacity:.75;background:linear-gradient(90deg,transparent 0,#2a4568 14%,#2a4568 38%,#efe8d6 38%,#efe8d6 62%,#7e212e 62%,#7e212e 86%,transparent 100%)}
 .bamboo{background-image:none}
 .bambooV{background-image:none}
+#zjPager.zjSliding #zjStory,#zjPager.zjSliding .bambooV{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 @keyframes flick{0%,100%{transform:scaleY(1);opacity:.95}25%{transform:scaleY(1.18) translateX(.6px);opacity:1}55%{transform:scaleY(.82);opacity:.75}80%{transform:scaleY(1.06) translateX(-.6px);opacity:.9}}
 @keyframes glow{0%,100%{opacity:.4}50%{opacity:.72}}
 @keyframes fall{0%{transform:translateY(-16px);opacity:0}10%{opacity:1}100%{transform:translateY(340px);opacity:0}}
@@ -5015,9 +5016,9 @@ function zenToggle(){
   }
 }
 function pagerW(){var pg=document.getElementById('zjPager');return pg?(pg.clientWidth||1):1;}
-function staggerCards(){var pg=document.querySelector('.zjPage[data-page="panel"]');if(!pg)return;var cs=pg.querySelectorAll('.glass');[].forEach.call(cs,function(c,i){if(!c.animate)return;c.animate([{opacity:0,transform:'translateX(24px)'},{opacity:1,transform:'none'}],{duration:340,delay:Math.min(i*42,300),easing:'cubic-bezier(.32,.72,0,1)',fill:'backwards'});});}
+function staggerCards(){var pg=document.querySelector('.zjPage[data-page="panel"]');if(!pg)return;var cs=pg.querySelectorAll('.glass');[].forEach.call(cs,function(c,i){if(!c.animate)return;c.animate([{transform:'translateY(20px) scale(.955)'},{transform:'none'}],{duration:520,delay:Math.min(i*55,380),easing:'cubic-bezier(.34,1.56,.64,1)',fill:'backwards'});});}
 function updateTabHl(ntb){var ball=document.getElementById('zjTabBall');if(ball)ball.style.left=(ntb==='panel'?'75%':'25%');var pill=document.getElementById('zjTabPill');if(pill)pill.style.left=(ntb==='panel'?'calc(50% + 3px)':'6px');[].forEach.call(document.querySelectorAll('#zjPager [data-tab]'),function(el){var on=el.getAttribute('data-tab')===ntb;el.style.color=on?'var(--gold2)':'var(--mut)';if(el.id)el.style.textShadow=on?'0 0 12px rgba(58,92,140,.7),0 0 5px rgba(58,92,140,.5),0 1px 0 rgba(255,255,255,.6)':'0 1px 0 rgba(255,255,255,.55)';});}
-function pagerSnap(idx,stag){var track=document.getElementById('zjTrack');var ntb=idx?'panel':'story';if(!track){S.tab=ntb;return;}var W=pagerW(),was=S.tab;track.style.transition='transform .34s cubic-bezier(.32,.72,0,1)';track.style.transform='translateX('+(-idx*W)+'px)';S.tab=ntb;updateTabHl(ntb);if(stag&&ntb!==was&&idx===1&&!reducedMotion())staggerCards();function done(){track.style.transition='';track.style.willChange='';track.removeEventListener('transitionend',done);}track.addEventListener('transitionend',done);setTimeout(done,460);}
+function pagerSnap(idx,stag){var track=document.getElementById('zjTrack');var ntb=idx?'panel':'story';if(!track){S.tab=ntb;return;}var pg=document.getElementById('zjPager');if(pg)pg.classList.add('zjSliding');var W=pagerW(),was=S.tab;track.style.transition='transform .34s cubic-bezier(.32,.72,0,1)';track.style.transform='translateX('+(-idx*W)+'px)';S.tab=ntb;updateTabHl(ntb);if(ntb!==was&&idx===1&&!reducedMotion())staggerCards();function done(){track.style.transition='';track.style.willChange='';if(pg)pg.classList.remove('zjSliding');track.removeEventListener('transitionend',done);}track.addEventListener('transitionend',done);setTimeout(done,460);}
 function swipeTab(ntb){if(ntb!==S.tab&&(ntb==='story'||ntb==='panel')){if(document.getElementById('zjTrack'))pagerSnap(ntb==='panel'?1:0,true);else{S.tab=ntb;render();}}}
 (function(){
   var sx=0,sy=0,decided=false,active=false,noPage=false,track=null,pager=null,W=1,base=0,lastX=0,lastT=0,vel=0;
@@ -5038,7 +5039,7 @@ function swipeTab(ntb){if(ntb!==S.tab&&(ntb==='story'||ntb==='panel')){if(docume
     if(!decided){
       if(Math.abs(dx)<7&&Math.abs(dy)<7)return;
       if(Math.abs(dx)<=Math.abs(dy)+1){decided=true;active=false;return;}
-      decided=true;active=true;W=pagerW();base=-((S.tab==='panel')?1:0)*W;track.style.transition='none';track.style.willChange='transform';try{pager.setPointerCapture(e.pointerId);}catch(ex){}
+      decided=true;active=true;W=pagerW();base=-((S.tab==='panel')?1:0)*W;track.style.transition='none';track.style.willChange='transform';pager.classList.add('zjSliding');try{pager.setPointerCapture(e.pointerId);}catch(ex){}
     }
     if(!active)return;
     var t=Date.now();if(t>lastT)vel=(e.clientX-lastX)/(t-lastT);lastX=e.clientX;lastT=t;
