@@ -490,80 +490,22 @@ function glInit(){
         var lg=document.createElement('canvas');lg.width=Math.max(2,Math.ceil(lw*2));lg.height=Math.max(2,Math.ceil(lh*2)); /* 2×超采样与贴图分辨率对齐 */
         var g2=lg.getContext('2d'),kx=lg.width/772,ky=lg.height/834;
         g2.setTransform(kx,0,0,ky,0,0);
-        /* —— 大革命时期雕版国徽：日芒·月桂花环·束带·弧形铭文·三叶草纹章 —— */
-        var gr=g2.createLinearGradient(0,60,0,800);
-        gr.addColorStop(0,'#d9b981');gr.addColorStop(.5,'#bf9455');gr.addColorStop(1,'#93683a');
-        var CX=386,CY=417,TAU=6.28318530718,HPI=1.57079632679;
-        g2.strokeStyle=gr;g2.fillStyle=gr;
-        /* 放射日芒（长短相间的雕版线）：革命印章最典型的背景 */
-        g2.lineWidth=2.2;g2.globalAlpha=.5;
-        for(var ri=0;ri<40;ri++){var rt=ri*TAU/40,rr=(ri%2)?206:176;
-          g2.beginPath();g2.moveTo(CX+142*Math.cos(rt),CY+142*Math.sin(rt));
-          g2.lineTo(CX+rr*Math.cos(rt),CY+rr*Math.sin(rt));g2.stroke();}
-        /* 月桂花环：左右两枝自底部向上环抱，叶片沿枝错生 */
-        function lf9(px,py,ang,ln9,wd9){g2.save();g2.translate(px,py);g2.rotate(ang);
-          g2.beginPath();g2.moveTo(0,0);g2.quadraticCurveTo(ln9*.5,-wd9,ln9,0);
-          g2.quadraticCurveTo(ln9*.5,wd9,0,0);g2.fill();g2.restore();}
-        g2.globalAlpha=.9;g2.lineWidth=3.5;
-        g2.beginPath();g2.arc(CX,CY,250,1.68,2.92);g2.stroke();      /* 左枝干 */
-        g2.beginPath();g2.arc(CX,CY,250,0.22,1.46);g2.stroke();      /* 右枝干 */
-        for(var li=0;li<13;li++){
-          var tL=1.74+li*0.096,tR=1.40-li*0.096;
-          lf9(CX+250*Math.cos(tL),CY+250*Math.sin(tL),tL+HPI+((li%2)?.52:.18),42,13);
-          lf9(CX+250*Math.cos(tR),CY+250*Math.sin(tR),tR-HPI-((li%2)?.52:.18)+3.14159,-42,13);
-        }
-        /* 底部束带交叉 */
-        g2.lineWidth=5;g2.globalAlpha=.85;
-        g2.beginPath();g2.moveTo(CX-30,CY+236);g2.lineTo(CX+30,CY+266);g2.stroke();
-        g2.beginPath();g2.moveTo(CX+30,CY+236);g2.lineTo(CX-30,CY+266);g2.stroke();
-        /* 内外饰环：外粗环＋铭文带内侧的雕版虚线环 */
-        g2.globalAlpha=.75;g2.lineWidth=7;g2.beginPath();g2.arc(CX,CY,350,0,TAU);g2.stroke();
-        g2.globalAlpha=.3;g2.lineWidth=1.5;g2.beginPath();g2.arc(CX,CY,366,0,TAU);g2.stroke();
-        g2.globalAlpha=.45;g2.lineWidth=1.5;g2.setLineDash([3,10]);g2.beginPath();g2.arc(CX,CY,288,0,TAU);g2.stroke();g2.setLineDash([]);
-        /* 弧形铭文：革命口号，上弧三词、下弧「不自由毋宁死」 */
-        function arc9(str,r9,a0,a1,sz,flp){
-          g2.font='600 '+sz+'px Georgia,serif';g2.textAlign='center';g2.textBaseline='middle';
-          for(var ci=0;ci<str.length;ci++){
-            var t9a=a0+(ci+0.5)/str.length*(a1-a0);
-            g2.save();g2.translate(CX+r9*Math.cos(t9a),CY+r9*Math.sin(t9a));
-            g2.rotate(t9a+(flp?-HPI:HPI));g2.fillText(str.charAt(ci),0,0);g2.restore();
-          }
-        }
-        g2.globalAlpha=.92;
-        arc9('LIBERT\u00c9 \u00b7 \u00c9GALIT\u00c9 \u00b7 FRATERNIT\u00c9',320,-3.14159+0.40,-0.40,36,false);
-        arc9('\u00b7 OU LA MORT \u00b7',318,3.14159-0.55,0.55,36,true);
-        /* 左右分隔玫瑰点 */
-        g2.beginPath();g2.arc(CX-320,CY,7,0,TAU);g2.fill();
-        g2.beginPath();g2.arc(CX+320,CY,7,0,TAU);g2.fill();
-        /* 中心三叶草纹章（雕版感：实心＋深色描边勒出体积） */
-        g2.save();g2.translate(CX,CY+10);g2.scale(0.78,0.78);g2.translate(-386,-417);
-        g2.globalAlpha=1;
-        g2.beginPath();g2.arc(386,303,112,0,TAU);g2.fill();
-        g2.beginPath();g2.arc(287,472,112,0,TAU);g2.fill();
-        g2.beginPath();g2.arc(485,472,112,0,TAU);g2.fill();
-        try{g2.fill(new Path2D('M386 520 q-14 96 -66 150 q66 -18 84 -70 q10 -34 6 -80 Z'));}catch(ep){}
-        g2.strokeStyle='#7a5730';g2.lineWidth=4;g2.globalAlpha=.5;
-        g2.beginPath();g2.arc(386,303,112,0,TAU);g2.stroke();
-        g2.beginPath();g2.arc(287,472,112,0,TAU);g2.stroke();
-        g2.beginPath();g2.arc(485,472,112,0,TAU);g2.stroke();
-        g2.restore();
-        /* 做旧腐蚀：定种伪随机（不用 Math.random，重绘结果稳定）——
-           斑驳噪点抠掉印花碎屑＋几道横向磨痕，边角褪得更狠 */
-        g2.setTransform(1,0,0,1,0,0);
-        g2.globalCompositeOperation='destination-out';
-        var sd=48271;function pr(){sd=(sd*16807)%2147483647;return sd/2147483647;}
-        var n=Math.round(lg.width*lg.height/520);
-        for(var e=0;e<n;e++){
-          var ex=pr()*lg.width,ey=pr()*lg.height,er=(0.4+pr()*1.9)*(lg.width/300);
-          g2.globalAlpha=.35+.55*pr();
-          g2.beginPath();g2.arc(ex,ey,er,0,6.2832);g2.fill();
-        }
-        for(var e2=0;e2<14;e2++){
-          var sy2=pr()*lg.height,sh2=(0.6+pr()*1.6)*(lg.width/300);
-          g2.globalAlpha=.16+.26*pr();
-          g2.fillRect(0,sy2,lg.width,sh2);
-        }
-        g2.globalCompositeOperation='source-over';g2.globalAlpha=1;
+        /* —— 三叶党徽记：纯三叶草纹章（用户矢量原稿，金色雕版感，无环无铭文）—— */
+        var gr=g2.createLinearGradient(0,150,0,720);
+        gr.addColorStop(0,'#dcbd84');gr.addColorStop(.5,'#c1974f');gr.addColorStop(1,'#8f6236');
+        var CX=386,CY=417;
+        g2.fillStyle=gr;g2.globalAlpha=1;
+        try{
+          var _TW=575,_TS=_TW/1165;
+          g2.save();
+          g2.translate(CX,CY);g2.scale(_TS,_TS);g2.translate(-582.5,-522.5);
+          g2.transform(1,0,0,1,-45.171495,-92.400144);
+          g2.transform(1.421375,0,0,1.469334,-81.187495,-78.781491);
+          g2.save();g2.transform(1.09072,0,0,0.994011,-46.415397,3.205902);g2.fill(new Path2D('M499.355,494.523C487.92,484.082 469.72,471.328 449.801,454.072C400.055,410.979 336.214,346.987 315.513,273.437C311.156,257.96 310,241.329 310,225C310,185.355 325.466,155.707 347.325,137.09C385.121,104.899 443.312,107.053 482.943,157.351C489.703,165.931 494.59,176.59 500,188C511.125,160.455 529.341,139.258 548.544,127.685C610.211,90.524 690,133.495 690,225C690,326.61 597.003,414.736 536.526,466.206C522.604,478.055 507.963,486.663 499.355,494.523Z'));g2.restore();
+          g2.save();g2.transform(-0.55071,0.953857,-0.863971,-0.498814,1211.065335,265.346195);g2.fill(new Path2D('M504.16,503.863C491.613,493.236 470.611,474.77 449.989,455.057C392.763,400.357 316.003,317.306 310,225C306.538,171.766 332.837,132.228 368.737,117.941C411.596,100.884 467.731,119.037 497.661,182.162C552.661,66.162 685.184,108.07 690,225C692.294,280.706 670.579,332.057 630.675,377.481C615.146,395.159 600.729,415.356 584.637,431.66C553.034,463.679 521.061,488.432 504.16,503.863Z'));g2.restore();
+          g2.save();g2.transform(-0.555838,-0.962739,0.866025,-0.5,341.762784,1224.563941);g2.fill(new Path2D('M497.777,500.198C450.508,460.126 310.602,351.249 311.377,225.071C311.51,203.34 317.083,185.143 324.711,169.486C343.514,130.891 382.674,107.362 421.034,111.86C453.041,115.613 484.268,139.72 504.755,182.928C516.812,157.499 531.629,135.676 548.753,124.295C586.758,99.035 634.357,105.272 663.244,138.271C680.714,158.228 690,189.69 690,225C690,257.975 676.68,287.763 660.907,317.528C621.298,392.272 549.341,456.037 510.012,490.18C505.634,493.981 501.699,497.441 497.777,500.198Z'));g2.restore();
+          g2.restore();
+        }catch(ep){}
         x.globalAlpha=.8; /* 印花integrated：略透出布色 */
         x.drawImage(lg,tx-lw/2,ty-lh/2,lw,lh);
         x.globalAlpha=1;
