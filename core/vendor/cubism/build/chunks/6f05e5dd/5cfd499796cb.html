@@ -4283,7 +4283,7 @@ function render(){
   zjBgSync();
   try{genKick();}catch(e){}
   /* 弹窗与剧场层同帧让位:剧场层挂在 body(z5),弹窗关在游戏根容器(z1)里,若等 250ms 轮询会先被压在立绘后面再"穿"出来 */
-  try{if(S.overlay||S.bgmOpen){var _vr=document.getElementById('vnRoot');if(_vr)_vr.style.display='none';var _vp=document.getElementById('vnPill');if(_vp)_vp.style.display='none';}}catch(e){}
+  try{if(S.overlay||S.bgmOpen||S.screen!=='game'){var _vr=document.getElementById('vnRoot');if(_vr)_vr.style.display='none';var _vp=document.getElementById('vnPill');if(_vp)_vp.style.display='none';}}catch(e){}
   try{if(S.screen==='game')memSync();}catch(e){}
   var focused=document.activeElement&&document.activeElement.id==='zjInput';
   var selStart=focused?document.activeElement.selectionStart:null;
